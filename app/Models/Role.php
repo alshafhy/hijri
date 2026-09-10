@@ -2,13 +2,9 @@
 
 namespace App\Models;
 
-use App\Models\AppBaseModel;
-
-
-
 /**
  * Class Role
- * @package App\Models
+ *
  * @version January 1, 2022, 10:52 am UTC
  *
  * @property string $name
@@ -16,16 +12,11 @@ use App\Models\AppBaseModel;
  */
 class Role extends AppBaseModel
 {
-
-
     public $table = 'roles';
-    
-
-
 
     public $fillable = [
         'name',
-        'ar_name'
+        'ar_name',
     ];
 
     /**
@@ -36,7 +27,7 @@ class Role extends AppBaseModel
     protected $casts = [
         'id' => 'integer',
         'name' => 'string',
-        'ar_name' => 'string'
+        'ar_name' => 'string',
     ];
 
     /**
@@ -45,8 +36,6 @@ class Role extends AppBaseModel
      * @var array
      */
     public static $rules = [
-        
-    ];
 
-    
+    ];
 }

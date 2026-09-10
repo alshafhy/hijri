@@ -11,21 +11,17 @@ class XssClean
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         $input = $request->all();
 
-  
-
-        array_walk_recursive($input, function(&$input) {
+        array_walk_recursive($input, function (&$input) {
 
             $input = strip_tags($input);
 
         });
-
-  
 
         $request->merge($input);
 

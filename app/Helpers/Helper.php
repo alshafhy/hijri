@@ -7,6 +7,7 @@ namespace App\Helpers;
 use App\Models\User;
 use App\Notifications\GeneralNotification;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Notification;
@@ -278,7 +279,7 @@ class Helper
         return in_array(Route::currentRouteName(), $menuRouteArr, true);
     }
 
-    public static function redirectAfterSaving(int|string $id, object $request, string $routeName): \Illuminate\Http\RedirectResponse
+    public static function redirectAfterSaving(int|string $id, object $request, string $routeName): RedirectResponse
     {
         if (isset($request->redirectAction) && $request->redirectAction === 'edit') {
             return redirect(route($routeName.'.edit', $id));

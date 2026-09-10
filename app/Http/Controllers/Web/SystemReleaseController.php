@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Web;
 
 use App\DataTables\SystemReleaseDataTable;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\CreateSystemReleaseRequest;
 use App\Http\Requests\UpdateSystemReleaseRequest;
-use App\Http\Controllers\AppBaseController;
-use App\Models\SystemReleasesFeature;
 use App\Models\SystemRelease;
-use Illuminate\Http\Request;
+use App\Models\SystemReleasesFeature;
 use Flash;
 
 class SystemReleaseController extends AppBaseController
@@ -18,9 +17,8 @@ class SystemReleaseController extends AppBaseController
      */
     public function index(SystemReleaseDataTable $systemReleaseDataTable)
     {
-    return $systemReleaseDataTable->render('system_releases.index');
+        return $systemReleaseDataTable->render('system_releases.index');
     }
-
 
     /**
      * Show the form for creating a new SystemRelease.
@@ -123,10 +121,12 @@ class SystemReleaseController extends AppBaseController
 
         return redirect(route('systemReleases.index'));
     }
+
     public function systemReleasesShow()
     {
         $releases = SystemRelease::all();
         $features = SystemReleasesFeature::get();
-        return view('system_releases.systemReleasesShow', compact('releases','features'));
+
+        return view('system_releases.systemReleasesShow', compact('releases', 'features'));
     }
 }

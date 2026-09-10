@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
-use App\Http\Controllers\AppBaseController;
 use App\Actions\User\ChangePasswordAction;
 use App\Actions\User\CreateUserAction;
 use App\Actions\User\DeleteUserAction;
@@ -13,6 +12,7 @@ use App\DataTables\UserDataTable;
 use App\DTOs\User\ChangePasswordData;
 use App\DTOs\User\CreateUserData;
 use App\DTOs\User\UpdateUserData;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\User\ChangePasswordRequest;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;

@@ -3,12 +3,15 @@
 namespace App\View\Components\Attachment;
 
 use App\Models\AttachmentType;
+use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
 class Files extends Component
 {
     public $required = [];
+
     public $categories;
+
     /**
      * Create a new component instance.
      *
@@ -16,23 +19,23 @@ class Files extends Component
      */
     public function __construct($required, $categories = null)
     {
-        $this->required = is_array($required)? $required : explode(",", $required);
-        if ($categories){
+        $this->required = is_array($required) ? $required : explode(',', $required);
+        if ($categories) {
             $this->categories = $categories;
-        }else{
-            $this->categories  = AttachmentType::get();
+        } else {
+            $this->categories = AttachmentType::get();
         }
-        
+
     }
 
     /**
      * Get the view / contents that represent the component.
      *
-     * @return \Illuminate\Contracts\View\View|\Closure|string
+     * @return View|\Closure|string
      */
     public function render()
     {
-        
+
         return view('components.attachment.files');
     }
 }

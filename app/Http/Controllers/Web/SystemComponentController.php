@@ -2,25 +2,22 @@
 
 namespace App\Http\Controllers\Web;
 
-use Flash;
-use Response;
-use App\Http\Requests;
-use App\Utils\NodeUtil;
-use Illuminate\Support\Str;
-use App\Utils\PermissionsUtil;
-use App\Models\SystemComponent;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\AppBaseController;
 use App\DataTables\SystemComponentDataTable;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\CreateSystemComponentRequest;
 use App\Http\Requests\UpdateSystemComponentRequest;
+use App\Models\SystemComponent;
+use App\Utils\NodeUtil;
+use App\Utils\PermissionsUtil;
+use Flash;
+use Illuminate\Support\Facades\DB;
+use Response;
 
 class SystemComponentController extends AppBaseController
 {
     /**
      * Display a listing of the SystemComponent.
      *
-     * @param SystemComponentDataTable $systemComponentDataTable
      * @return Response
      */
     public function index(SystemComponentDataTable $systemComponentDataTable)
@@ -35,44 +32,42 @@ class SystemComponentController extends AppBaseController
      */
     public function create()
     {
-        $parents_list  = SystemComponent::whereIn('comp_type',array(1,2))->pluck('comp_ar_label' , 'id');
-        $parents_list[''] = "اختار";
+        $parents_list = SystemComponent::whereIn('comp_type', [1, 2])->pluck('comp_ar_label', 'id');
+        $parents_list[''] = 'اختار';
 
-
-        $comp_type_list  = array(
-                                1=>'نظام',
-                                2=>'قائمة',
-                                3=>'شاشة',
-                                4=>'تقرير',
-                                );
-        $comp_type_list[''] = "اختار";
+        $comp_type_list = [
+            1 => 'نظام',
+            2 => 'قائمة',
+            3 => 'شاشة',
+            4 => 'تقرير',
+        ];
+        $comp_type_list[''] = 'اختار';
 
         return view('system_components.create')
-                    ->with('parents_list', $parents_list )
-                    ->with('comp_type_list',$comp_type_list);
+            ->with('parents_list', $parents_list)
+            ->with('comp_type_list', $comp_type_list);
     }
 
     /**
      * Store a newly created SystemComponent in storage.
      *
-     * @param CreateSystemComponentRequest $request
      *
      * @return Response
      */
     public function store(CreateSystemComponentRequest $request)
     {
-        
+
         // dd($input);
         /** @var SystemComponent $systemComponent */
-        DB::transaction(function () use($request ) {
+        DB::transaction(function () use ($request) {
             $input = $request->all();
             $result = NodeUtil::addNewNode($request);
 
-            if($input['comp_type'] == 3 || $input['comp_type'] == 4) {
+            if ($input['comp_type'] == 3 || $input['comp_type'] == 4) {
                 (new PermissionsUtil)->addPermissionsToObject($result->id);
             }
         });
-        
+
         Flash::success(__('messages.saved', ['model' => __('models/systemComponents.singular')]));
 
         return redirect(route('systemComponents.index'));
@@ -81,8 +76,7 @@ class SystemComponentController extends AppBaseController
     /**
      * Display the specified SystemComponent.
      *
-     * @param  int $id
-     *
+     * @param  int  $id
      * @return Response
      */
     public function show($id)
@@ -102,8 +96,7 @@ class SystemComponentController extends AppBaseController
     /**
      * Show the form for editing the specified SystemComponent.
      *
-     * @param  int $id
-     *
+     * @param  int  $id
      * @return Response
      */
     public function edit($id)
@@ -117,30 +110,27 @@ class SystemComponentController extends AppBaseController
             return redirect(route('systemComponents.index'));
         }
 
-        $parents_list  = SystemComponent::whereIn('comp_type',array(1,2))->pluck('comp_ar_label' , 'id');
-        $parents_list[''] = "اختار";
+        $parents_list = SystemComponent::whereIn('comp_type', [1, 2])->pluck('comp_ar_label', 'id');
+        $parents_list[''] = 'اختار';
 
-        $comp_type_list  = array(
-                                1=>'نظام',
-                                2=>'قائمة',
-                                3=>'شاشة',
-                                4=>'تقرير',
-                                );
-        $comp_type_list[''] = "اختار";
+        $comp_type_list = [
+            1 => 'نظام',
+            2 => 'قائمة',
+            3 => 'شاشة',
+            4 => 'تقرير',
+        ];
+        $comp_type_list[''] = 'اختار';
 
         return view('system_components.edit')
-                    ->with('systemComponent', $systemComponent)
-                    ->with('parents_list', $parents_list)
-                    ->with('comp_type_list', $comp_type_list)
-                    ;
+            ->with('systemComponent', $systemComponent)
+            ->with('parents_list', $parents_list)
+            ->with('comp_type_list', $comp_type_list);
     }
 
     /**
      * Update the specified SystemComponent in storage.
      *
-     * @param  int              $id
-     * @param UpdateSystemComponentRequest $request
-     *
+     * @param  int  $id
      * @return Response
      */
     public function update($id, UpdateSystemComponentRequest $request)
@@ -165,11 +155,10 @@ class SystemComponentController extends AppBaseController
     /**
      * Remove the specified SystemComponent from storage.
      *
-     * @param  int $id
+     * @param  int  $id
+     * @return Response
      *
      * @throws \Exception
-     *
-     * @return Response
      */
     public function destroy($id)
     {
@@ -188,6 +177,4 @@ class SystemComponentController extends AppBaseController
 
         return redirect(route('systemComponents.index'));
     }
-
-
 }

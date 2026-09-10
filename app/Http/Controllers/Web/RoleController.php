@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
-use App\Http\Controllers\AppBaseController;
 use App\Actions\Role\SyncRolePermissionsAction;
 use App\DataTables\RoleDataTable;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\Role\StoreRoleRequest;
 use App\Http\Requests\Role\UpdateRoleRequest;
 use App\Models\SystemComponent;

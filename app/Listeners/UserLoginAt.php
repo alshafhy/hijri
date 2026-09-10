@@ -4,8 +4,6 @@ namespace App\Listeners;
 
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Login;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class UserLoginAt
 {
@@ -22,7 +20,6 @@ class UserLoginAt
     /**
      * Handle the event.
      *
-     * @param  \Illuminate\Auth\Events\Login  $event
      * @return void
      */
     public function handle(Login $event)
@@ -30,7 +27,7 @@ class UserLoginAt
         // dd($event->user);
         $event->user->update([
             'last_login_at' => Carbon::now(),
-            'last_login_ip_address' => request()->getClientIp()
-         ]);
+            'last_login_ip_address' => request()->getClientIp(),
+        ]);
     }
 }

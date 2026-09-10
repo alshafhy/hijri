@@ -12,21 +12,22 @@ class CheckPassChange
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $routeExceptioArray = ['change-password','update-password','home-page'];
-        if(auth()){
+        $routeExceptioArray = ['change-password', 'update-password', 'home-page'];
+        if (auth()) {
             // dd(Route::current()->getName());
             // dd(auth()->user()->pass_need_to_be_changed);
             // if (currentRoute === 'some_url') {
             //     return $next($request);
             // }
-            if(auth()->user() && auth()->user()->pass_need_to_be_changed && ! in_array(Route::current()->getName(), $routeExceptioArray) ){
+            if (auth()->user() && auth()->user()->pass_need_to_be_changed && ! in_array(Route::current()->getName(), $routeExceptioArray)) {
                 return redirect(route('change-password'));
             }
         }
+
         return $next($request);
     }
 }

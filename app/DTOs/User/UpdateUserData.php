@@ -17,8 +17,7 @@ final readonly class UpdateUserData
         public string $email,
         public ?int $branchId,
         public array $roleIds = [],
-    ) {
-    }
+    ) {}
 
     public static function fromRequest(FormRequest $request): self
     {

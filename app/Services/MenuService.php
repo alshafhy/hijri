@@ -11,9 +11,12 @@ use Illuminate\Support\Facades\Cache;
 
 class MenuService
 {
+    /**
+     * @return Collection<int, SystemComponent>
+     */
     public function getMenuForUser(?User $user): Collection
     {
-        if (!$user) {
+        if (! $user) {
             return collect();
         }
 
@@ -24,7 +27,7 @@ class MenuService
                 ->orderBy('sort_order')
                 ->get();
 
-            return $this->filterTree($roots, $user);
+            return $this->filterTree(collect($roots->all()), $user);
         });
     }
 
@@ -39,22 +42,25 @@ class MenuService
             Cache::tags(['menu'])->flush();
         } catch (\BadMethodCallException) {
             // Driver does not support tags — iterate known users
-            \App\Models\User::query()->select('id')->each(
-                fn(User $u) => $this->clearMenuCache($u->id)
+            User::query()->select('id')->each(
+                fn (User $u) => $this->clearMenuCache($u->id)
             );
         }
     }
 
+    /**
+     * @param  Collection<int, SystemComponent>  $nodes
+     * @return Collection<int, SystemComponent>
+     */
     private function filterTree(Collection $nodes, User $user): Collection
     {
         return $nodes
-            ->filter(fn(SystemComponent $node) => $node->hasAccess($user))
+            ->filter(fn (SystemComponent $node) => $node->hasAccess($user))
             ->map(function (SystemComponent $node) use ($user) {
                 if ($node->children->isNotEmpty()) {
-                    $visibleChildren = $this->filterTree(
-                        $node->children->sortBy('sort_order'),
-                        $user
-                    );
+                    /** @var Collection<int, SystemComponent> $childNodes */
+                    $childNodes = collect($node->children->sortBy('sort_order')->values()->all());
+                    $visibleChildren = $this->filterTree($childNodes, $user);
 
                     // Drop groups with no visible children
                     if ($visibleChildren->isEmpty() && empty($node->route_name)) {

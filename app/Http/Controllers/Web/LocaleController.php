@@ -18,7 +18,7 @@ class LocaleController extends Controller
 
         // Persist in session
         session([
-            'locale'    => $locale,
+            'locale' => $locale,
             'direction' => $direction,
         ]);
 

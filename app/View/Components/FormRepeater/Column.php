@@ -2,7 +2,6 @@
 
 namespace App\View\Components\FormRepeater;
 
-use Illuminate\Support\Arr;
 use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
 
@@ -12,11 +11,11 @@ use Illuminate\Support\Str;
  * @property string name
  * @property string footer
  * @property array attributes
+ *
  * @see https://datatables.net/reference/option/#columns
  */
 class Column extends Fluent
 {
-
     /**
      * @param  array  $attributes
      */
@@ -35,13 +34,13 @@ class Column extends Fluent
 
         // Allow methods override attribute value
         foreach ($attributes as $attribute => $value) {
-            $method = 'parse' . ucfirst(strtolower($attribute));
-            if (!is_null($value) && method_exists($this, $method)) {
+            $method = 'parse'.ucfirst(strtolower($attribute));
+            if (! is_null($value) && method_exists($this, $method)) {
                 $attributes[$attribute] = $this->$method($value);
             }
         }
 
-        if (!isset($attributes['name']) && isset($attributes['data'])) {
+        if (! isset($attributes['name']) && isset($attributes['data'])) {
             $attributes['name'] = $attributes['data'];
         }
         $attributes['id'] = isset($attributes['id']) ? $attributes['id'] : $attributes['name'];

@@ -2,9 +2,9 @@
 
 namespace App\View\Components;
 
-use Illuminate\View\Component as Component;
 use App\Models\SystemComponent;
-use Illuminate\Support\Arr;
+use Illuminate\Contracts\View\View;
+use Illuminate\View\Component;
 
 class SysMenu extends Component
 {
@@ -13,37 +13,35 @@ class SysMenu extends Component
      *
      * @return void
      */
-    public function __construct()
-    {
-
-    }
+    public function __construct() {}
 
     /**
      * Get the view / contents that represent the component.
      *
-     * @return \Illuminate\Contracts\View\View|\Closure|string
+     * @return View|\Closure|string
      */
     public function render()
     {
         // $nodes  = SystemComponent::get()->toTree();
         $nodes = $this->getNodesByPermissions();
 
-        return view('components.sys-menu')->with('nodes',$nodes);
+        return view('components.sys-menu')->with('nodes', $nodes);
     }
+
     private function getNodesByPermissions()
     {
         $user = auth()->user();
-        if(!$user){
-            return array();
+        if (! $user) {
+            return [];
         }
         // if(session('current_user_menu')){
         //     $nodes  =session('current_user_menu');
         // }else{
-            $nodes  = SystemComponent::get()->toTree(); 
-            session(['current_user_menu' => $nodes ]);
+        $nodes = SystemComponent::get()->toTree();
+        session(['current_user_menu' => $nodes]);
         // }
 
-        if($user->hasRole('admin')){
+        if ($user->hasRole('admin')) {
             return $nodes;
         }
         $permissions = $user->getAllPermissions();
@@ -51,30 +49,31 @@ class SysMenu extends Component
         $permissions = $permissions->pluck('name');
 
         foreach ($nodes as $node) {
-            $filtered = $node->children->reject(function  ($value, $key)use ($permissions) {
-                $route_name=$value->route_name;
-                $prefix=$value->prefix;
+            $filtered = $node->children->reject(function ($value, $key) use ($permissions) {
+                $route_name = $value->route_name;
+                $prefix = $value->prefix;
                 // if($prefix=='commonScreens'){
-                //     $prefix='cmn';  
+                //     $prefix='cmn';
                 // }
-                if($value->comp_type == 4){
-                    $p=$prefix.".".$route_name ;
-                }else{
-                    $p=$prefix.".".$route_name."."."index";
+                if ($value->comp_type == 4) {
+                    $p = $prefix.'.'.$route_name;
+                } else {
+                    $p = $prefix.'.'.$route_name.'.'.'index';
                 }
-                
+
                 // dd(!$permissions);
-                return !$permissions->contains($p);
-            }); 
+                return ! $permissions->contains($p);
+            });
             $node->setRelation('children', $filtered);
         }
-        $filtered = $nodes->reject(function  ($value, $key){
-            if($value->children->all()){
+        $filtered = $nodes->reject(function ($value, $key) {
+            if ($value->children->all()) {
                 return false;
-            }else{
+            } else {
                 return true;
             }
-        }); 
+        });
+
         return $filtered;
     }
 }

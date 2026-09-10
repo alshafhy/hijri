@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Web;
 
-use Flash;
-use Illuminate\Http\Request;
-use App\Models\SystemRelease;
-use App\Models\SystemReleasesFeature;
-use App\Http\Controllers\AppBaseController;
 use App\DataTables\SystemReleasesFeatureDataTable;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\CreateSystemReleasesFeatureRequest;
 use App\Http\Requests\UpdateSystemReleasesFeatureRequest;
+use App\Models\SystemRelease;
+use App\Models\SystemReleasesFeature;
+use Flash;
 
 class SystemReleasesFeatureController extends AppBaseController
 {
@@ -18,18 +17,18 @@ class SystemReleasesFeatureController extends AppBaseController
      */
     public function index(SystemReleasesFeatureDataTable $systemReleasesFeatureDataTable)
     {
-    return $systemReleasesFeatureDataTable->render('system_releases_features.index');
+        return $systemReleasesFeatureDataTable->render('system_releases_features.index');
     }
-
 
     /**
      * Show the form for creating a new SystemReleasesFeature.
      */
     public function create()
     {
-        $systemReleases = SystemRelease::pluck('version_number','id')->prepend("اختر","");
+        $systemReleases = SystemRelease::pluck('version_number', 'id')->prepend('اختر', '');
+
         // dd($systemReleases );
-        return view('system_releases_features.create',compact(['systemReleases']));
+        return view('system_releases_features.create', compact(['systemReleases']));
     }
 
     /**
@@ -71,14 +70,14 @@ class SystemReleasesFeatureController extends AppBaseController
     {
         /** @var SystemReleasesFeature $systemReleasesFeature */
         $systemReleasesFeature = SystemReleasesFeature::find($id);
-        $systemReleases = SystemRelease::pluck('version_number','id')->prepend("اختر","");
+        $systemReleases = SystemRelease::pluck('version_number', 'id')->prepend('اختر', '');
         if (empty($systemReleasesFeature)) {
             Flash::error(__('models/systemReleasesFeatures.singular').' '.__('messages.not_found'));
 
             return redirect(route('systemReleasesFeatures.index'));
         }
 
-        return view('system_releases_features.edit',compact(['systemReleasesFeature','systemReleases']));
+        return view('system_releases_features.edit', compact(['systemReleasesFeature', 'systemReleases']));
     }
 
     /**

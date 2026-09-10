@@ -8,11 +8,14 @@ parameters:
         - app/Enums
         - app/Jobs
         - app/Support
-        - app/Http/Controllers/Api/V1
+        - app/Policies
+        - app/Http/Controllers/Api
         - app/Http/Controllers/Web/UserController.php
-        - app/Http/Resources/User
+        - app/Http/Controllers/Web/RoleController.php
         - app/Http/Requests/User
         - app/Http/Requests/Auth
-        - app/Policies
+        - app/Http/Requests/Role
+        - app/Http/Resources
+        - app/Services
     level: 5
     treatPhpDocTypesAsCertain: false

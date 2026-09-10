@@ -25,7 +25,7 @@ class UpdateSystemReleaseRequest extends FormRequest
     public function rules()
     {
         $rules = SystemRelease::$rules;
-        
+
         return $rules;
     }
 }

@@ -18,8 +18,7 @@ final readonly class CreateUserData
         public ?string $password,
         public ?int $branchId,
         public array $roleIds = [],
-    ) {
-    }
+    ) {}
 
     public static function fromRequest(FormRequest $request): self
     {

@@ -7,9 +7,7 @@ use Illuminate\View\View;
 
 class MenuComposer
 {
-    public function __construct(private readonly MenuService $menuService)
-    {
-    }
+    public function __construct(private readonly MenuService $menuService) {}
 
     public function compose(View $view): void
     {

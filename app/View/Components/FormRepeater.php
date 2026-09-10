@@ -2,6 +2,7 @@
 
 namespace App\View\Components;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
 class FormRepeater extends Component
@@ -12,7 +13,6 @@ class FormRepeater extends Component
      * @var string
      */
     public $name;
- 
 
     /**
      * The options array for data-repeater.
@@ -26,7 +26,7 @@ class FormRepeater extends Component
      *
      * @return void
      */
-    public function __construct($name,$options)
+    public function __construct($name, $options)
     {
         $this->name = $name;
         $this->options = $options;
@@ -35,7 +35,7 @@ class FormRepeater extends Component
     /**
      * Get the view / contents that represent the component.
      *
-     * @return \Illuminate\Contracts\View\View|\Closure|string
+     * @return View|\Closure|string
      */
     public function render()
     {

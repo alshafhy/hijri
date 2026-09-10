@@ -12,8 +12,7 @@ final class RegisterUserAction
 {
     public function __construct(
         private readonly CreateUserAction $createUserAction,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{user: User, token: string}

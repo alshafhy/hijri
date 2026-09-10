@@ -11,8 +11,6 @@ class RestrictIp
     /**
      * List of allowed IP addresses.
      * Can be configured in .env file using ALLOWED_IPS variable.
-     *
-     * @var array
      */
     protected array $allowedIps = [];
 
@@ -20,8 +18,8 @@ class RestrictIp
     {
         // Get allowed IPs from environment variable (comma-separated)
         $allowedIps = env('ALLOWED_IPS', '');
-        
-        if (!empty($allowedIps)) {
+
+        if (! empty($allowedIps)) {
             $this->allowedIps = array_map('trim', explode(',', $allowedIps));
         }
     }
@@ -29,7 +27,7 @@ class RestrictIp
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -40,16 +38,16 @@ class RestrictIp
         if (empty($this->allowedIps)) {
             return $next($request);
         }
-        
+
         // Check if the client IP is in the allowed list
-        if (!in_array($clientIp, $this->allowedIps)) {
+        if (! in_array($clientIp, $this->allowedIps)) {
             // Option 1: Return 403 Forbidden
             abort(403, 'Access Denied. Your IP address is not authorized.');
-            
+
             // Option 2: Redirect to a custom page (uncomment if needed)
             // return redirect('/unauthorized');
         }
-        
+
         return $next($request);
     }
 }

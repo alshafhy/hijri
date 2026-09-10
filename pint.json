@@ -1,0 +1,11 @@
+{
+    "preset": "laravel",
+    "exclude": [
+        "vendor.root-from-docker",
+        "vendor-user",
+        "node_modules",
+        "storage",
+        "bootstrap/cache",
+        "public"
+    ]
+}

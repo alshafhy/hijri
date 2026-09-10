@@ -3,18 +3,17 @@
 namespace App\Models;
 
 use App\Traits\Branchable;
-use Illuminate\Support\Str;
-use App\Models\AppBaseModel;
 use App\Traits\CreatedUpdatedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Attachment extends AppBaseModel
 {
-    use HasFactory, SoftDeletes, LogsActivity ,Branchable , CreatedUpdatedBy;
+    use Branchable, CreatedUpdatedBy, HasFactory ,LogsActivity , SoftDeletes;
 
     protected $fillable = [
         'uuid',
@@ -36,8 +35,9 @@ class Attachment extends AppBaseModel
     ];
 
     protected $casts = [
-        'metadata'=>'array'
+        'metadata' => 'array',
     ];
+
     /**
      * Validation rules
      *
@@ -60,27 +60,30 @@ class Attachment extends AppBaseModel
     {
         static::creating(function ($model) {
             $model->uuid = (string) Str::uuid();
-            if(empty($model->created_by)) {
+            if (empty($model->created_by)) {
                 $model->created_by = auth()->id() ?? null;
                 $model->updated_by = auth()->id() ?? null;
             }
         });
         static::updating(function ($model) {
-            if(empty($model->updated_by)) {
+            if (empty($model->updated_by)) {
                 $model->updated_by = auth()->id() ?? null;
             }
         });
     }
 
-    public function activities(){
-        return $this->hasMany(Activity::class,'subject_id','id')->where(['subject_type'=>'App\Models\Attachment']);
+    public function activities()
+    {
+        return $this->hasMany(Activity::class, 'subject_id', 'id')->where(['subject_type' => 'App\Models\Attachment']);
     }
 
-    public function attachmentType(){
-        return $this->hasOne(AttachmentType::class,'id','attachment_type_id');
+    public function attachmentType()
+    {
+        return $this->hasOne(AttachmentType::class, 'id', 'attachment_type_id');
     }
 
-    public function creator(){
-        return $this->hasOne(User::class,'id','created_by')->withDefault(['name'=>'-']);
+    public function creator()
+    {
+        return $this->hasOne(User::class, 'id', 'created_by')->withDefault(['name' => '-']);
     }
 }

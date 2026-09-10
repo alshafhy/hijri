@@ -3,12 +3,13 @@
 namespace App\DataTables;
 
 use App\Models\SystemRelease;
+use Illuminate\Database\Eloquent\Builder;
 use Yajra\DataTables\Html\Column;
-use App\DataTables\AppDataTable;
 
 class SystemReleaseDataTable extends AppDataTable
 {
-    function __construct() {
+    public function __construct()
+    {
         $this->dataTableName = 'systemReleases';
         $this->actionViewBlade = 'system_releases.datatables_actions';
     }
@@ -16,14 +17,12 @@ class SystemReleaseDataTable extends AppDataTable
     /**
      * Get query source of dataTable.
      *
-     * @param \App\Models\SystemRelease $model
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function query(SystemRelease $model)
     {
         return $model->newQuery();
     }
-
 
     /**
      * Get columns.
@@ -33,11 +32,9 @@ class SystemReleaseDataTable extends AppDataTable
     protected function getColumns()
     {
         return [
-            'index'=> $this->getIndexCol(),
+            'index' => $this->getIndexCol(),
             'version_number' => new Column(['title' => __('models/systemReleases.fields.version_number'), 'data' => 'version_number']),
-            'release_date' => new Column(['title' => __('models/systemReleases.fields.release_date'), 'data' => 'release_date'])
+            'release_date' => new Column(['title' => __('models/systemReleases.fields.release_date'), 'data' => 'release_date']),
         ];
     }
-
-    
 }

@@ -3,14 +3,13 @@
 namespace App\DataTables;
 
 use App\Models\SystemComponent;
-use App\DataTables\AppDataTable;
+use Illuminate\Database\Eloquent\Builder;
 use Yajra\DataTables\Html\Column;
 
 class SystemComponentDataTable extends AppDataTable
 {
-
-
-    function __construct() {
+    public function __construct()
+    {
         $this->dataTableName = 'system_components';
         $this->actionViewBlade = 'system_components.datatables_actions';
     }
@@ -18,12 +17,11 @@ class SystemComponentDataTable extends AppDataTable
     /**
      * Get query source of dataTable.
      *
-     * @param \App\Models\SystemComponent $model
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function query(SystemComponent $model)
     {
-        return $model->withAggregate('parentData','comp_ar_label')->newQuery();
+        return $model->withAggregate('parentData', 'comp_ar_label')->newQuery();
     }
 
     /**
@@ -35,12 +33,12 @@ class SystemComponentDataTable extends AppDataTable
     {
         return [
             // 'index'=> $this->getIndexCol(),
-            'id' => new Column(['title' =>__('models/systemComponents.fields.id'), 'data' => 'id']),
+            'id' => new Column(['title' => __('models/systemComponents.fields.id'), 'data' => 'id']),
             'comp_name' => new Column(['title' => __('models/systemComponents.fields.comp_name'), 'data' => 'comp_name']),
             'comp_ar_label' => new Column(['title' => __('models/systemComponents.fields.comp_ar_label'), 'data' => 'comp_ar_label']),
-            //'comp_type' => new Column(['title' => __('models/systemComponents.fields.comp_type'), 'data' => 'comp_type']),
+            // 'comp_type' => new Column(['title' => __('models/systemComponents.fields.comp_type'), 'data' => 'comp_type']),
             'comp_type' => new Column([
-                'title' => __('models/systemComponents.fields.comp_type'), 
+                'title' => __('models/systemComponents.fields.comp_type'),
                 'data' => 'comp_type',
                 'render' => 'function() {
                     if(data == 1){
@@ -53,23 +51,22 @@ class SystemComponentDataTable extends AppDataTable
                         return "تقرير";
                     }
                     
-                }'
+                }',
             ]),
             'route_name' => new Column(['title' => __('models/systemComponents.fields.route_name'), 'data' => 'route_name']),
             'prefix' => new Column(['title' => __('models/systemComponents.fields.prefix'), 'data' => 'prefix']),
             'parent_data_comp_ar_label' => new Column([
-                'title' => __('models/systemComponents.fields.parent_id'), 
+                'title' => __('models/systemComponents.fields.parent_id'),
                 'data' => 'parent_data_comp_ar_label',
-                "defaultContent"=> '',
-                'orderable'      => false,
-                'searchable'     => false,
-                'printable'  =>false
+                'defaultContent' => '',
+                'orderable' => false,
+                'searchable' => false,
+                'printable' => false,
             ]),
-           
+
             // '_lft' => new Column(['title' => __('models/systemComponents.fields._lft'), 'data' => '_lft']),
             // '_rgt' => new Column(['title' => __('models/systemComponents.fields._rgt'), 'data' => '_rgt'])
-            
+
         ];
     }
-
 }

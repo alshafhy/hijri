@@ -7,9 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PermissionObserver
 {
-    public function __construct(private readonly MenuService $menuService)
-    {
-    }
+    public function __construct(private readonly MenuService $menuService) {}
 
     public function saved(Model $model): void
     {

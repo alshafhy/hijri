@@ -6,7 +6,6 @@ use App\Models\SystemComponent;
 
 class NodeUtil
 {
-
     // private function buildNodesFromObjects()
     // {
     //     SystemComponent::query()->delete();
@@ -53,8 +52,8 @@ class NodeUtil
     private function traverse($categories, $prefix = '-')
     {
         foreach ($categories as $category) {
-            echo "<br>" . $prefix . ' ' . $category->name;
-            $this->traverse($category->children, $prefix . '-');
+            echo '<br>'.$prefix.' '.$category->name;
+            $this->traverse($category->children, $prefix.'-');
         }
     }
 }

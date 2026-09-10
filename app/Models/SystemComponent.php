@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Route;
 use Kalnoy\Nestedset\NodeTrait;
 
 class SystemComponent extends AppBaseModel
 {
-    use SoftDeletes, NodeTrait;
+    use NodeTrait, SoftDeletes;
 
     public $table = 'system_components';
 
@@ -31,14 +32,14 @@ class SystemComponent extends AppBaseModel
     ];
 
     protected $casts = [
-        'id'         => 'integer',
-        '_lft'       => 'integer',
-        '_rgt'       => 'integer',
-        'comp_type'  => 'integer',
-        'parent_id'  => 'integer',
+        'id' => 'integer',
+        '_lft' => 'integer',
+        '_rgt' => 'integer',
+        'comp_type' => 'integer',
+        'parent_id' => 'integer',
         'sort_order' => 'integer',
-        'is_active'  => 'boolean',
-        'config'     => 'array',
+        'is_active' => 'boolean',
+        'config' => 'array',
         'deleted_at' => 'datetime',
     ];
 
@@ -71,10 +72,10 @@ class SystemComponent extends AppBaseModel
             return false;
         }
 
-        return request()->routeIs($this->route_name . '*');
+        return request()->routeIs($this->route_name.'*');
     }
 
-    public function parentData(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function parentData(): BelongsTo
     {
         return $this->belongsTo(SystemComponent::class, 'parent_id', 'id');
     }
@@ -103,7 +104,7 @@ class SystemComponent extends AppBaseModel
     {
         $node = self::find($id);
 
-        if (!$node) {
+        if (! $node) {
             return null;
         }
 

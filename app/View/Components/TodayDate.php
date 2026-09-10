@@ -3,6 +3,7 @@
 namespace App\View\Components;
 
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
 class TodayDate extends Component
@@ -20,11 +21,12 @@ class TodayDate extends Component
     /**
      * Get the view / contents that represent the component.
      *
-     * @return \Illuminate\Contracts\View\View|\Closure|string
+     * @return View|\Closure|string
      */
     public function render()
     {
         $todayDate = $this->getTodayDate();
+
         return view('components.today-date', compact('todayDate'));
     }
 
@@ -42,6 +44,7 @@ class TodayDate extends Component
         // $today .= $date->translatedFormat('d F Y');
         // $today .= ' ميلادي ';
         $today = Carbon::today()->locale('ar');
-        return $today;//'25 جمادى الأول 1439 هجري - الخميس 10 فبراير 2018 ميلادي';
+
+        return $today; // '25 جمادى الأول 1439 هجري - الخميس 10 فبراير 2018 ميلادي';
     }
 }

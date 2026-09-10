@@ -25,7 +25,7 @@ class UpdateSystemReleasesFeatureRequest extends FormRequest
     public function rules()
     {
         $rules = SystemReleasesFeature::$rules;
-        
+
         return $rules;
     }
 }

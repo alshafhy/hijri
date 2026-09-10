@@ -1,10 +1,11 @@
 <?php
+
 return [
     'path' => 'public/:model/:id/',
     'accept' => 'image/*,application/pdf',
-    'route'=>[
+    'route' => [
         'middleware' => 'web',
-        'prefix'=>'attachment',
+        'prefix' => 'attachment',
     ],
     'options' => [
         'display' => [
@@ -20,13 +21,13 @@ return [
             'extension' => true,
             'category' => true,
             'creator' => true,
-            'description' => false
+            'description' => false,
         ],
-        'action'=> [
+        'action' => [
             'view' => true,
             'download' => true,
             'delete' => true,
-        ]
+        ],
     ],
 
 ];

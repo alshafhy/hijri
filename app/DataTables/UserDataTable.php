@@ -3,14 +3,13 @@
 namespace App\DataTables;
 
 use App\Models\User;
-use App\DataTables\AppDataTable;
+use Illuminate\Database\Eloquent\Builder;
 use Yajra\DataTables\Html\Column;
 
 class UserDataTable extends AppDataTable
 {
-
-
-    function __construct() {
+    public function __construct()
+    {
         $this->dataTableName = 'users';
         $this->actionViewBlade = 'users.datatables_actions';
     }
@@ -18,8 +17,7 @@ class UserDataTable extends AppDataTable
     /**
      * Get query source of dataTable.
      *
-     * @param \App\Models\User $model
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function query(User $model)
     {
@@ -36,8 +34,7 @@ class UserDataTable extends AppDataTable
         return [
             'name' => new Column(['title' => __('models/users.fields.name'), 'data' => 'name']),
             'email' => new Column(['title' => __('models/users.fields.email'), 'data' => 'email']),
-            'username' => new Column(['title' => __('models/users.fields.username'), 'data' => 'username'])
+            'username' => new Column(['title' => __('models/users.fields.username'), 'data' => 'username']),
         ];
     }
-
 }

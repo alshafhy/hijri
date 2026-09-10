@@ -11,8 +11,7 @@ final readonly class ChangePasswordData
     public function __construct(
         public string $oldPassword,
         public string $newPassword,
-    ) {
-    }
+    ) {}
 
     public static function fromRequest(FormRequest $request): self
     {

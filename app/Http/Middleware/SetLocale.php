@@ -15,7 +15,7 @@ class SetLocale
     {
         $locale = session('locale', config('app.locale'));
 
-        if (!in_array($locale, ['ar', 'en'])) {
+        if (! in_array($locale, ['ar', 'en'])) {
             $locale = 'ar';
         }
 
@@ -25,7 +25,7 @@ class SetLocale
         $dir = $locale === 'ar' ? 'rtl' : 'ltr';
 
         session([
-            'locale'    => $locale,
+            'locale' => $locale,
             'direction' => $dir,
         ]);
 
