@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\UserController;
+use App\Http\Controllers\Web\ValuationRequestController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -46,5 +47,15 @@ Route::middleware('auth')->group(function (): void {
         Route::get('roles/{role}/permissions/{objectId?}', [RoleController::class, 'getPermissionsView'])
             ->name('roles.permissions')
             ->middleware('permission:role.edit');
+
+        Route::get('valuation-requests', [ValuationRequestController::class, 'index'])
+            ->name('valuation-requests.index')
+            ->middleware('permission:valuation_request.view');
+        Route::get('valuation-requests/{valuationRequest}', [ValuationRequestController::class, 'show'])
+            ->name('valuation-requests.show')
+            ->middleware('permission:valuation_request.view');
+        Route::post('valuation-requests/{valuationRequest}/official-report', [ValuationRequestController::class, 'uploadOfficialReport'])
+            ->name('valuation-requests.official-report')
+            ->middleware('permission:valuation_request.qima_upload');
     });
 });
