@@ -35,7 +35,7 @@ class Helper
             'contentLayout' => 'default',
             'blankPage' => false,
             'defaultLanguage' => 'ar',
-            'direction' => env('APP_DIRECTION', (env('MIX_CONTENT_DIRECTION') ?: 'rtl')),
+            'direction' => env('APP_DIRECTION', 'rtl'),
         ];
 
         $data = array_merge($defaultData, config('custom.custom', []));

@@ -32,6 +32,31 @@ export default defineConfig({
             },
         },
     },
+    build: {
+        manifest: true,
+        sourcemap: false,
+        cssCodeSplit: true,
+        rollupOptions: {
+            output: {
+                entryFileNames: 'assets/[name]-[hash].js',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash][extname]',
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('bootstrap') || id.includes('@popperjs')) {
+                            return 'vendor-bootstrap';
+                        }
+                        if (id.includes('jquery')) {
+                            return 'vendor-jquery';
+                        }
+                        if (id.includes('axios')) {
+                            return 'vendor-axios';
+                        }
+
+                        return 'vendor';
+                    }
+                },
+            },
+        },
+    },
 });
-
-

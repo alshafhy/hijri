@@ -16,7 +16,7 @@ return [
         'contentLayout' => 'default', // options[String]: default, content-left-sidebar, content-right-sidebar, content-detached-left-sidebar, content-detached-right-sidebar (warning:use this option if your whole project with sidenav Otherwise override this option as page level )
         'defaultLanguage' => 'ar',    //en(default)/de/pt/fr here are four optional language provided in theme
         'blankPage' => false, // options[Boolean]: true, false(default) (warning:only make true if your whole project without navabr and sidebar otherwise override option page wise)
-        'direction' => env('APP_DIRECTION', env('MIX_CONTENT_DIRECTION', 'rtl')), // Options[String]: ltr(default), rtl
+        'direction' => env('APP_DIRECTION', 'rtl'), // Options[String]: ltr(default), rtl
         'showDashboard' => env('SHOW_DASHBOARD', true), // Options[String]: ltr(default), rtl
     ],
 ];

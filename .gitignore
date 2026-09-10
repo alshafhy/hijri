@@ -1,5 +1,6 @@
 /node_modules
 /public/hot
+/public/build
 /public/data
 /public/fonts
 /public/images
@@ -9,6 +10,9 @@
 /public/vendors
 /storage/*.key
 /vendor
+/vendor.root-from-docker
+/vendor-user
+/database/*.sqlite
 .env
 .env.backup
 .phpunit.result.cache
@@ -19,7 +23,7 @@ yarn-error.log
 /vuexy-shell-scripts
 supervisord.log
 supervisord.pid
-
+.claude/
 _ide_helper.php
 _ide_helper_models.php
 .phpstorm.meta.php
