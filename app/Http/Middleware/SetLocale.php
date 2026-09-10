@@ -22,17 +22,29 @@ class SetLocale
         App::setLocale($locale);
         Carbon::setLocale($locale);
 
-        $dir = $locale === 'ar' ? 'rtl' : 'ltr';
+        $dir = session('direction');
+        if (! in_array($dir, ['rtl', 'ltr'], true)) {
+            $dir = $locale === 'ar' ? 'rtl' : 'ltr';
+        }
+
+        // Keep language and direction aligned when locale alone changed.
+        if ($locale === 'ar') {
+            $dir = 'rtl';
+        } elseif ($locale === 'en') {
+            $dir = 'ltr';
+        }
 
         session([
             'locale' => $locale,
             'direction' => $dir,
         ]);
 
+        config(['custom.custom.direction' => $dir]);
+
         View::share('currentLocale', $locale);
         View::share('currentDir', $dir);
         View::share('isRtl', $dir === 'rtl');
-        View::share('dir', $dir); // Backward compatibility
+        View::share('dir', $dir);
 
         return $next($request);
     }

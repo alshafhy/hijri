@@ -1,21 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 
 class LanguageController extends Controller
 {
-    //
-    public function swap($locale)
+    public function swap(string $locale): RedirectResponse
     {
-        // available language in template array
-        $availLocale = ['ar' => 'ar', 'en' => 'en', 'fr' => 'fr', 'de' => 'de', 'pt' => 'pt'];
-        // check for existing language
-        if (array_key_exists($locale, $availLocale)) {
-            session()->put('locale', $locale);
-        }
+        $availLocale = ['ar' => 'ar', 'en' => 'en'];
 
-        return redirect()->back();
+        abort_if(! array_key_exists($locale, $availLocale), 404);
+
+        $direction = $locale === 'ar' ? 'rtl' : 'ltr';
+
+        session([
+            'locale' => $locale,
+            'direction' => $direction,
+        ]);
+
+        return redirect()->back()->withHeaders([
+            'Cache-Control' => 'no-store, no-cache',
+        ]);
     }
 }

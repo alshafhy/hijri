@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
@@ -10,17 +12,17 @@ class LocaleController extends Controller
 {
     public function switch(Request $request, string $locale): RedirectResponse
     {
-        // Validate
-        abort_if(! in_array($locale, ['ar', 'en']), 404);
+        abort_if(! in_array($locale, ['ar', 'en'], true), 404);
 
-        // Derive direction
         $direction = $locale === 'ar' ? 'rtl' : 'ltr';
 
-        // Persist in session
         session([
             'locale' => $locale,
             'direction' => $direction,
         ]);
+
+        // Keep config helper consumers in sync for this request/session.
+        config(['custom.custom.direction' => $direction]);
 
         return redirect()->back()->withHeaders([
             'Cache-Control' => 'no-store, no-cache',

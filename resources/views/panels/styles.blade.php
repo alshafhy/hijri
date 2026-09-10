@@ -25,13 +25,11 @@
   <link rel="stylesheet" href="{{ asset('css-rtl/base/themes/bordered-layout.rtl.css') }}" />
   <link rel="stylesheet" href="{{ asset('css-rtl/base/themes/semi-dark-layout.rtl.css') }}" />
 @else
-  @vite(['resources/scss/core.scss'])
+  <link rel="stylesheet" href="{{ asset('css/core.css') }}" />
   <link rel="stylesheet" href="{{ asset('css/base/themes/dark-layout.css') }}" />
   <link rel="stylesheet" href="{{ asset('css/base/themes/bordered-layout.css') }}" />
   <link rel="stylesheet" href="{{ asset('css/base/themes/semi-dark-layout.css') }}" />
 @endif
-
-@php $configData = Helper::applClasses(); @endphp
 
 <!-- BEGIN: Page CSS-->
 @if ($configData['mainLayoutType'] === 'horizontal')
@@ -52,41 +50,16 @@
 {{-- Page Styles --}}
 @yield('page-style')
 
-
 <!-- laravel style -->
 @if ($configData['direction'] === 'rtl')
   <link rel="stylesheet" href="{{ asset('css-rtl/overrides.rtl.css') }}" />
 @else
-  @vite(['resources/scss/overrides.scss'])
+  <link rel="stylesheet" href="{{ asset('css/overrides.css') }}" />
 @endif
 
 <!-- BEGIN: Custom CSS-->
 @if ($configData['direction'] === 'rtl')
   <link rel="stylesheet" href="{{ asset('css-rtl/style.rtl.css') }}" />
-  <style>
-      [dir='rtl'] .main-menu {
-          right: 0 !important;
-          left: auto !important;
-      }
-      [dir='rtl'] .vertical-layout.vertical-menu-modern.menu-expanded .app-content,
-      [dir='rtl'] .vertical-layout.vertical-menu-modern.menu-expanded .footer {
-          margin-left: 0 !important;
-          margin-right: 260px !important;
-      }
-      [dir='rtl'] .vertical-layout.vertical-menu-modern.menu-collapsed .app-content,
-      [dir='rtl'] .vertical-layout.vertical-menu-modern.menu-collapsed .footer {
-          margin-left: 0 !important;
-          margin-right: 80px !important;
-      }
-      [dir='rtl'] .header-navbar {
-          right: 260px !important;
-          left: 0 !important;
-      }
-      [dir='rtl'] .vertical-layout.vertical-menu-modern.menu-collapsed .header-navbar {
-          right: 80px !important;
-          left: 0 !important;
-      }
-  </style>
 @else
-  @vite(['resources/assets/scss/style.scss'])
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
 @endif

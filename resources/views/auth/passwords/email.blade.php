@@ -10,7 +10,7 @@
 
 @section('content')
 
-            <div class="card" style="direction: rtl">
+            <div class="card">
                 <div class="card-header"><b>{{ __('Reset Password') }}</b></div>
 
                 <div class="card-body">
