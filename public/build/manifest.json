@@ -1,0 +1,28 @@
+{
+  "resources/assets/scss/style-rtl.scss": {
+    "file": "assets/style-rtl-3NGOYkrU.css",
+    "src": "resources/assets/scss/style-rtl.scss",
+    "isEntry": true
+  },
+  "resources/assets/scss/style.scss": {
+    "file": "assets/style-DL6JwF56.css",
+    "src": "resources/assets/scss/style.scss",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-BPSQMIgG.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/scss/core.scss": {
+    "file": "assets/core-BL_Cl_Dc.css",
+    "src": "resources/scss/core.scss",
+    "isEntry": true
+  },
+  "resources/scss/overrides.scss": {
+    "file": "assets/overrides-DFkWY5fA.css",
+    "src": "resources/scss/overrides.scss",
+    "isEntry": true
+  }
+}

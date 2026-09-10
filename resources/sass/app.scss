@@ -1,0 +1,247 @@
+// Fonts
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+// Variables
+// Variables
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+@import '~bootstrap/scss/mixins';
+
+// Bootstrap
+@import '~bootstrap/scss/bootstrap';
+
+// Vuexy Core & Overrides
+@import '@/scss/core.scss';
+@import '@/scss/overrides.scss';
+@import '@/assets/scss/style.scss';
+
+// ─── RTL / LTR Direction Switching (NUCLEAR) ───────────────────────
+
+.sidebar {
+  position: fixed !important;
+  top: 0;
+  height: 100vh;
+  width: var(--sidebar-width, 260px);
+  z-index: 1040;
+
+  /* Default: right side for RTL */
+  right: 0;
+  left: auto;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: none;
+}
+
+/* Override to LEFT only when LTR */
+html[dir="ltr"] .sidebar {
+  left: 0 !important;
+  right: auto !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: none;
+}
+
+/* Main content: default RTL offset */
+.main-wrapper, 
+.main-content,
+.app-content {
+  margin-right: var(--sidebar-width, 260px) !important;
+  margin-left: 0 !important;
+}
+
+/* Override for LTR */
+html[dir="ltr"] .main-wrapper,
+html[dir="ltr"] .main-content,
+html[dir="ltr"] .app-content {
+  margin-left: var(--sidebar-width, 260px) !important;
+  margin-right: 0 !important;
+}
+
+/* Collapsed state */
+body[data-sidebar="collapsed"] .main-wrapper,
+body[data-sidebar="collapsed"] .main-content,
+body[data-sidebar="collapsed"] .app-content,
+html.sidebar-collapsed .main-content {
+  margin-right: var(--sidebar-collapsed-width, 80px) !important;
+  margin-left: 0 !important;
+}
+
+html[dir="ltr"] body[data-sidebar="collapsed"] .main-wrapper,
+html[dir="ltr"] body[data-sidebar="collapsed"] .main-content,
+html[dir="ltr"] body[data-sidebar="collapsed"] .app-content,
+html[dir="ltr"].sidebar-collapsed .main-content {
+  margin-left: var(--sidebar-collapsed-width, 80px) !important;
+  margin-right: 0 !important;
+}
+
+/* Mobile: no offset either direction */
+@media (max-width: 992px) {
+  .sidebar {
+    right: 0 !important;
+    left: auto !important;
+    transform: translateX(100%);
+  }
+  
+  html[dir="ltr"] .sidebar {
+    left: 0 !important;
+    right: auto !important;
+    transform: translateX(-100%) !important;
+  }
+  
+  .main-wrapper,
+  .main-content,
+  .app-content,
+  html[dir="ltr"] .main-wrapper,
+  html[dir="ltr"] .main-content,
+  html[dir="ltr"] .app-content {
+    margin: 0 !important;
+  }
+  
+  body.sidebar-open .sidebar {
+    transform: translateX(0) !important;
+  }
+}
+
+// Topbar direction
+html.rtl .topbar .dropdown-menu {
+    right: auto;
+    left: 0;
+}
+
+html.ltr .topbar .dropdown-menu {
+    left: auto;
+    right: 0;
+}
+
+// Bootstrap icon flip for chevrons in RTL
+html.rtl .collapse-arrow {
+    transform: rotate(0deg);
+}
+
+html.rtl .collapse-arrow.rotated {
+    transform: rotate(-90deg);
+}
+
+html.ltr .collapse-arrow {
+    transform: rotate(0deg);
+}
+
+// Active badge direction badge colors
+.badge.rtl-badge  { background-color: #6c63ff !important; }
+.badge.ltr-badge  { background-color: #6c757d !important; }
+
+/* ── NUCLEAR FIX: Force Vuexy sidebar to RIGHT in RTL ── */
+html[dir="rtl"] .main-menu {
+    left: auto !important;
+    right: 0 !important;
+}
+
+html[dir="ltr"] .main-menu {
+    right: auto !important;
+    left: 0 !important;
+}
+
+/* Fix content margin */
+html[dir="rtl"] .content {
+    margin-right: 260px !important;
+    margin-left: 0 !important;
+}
+
+html[dir="ltr"] .content {
+    margin-left: 260px !important;
+    margin-right: 0 !important;
+}
+
+/* Fix collapsed state */
+html[dir="rtl"] .menu-collapsed .main-menu {
+    right: 0 !important;
+    left: auto !important;
+}
+
+html[dir="rtl"] .menu-collapsed .content {
+    margin-right: 80px !important;
+    margin-left: 0 !important;
+}
+
+/* Fix mobile hidden state */
+@media (max-width: 767.98px) {
+    html[dir="rtl"] .main-menu {
+        right: auto !important;
+        left: auto !important;
+        transform: translate3d(240px, 0, 0) !important;
+    }
+    html[dir="rtl"] .menu-open .main-menu {
+        transform: translateZ(0) !important;
+    }
+}
+
+/* ─── RTL EXPANDED MENU FIX ─── */
+
+/* Force menu EXPANDED by default in RTL */
+html[dir="rtl"] .main-menu {
+    left: auto !important;
+    right: 0 !important;
+    width: 260px !important;
+    transform: translateZ(0) !important;
+}
+
+/* Show menu text — remove collapsed state */
+html[dir="rtl"] body.menu-collapsed .main-menu,
+html[dir="rtl"] body:not(.menu-collapsed) .main-menu {
+    left: auto !important;
+    right: 0 !important;
+    width: 260px !important;
+}
+
+/* Hide the collapsed icon-only mode */
+html[dir="rtl"] .main-menu .navbar-header .brand-text,
+html[dir="rtl"] .main-menu ul li a span {
+    display: inline !important;
+    opacity: 1 !important;
+}
+
+/* ─── RTL NAVBAR POSITIONING FIX ─── */
+/* core.css sets left:260px; right:0 for LTR. For RTL (right-side sidebar) we flip this. */
+
+html[dir="rtl"] .header-navbar.fixed-top,
+html[dir="rtl"] .header-navbar.floating-nav {
+    left: 0 !important;
+    right: 260px !important;
+}
+
+html[dir="rtl"] .header-navbar.floating-nav {
+    width: calc(100vw - (100vw - 100%) - calc(2rem * 2) - 260px) !important;
+}
+
+html[dir="rtl"] .header-navbar.navbar-static-top {
+    left: 0 !important;
+    right: 260px !important;
+    width: calc(100vw - (100vw - 100%) - 260px) !important;
+}
+
+/* RTL collapsed state navbar (sidebar shrinks to 80px) */
+html[dir="rtl"] .vertical-layout.vertical-menu-modern.menu-collapsed .header-navbar.fixed-top,
+html[dir="rtl"] .vertical-layout.vertical-menu-modern.menu-collapsed .header-navbar.floating-nav {
+    left: 0 !important;
+    right: 80px !important;
+}
+
+html[dir="rtl"] .vertical-layout.vertical-menu-modern.menu-collapsed .header-navbar.floating-nav {
+    width: calc(100vw - (100vw - 100%) - 4.4rem - 74px) !important;
+}
+
+html[dir="rtl"] .vertical-layout.vertical-menu-modern.menu-collapsed .header-navbar.navbar-static-top {
+    left: 0 !important;
+    right: 74px !important;
+    width: calc(100vw - (100vw - 100%) - 74px) !important;
+}
+
+/* RTL footer margins */
+html[dir="rtl"] .vertical-layout.vertical-menu-modern.menu-expanded .footer {
+    margin-left: 0 !important;
+    margin-right: 260px !important;
+}
+
+html[dir="rtl"] .vertical-layout.vertical-menu-modern.menu-collapsed .footer {
+    margin-left: 0 !important;
+    margin-right: 80px !important;
+}
+
