@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Auth\LoginUserAction;
 use App\Actions\Auth\RegisterUserAction;
@@ -10,7 +10,8 @@ use App\DTOs\User\CreateUserData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
-use App\Http\Resources\UserResource;
+use App\Http\Resources\User\UserResource;
+use App\Support\Api\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,41 +21,45 @@ class AuthController extends Controller
     {
         $result = $action(CreateUserData::fromRequest($request));
 
-        return response()->json([
-            'message' => __('auth.registered'),
-            'user' => new UserResource($result['user']->loadMissing('roles')),
+        return ApiResponse::success([
+            'user' => (new UserResource($result['user']->loadMissing('roles')))->resolve(),
             'access_token' => $result['token'],
             'token_type' => (string) config('users.token_type'),
+        ], [
+            'message' => __('auth.registered'),
         ], 201);
     }
 
     public function login(LoginRequest $request, LoginUserAction $action): JsonResponse
     {
+        $login = (string) ($request->input('username') ?: $request->input('email'));
+
         $result = $action(
-            (string) $request->input('email'),
+            $login,
             (string) $request->input('password'),
         );
 
-        return response()->json([
-            'message' => __('auth.login_successful'),
-            'user' => new UserResource($result['user']->loadMissing('roles')),
+        return ApiResponse::success([
+            'user' => (new UserResource($result['user']->loadMissing('roles')))->resolve(),
             'access_token' => $result['token'],
             'token_type' => (string) config('users.token_type'),
+        ], [
+            'message' => __('auth.login_successful'),
         ]);
     }
 
     public function profile(Request $request): JsonResponse
     {
-        return response()->json([
-            'user' => new UserResource($request->user()->loadMissing('roles')),
-        ]);
+        return ApiResponse::resource(
+            new UserResource($request->user()->loadMissing('roles')),
+        );
     }
 
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json([
+        return ApiResponse::success(null, [
             'message' => __('auth.logged_out'),
         ]);
     }
@@ -63,7 +68,7 @@ class AuthController extends Controller
     {
         $request->user()->tokens()->delete();
 
-        return response()->json([
+        return ApiResponse::success(null, [
             'message' => __('auth.logged_out_all'),
         ]);
     }

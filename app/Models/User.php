@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -58,7 +59,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
-            'status' => 'integer',
+            'status' => UserStatus::class,
             'pass_need_to_be_changed' => 'integer',
             'branch_id' => 'integer',
         ];
@@ -90,7 +91,7 @@ class User extends Authenticatable
             return $query;
         }
 
-        $like = '%' . trim($term) . '%';
+        $like = '%'.trim($term).'%';
 
         return $query->where(function (Builder $builder) use ($like): void {
             $builder

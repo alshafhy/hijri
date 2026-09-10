@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\User;
 
 use App\DTOs\User\CreateUserData;
+use App\Enums\UserStatus;
+use App\Jobs\User\RefreshUserMenuCacheJob;
 use App\Models\User;
 use App\Utils\PermissionsUtil;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +18,7 @@ final class CreateUserAction
     {
         return DB::transaction(function () use ($data): User {
             $plainPassword = $data->password
-                ?? ($data->username . (string) config('users.default_password_suffix'));
+                ?? ($data->username.(string) config('users.default_password_suffix'));
 
             $user = User::query()->create([
                 'name' => $data->name,
@@ -25,7 +27,7 @@ final class CreateUserAction
                 'password' => Hash::make($plainPassword),
                 'branch_id' => $data->branchId ?? (int) config('users.default_branch_id'),
                 'pass_need_to_be_changed' => $data->password === null ? 1 : 0,
-                'status' => (int) config('users.status.active'),
+                'status' => UserStatus::Active->value,
             ]);
 
             if ($data->roleIds !== []) {
@@ -33,7 +35,11 @@ final class CreateUserAction
                 PermissionsUtil::clearPermissionCash();
             }
 
-            return $user->fresh(['roles', 'branch']) ?? $user;
+            $fresh = $user->fresh(['roles', 'branch']) ?? $user;
+
+            RefreshUserMenuCacheJob::dispatch($fresh->id);
+
+            return $fresh;
         });
     }
 }

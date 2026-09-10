@@ -15,16 +15,18 @@ final class LoginUserAction
      *
      * @throws ValidationException
      */
-    public function __invoke(string $email, string $password): array
+    public function __invoke(string $login, string $password): array
     {
-        if (! Auth::attempt(['email' => $email, 'password' => $password])) {
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        if (! Auth::attempt([$field => $login, 'password' => $password])) {
             throw ValidationException::withMessages([
-                'email' => [__('auth.invalid_credentials')],
+                $field => [__('auth.invalid_credentials')],
             ]);
         }
 
         /** @var User $user */
-        $user = User::query()->where('email', $email)->firstOrFail();
+        $user = User::query()->where($field, $login)->firstOrFail();
 
         $token = $user->createToken((string) config('users.api_token_name'))->plainTextToken;
 

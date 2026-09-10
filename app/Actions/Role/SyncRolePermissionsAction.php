@@ -36,9 +36,12 @@ final class SyncRolePermissionsAction
 
         $objectsPermIds = Permission::query()
             ->whereIn('system_component_id', $childNodes)
-            ->pluck('id');
+            ->pluck('id')
+            ->all();
 
-        $role->revokePermissionTo($objectsPermIds);
+        if ($objectsPermIds !== []) {
+            $role->revokePermissionTo($objectsPermIds);
+        }
 
         if ($permissionIds !== null && $permissionIds !== []) {
             $role->givePermissionTo($permissionIds);

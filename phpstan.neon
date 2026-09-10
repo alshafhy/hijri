@@ -1,0 +1,18 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/Actions
+        - app/DTOs
+        - app/Enums
+        - app/Jobs
+        - app/Support
+        - app/Http/Controllers/Api/V1
+        - app/Http/Controllers/Web/UserController.php
+        - app/Http/Resources/User
+        - app/Http/Requests/User
+        - app/Http/Requests/Auth
+        - app/Policies
+    level: 5
+    treatPhpDocTypesAsCertain: false

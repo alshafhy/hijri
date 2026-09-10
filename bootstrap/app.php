@@ -1,8 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Http\Middleware\ACL;
+use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\CheckPassChange;
+use App\Http\Middleware\SetLocale;
+use App\Support\Api\ApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -10,46 +24,49 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function (): void {
+            //
+        },
     )
-    ->withMiddleware(function (Middleware $middleware) {
-        // Web Middleware Group
+    ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            \App\Http\Middleware\SetLocale::class,
-            \App\Http\Middleware\CheckPassChange::class,
+            SetLocale::class,
+            CheckPassChange::class,
         ]);
 
-        // API Middleware Group
         $middleware->api(prepend: [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            EnsureFrontendRequestsAreStateful::class,
         ]);
 
-        $middleware->throttleApi();
+        $middleware->throttleApi('api');
 
-        // Middleware Aliases
         $middleware->alias([
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'acl' => \App\Http\Middleware\ACL::class,
-            'auth' => \App\Http\Middleware\Authenticate::class, // Preserving custom Authenticate if it exists
-        ]);
-
-        // Priority Middleware
-        $middleware->priority([
-            \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class,
-            \Illuminate\Routing\Middleware\ThrottleRequestsWithRedis::class,
-            \Illuminate\Session\Middleware\AuthenticateSession::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \Illuminate\Auth\Middleware\Authorize::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'acl' => ACL::class,
+            'auth' => Authenticate::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions) {
-        // Add custom exception handling if needed
+    ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (Throwable $e, Request $request) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
+                return null;
+            }
+
+            if ($e instanceof ValidationException) {
+                return ApiResponse::error(
+                    __('validation.failed') !== 'validation.failed' ? __('validation.failed') : 'Validation failed.',
+                    $e->errors(),
+                    422,
+                );
+            }
+
+            $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
+            $message = $status === 500 && ! config('app.debug')
+                ? 'Server Error'
+                : ($e->getMessage() !== '' ? $e->getMessage() : 'Error');
+
+            return ApiResponse::error($message, [], $status);
+        });
     })->create();

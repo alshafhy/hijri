@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\AppBaseController;
 use App\Actions\Role\SyncRolePermissionsAction;
 use App\DataTables\RoleDataTable;
-use App\Http\Requests\CreateRoleRequest;
-use App\Http\Requests\UpdateRoleRequest;
+use App\Http\Requests\Role\StoreRoleRequest;
+use App\Http\Requests\Role\UpdateRoleRequest;
 use App\Models\SystemComponent;
 use App\Overrides\Spatie\Permission;
 use App\Overrides\Spatie\Role;
@@ -32,7 +33,7 @@ class RoleController extends AppBaseController
         return view('roles.create');
     }
 
-    public function store(CreateRoleRequest $request): RedirectResponse
+    public function store(StoreRoleRequest $request): RedirectResponse
     {
         $this->authorize('create', Role::class);
 

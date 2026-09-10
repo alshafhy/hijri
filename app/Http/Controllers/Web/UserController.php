@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\AppBaseController;
 use App\Actions\User\ChangePasswordAction;
 use App\Actions\User\CreateUserAction;
 use App\Actions\User\DeleteUserAction;

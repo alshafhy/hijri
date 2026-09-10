@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 
 class NotificationController extends AppBaseController

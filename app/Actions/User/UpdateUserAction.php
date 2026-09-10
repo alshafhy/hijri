@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\User;
 
 use App\DTOs\User\UpdateUserData;
+use App\Jobs\User\RefreshUserMenuCacheJob;
 use App\Models\User;
 use App\Utils\PermissionsUtil;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,11 @@ final class UpdateUserAction
             $user->syncRoles($data->roleIds);
             PermissionsUtil::clearPermissionCash();
 
-            return $user->fresh(['roles', 'branch']) ?? $user;
+            $fresh = $user->fresh(['roles', 'branch']) ?? $user;
+
+            RefreshUserMenuCacheJob::dispatch($fresh->id);
+
+            return $fresh;
         });
     }
 }

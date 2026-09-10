@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\LanguageController;
-use App\Http\Controllers\LocaleController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\Web\HomeController;
+use App\Http\Controllers\Web\LanguageController;
+use App\Http\Controllers\Web\LocaleController;
+use App\Http\Controllers\Web\NotificationController;
+use App\Http\Controllers\Web\RoleController;
+use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
