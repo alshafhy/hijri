@@ -1,38 +1,66 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\View\Components;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
 class FormToolbar extends Component
 {
-    
-    public $actionname;
-    public $screenname;
-    public $key;
+    public string $indexRoute;
 
-    /**
-     * Create a new component instance.
-     *
-     * @return void
-     */
-    public function __construct($actionname, $screenname,$key="")
-    {
-        $this->actionname=$actionname;
-        //TODO: need another better way
-        if($screenname == "workOrdersGeneral"){
-            $screenname= "workOrders";
-        }
-        $this->screenname=$screenname;
-        $this->key=$key;
+    public string $createRoute;
+
+    public string $showRoute;
+
+    public string $editRoute;
+
+    public string $destroyRoute;
+
+    public ?string $createPermission;
+
+    public ?string $editPermission;
+
+    public ?string $viewPermission;
+
+    public ?string $deletePermission;
+
+    public function __construct(
+        public string $actionname,
+        public string $screenname,
+        public string|int $key = '',
+    ) {
+        $this->indexRoute = 'dashboard.'.$screenname.'.index';
+        $this->createRoute = 'dashboard.'.$screenname.'.create';
+        $this->showRoute = 'dashboard.'.$screenname.'.show';
+        $this->editRoute = 'dashboard.'.$screenname.'.edit';
+        $this->destroyRoute = 'dashboard.'.$screenname.'.destroy';
+
+        $this->createPermission = match ($screenname) {
+            'users' => 'user.create',
+            'roles' => 'role.create',
+            default => null,
+        };
+        $this->editPermission = match ($screenname) {
+            'users' => 'user.edit',
+            'roles' => 'role.edit',
+            default => null,
+        };
+        $this->viewPermission = match ($screenname) {
+            'users' => 'user.view',
+            'roles' => 'role.view',
+            default => null,
+        };
+        $this->deletePermission = match ($screenname) {
+            'users' => 'user.delete',
+            'roles' => 'role.delete',
+            default => null,
+        };
     }
 
-    /**
-     * Get the view / contents that represent the component.
-     *
-     * @return \Illuminate\Contracts\View\View|\Closure|string
-     */
-    public function render()
+    public function render(): View
     {
         return view('components.form-toolbar');
     }

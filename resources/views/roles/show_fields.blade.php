@@ -1,18 +1,14 @@
-<!-- Id Field -->
 <div class="col-sm-12">
-    {!! Form::label('id', __('models/roles.fields.id').':') !!}
+    <label for="id">{{ __('models/roles.fields.id') }}:</label>
     <p>{{ $role->id }}</p>
 </div>
 
-<!-- Name Field -->
 <div class="col-sm-12">
-    {!! Form::label('name', __('models/roles.fields.name').':') !!}
+    <label for="name">{{ __('models/roles.fields.name') }}:</label>
     <p>{{ $role->name }}</p>
 </div>
 
-<!-- Ar Name Field -->
 <div class="col-sm-12">
-    {!! Form::label('ar_name', __('models/roles.fields.ar_name').':') !!}
+    <label for="ar_name">{{ __('models/roles.fields.ar_name') }}:</label>
     <p>{{ $role->ar_name }}</p>
 </div>
-

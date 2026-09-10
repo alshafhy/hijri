@@ -43,5 +43,8 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('permission:user.view');
         Route::resource('roles', RoleController::class)
             ->middleware('permission:role.view');
+        Route::get('roles/{role}/permissions/{objectId?}', [RoleController::class, 'getPermissionsView'])
+            ->name('roles.permissions')
+            ->middleware('permission:role.edit');
     });
 });

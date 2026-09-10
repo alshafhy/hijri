@@ -19,7 +19,7 @@
     </div> --}}
 
     <div class="form-group {{$divContainerClass}}">
-        {!! Form::hidden('choose_multi_files_allowed', true) !!}
+        {!! html()->hidden('choose_multi_files_allowed', true) !!}
         <x-fileinput-custom name="file[]" :labelTitle="__('attachment.File Name')" ></x-fileinput-custom>
     </div>
 

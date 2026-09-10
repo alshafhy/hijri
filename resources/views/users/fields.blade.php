@@ -1,22 +1,19 @@
-<!-- Name Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('name', __('models/users.fields.name').':') !!}
-    {!! Form::text('name', null, ['class' => 'form-control']) !!}
+    {!! html()->label(__('models/users.fields.name').':', 'name') !!}
+    {!! html()->text('name')->class('form-control')->id('name') !!}
 </div>
 
-<!-- Email Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('email', __('models/users.fields.email').':') !!}
-    {!! Form::text('email', null, ['class' => 'form-control']) !!}
+    {!! html()->label(__('models/users.fields.email').':', 'email') !!}
+    {!! html()->email('email')->class('form-control')->id('email') !!}
 </div>
 
-<!-- Username Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('username', __('models/users.fields.username').':') !!}
-    {!! Form::text('username', null, ['class' => 'form-control']) !!}
+    {!! html()->label(__('models/users.fields.username').':', 'username') !!}
+    {!! html()->text('username')->class('form-control')->id('username') !!}
 </div>
 
-<!-- Username Field -->
 <div class="form-group col-sm-6">
-    {{-- <x-select2 name="branch_id" :options="$branches" :labelTitle="__('models/users.fields.branch_name')"></x-select2>  --}}
+    {!! html()->label(__('models/users.fields.branch_name').':', 'branch_id') !!}
+    {!! html()->select('branch_id', $branches ?? [])->class('form-control select2')->id('branch_id') !!}
 </div>

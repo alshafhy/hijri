@@ -7,7 +7,7 @@
                     <button type="button" onclick="addRow()" class="btn btn-icon btn-outline-primary">
                         <i data-feather="plus"></i>
                     </button>
-                    {!! Form::hidden('choose_multi_files_allowed', false) !!}
+                    {!! html()->hidden('choose_multi_files_allowed', false) !!}
                 </td>
             </tr>
             </thead>

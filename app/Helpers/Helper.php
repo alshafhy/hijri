@@ -83,47 +83,107 @@ class Helper
             ],
             'footerType' => [
                 'static' => 'footer-static',
-                'sticky' => 'fixed-footer',
+                'sticky' => 'footer-fixed',
                 'hidden' => 'footer-hidden',
             ],
             'pageHeader' => [true, false],
             'contentLayout' => [
-                'default' => 'default',
-                'detached' => 'detached',
+                'default',
+                'content-left-sidebar',
+                'content-right-sidebar',
+                'content-detached-left-sidebar',
+                'content-detached-right-sidebar',
             ],
-            'blankPage' => [true, false],
+            'blankPage' => [false, true],
             'sidebarPositionClass' => [
-                'vertical' => 'main-menu-content',
-                'horizontal' => '',
+                'content-left-sidebar' => 'sidebar-left',
+                'content-right-sidebar' => 'sidebar-right',
+                'content-detached-left-sidebar' => 'sidebar-detached sidebar-left',
+                'content-detached-right-sidebar' => 'sidebar-detached sidebar-right',
+                'default' => 'default-sidebar-position',
             ],
             'contentsidebarClass' => [
+                'content-left-sidebar' => 'content-right',
+                'content-right-sidebar' => 'content-left',
+                'content-detached-left-sidebar' => 'content-detached content-right',
+                'content-detached-right-sidebar' => 'content-detached content-left',
                 'default' => 'default-sidebar',
-                'detached' => 'detached-sidebar',
             ],
             'defaultLanguage' => [
-                'en' => 'en',
                 'ar' => 'ar',
+                'en' => 'en',
             ],
             'direction' => ['ltr', 'rtl'],
         ];
 
         foreach ($allOptions as $key => $value) {
-            if (array_key_exists($key, $defaultData) && isset($data[$key]) && array_key_exists($data[$key], $value)) {
-                $result = $value[$data[$key]];
-            } elseif (array_key_exists($key, $defaultData) && isset($data[$key]) && is_array($value) && in_array($data[$key], $value, true)) {
-                $result = $data[$key];
-            } else {
-                $result = array_values($value)[0];
+            if (! array_key_exists($key, $defaultData)) {
+                continue;
             }
 
-            $data[$key] = $result;
+            if (gettype($defaultData[$key]) !== gettype($data[$key])) {
+                $data[$key] = $defaultData[$key];
+
+                continue;
+            }
+
+            if (! is_string($data[$key])) {
+                continue;
+            }
+
+            if ($data[$key] === '') {
+                $data[$key] = $defaultData[$key];
+
+                continue;
+            }
+
+            if (! array_key_exists($data[$key], $value)) {
+                $result = array_search($data[$key], $value, true);
+                if ($result === false) {
+                    $data[$key] = $defaultData[$key];
+                }
+            }
         }
 
-        $themeName = $data['theme'];
-        $data['theme'] = $themeName;
-        $data['themeName'] = $themeName;
+        $layoutClasses = [
+            'theme' => $data['theme'],
+            'layoutTheme' => $allOptions['theme'][$data['theme']],
+            'sidebarCollapsed' => $data['sidebarCollapsed'],
+            'showMenu' => $data['showMenu'],
+            'layoutWidth' => $data['layoutWidth'],
+            'verticalMenuNavbarType' => $allOptions['verticalMenuNavbarType'][$data['verticalMenuNavbarType']],
+            'navbarClass' => $allOptions['navbarClass'][$data['verticalMenuNavbarType']],
+            'navbarColor' => $data['navbarColor'],
+            'horizontalMenuType' => $allOptions['horizontalMenuType'][$data['horizontalMenuType']],
+            'horizontalMenuClass' => $allOptions['horizontalMenuClass'][$data['horizontalMenuType']],
+            'footerType' => $allOptions['footerType'][$data['footerType']],
+            'sidebarClass' => '',
+            'bodyClass' => $data['bodyClass'],
+            'pageClass' => $data['pageClass'],
+            'pageHeader' => $data['pageHeader'],
+            'blankPage' => $data['blankPage'],
+            'blankPageClass' => '',
+            'contentLayout' => $data['contentLayout'],
+            'sidebarPositionClass' => $allOptions['sidebarPositionClass'][$data['contentLayout']],
+            'contentsidebarClass' => $allOptions['contentsidebarClass'][$data['contentLayout']],
+            'mainLayoutType' => $data['mainLayoutType'],
+            'defaultLanguage' => $allOptions['defaultLanguage'][$data['defaultLanguage']],
+            'direction' => session('direction', $data['direction']),
+        ];
 
-        return $data;
+        if (! session()->has('locale')) {
+            app()->setLocale($layoutClasses['defaultLanguage']);
+        }
+
+        if ($layoutClasses['sidebarCollapsed'] === true || $layoutClasses['sidebarCollapsed'] === 'true') {
+            $layoutClasses['sidebarClass'] = 'menu-collapsed';
+        }
+
+        if ($layoutClasses['blankPage'] === true || $layoutClasses['blankPage'] === 'true') {
+            $layoutClasses['blankPageClass'] = 'blank-page';
+        }
+
+        return $layoutClasses;
     }
 
     public static function updatePageConfig(?array $pageConfigs): void

@@ -230,15 +230,8 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
         'Helper' => App\Helpers\Helper::class,
-
-        'Form'      => Collective\Html\FormFacade::class,
-        'Html'      => Collective\Html\HtmlFacade::class,
-        'Flash'     => Laracasts\Flash\Flash::class,
-
+        'Flash' => Laracasts\Flash\Flash::class,
         'DataTables' => Yajra\DataTables\Facades\DataTables::class,
-
-        'PDF' => Mccarlosen\LaravelMpdf\Facades\LaravelMpdf::class,
-        'UserPermissions' => App\Helpers\UserPermissions::class, 
     ],
 
 ];

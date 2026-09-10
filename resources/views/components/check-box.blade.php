@@ -1,5 +1,5 @@
 <div>
-    {!! Form::label($name, $labelTitle.':') !!}
-    {!! Form::hidden($name, 0) !!}
-    {!! Form::checkbox($name, 1, $isCheckedByDefault,  ['data-bootstrap-switch']) !!}
+    {!! html()->label(($labelTitle ?? '').':', $name) !!}
+    {!! html()->hidden($name, 0) !!}
+    {!! html()->checkbox($name, 1, (bool) ($isCheckedByDefault ?? false))->attribute('data-bootstrap-switch', 'true') !!}
 </div>

@@ -11,7 +11,7 @@
 
         <div class="card">
 
-            {!! Form::open(['route' => 'systemReleases.store']) !!}
+            {!! html()->form('POST', route('systemReleases.store'))->open() !!}
             <div class="card-header">
                 
                 <h4 class="card-title">
@@ -29,11 +29,11 @@
             </div>
 
             <div class="card-footer">
-                {!! Form::submit(__('crud.save'), ['class' => 'btn btn-primary']) !!}
+                {!! html()->submit(__('crud.save'))->class('btn btn-primary') !!}
                 <a href="{{ route('systemReleases.index') }}" class="btn btn-default"> @lang('crud.cancel') </a>
             </div>
 
-            {!! Form::close() !!}
+            {!! html()->form()->close() !!}
 
         </div>
     </div>

@@ -22,7 +22,8 @@ class CurrentSystemRelease extends Component
      */
     public function render(): View|Closure|string
     {
-        $currentSystemRelease=  SystemRelease::limit(1)->first()->version_number ?? '';
-        return view('components.current-system-release',compact(['currentSystemRelease']));
+        $currentSystemRelease = SystemRelease::query()->latest('id')->value('version_number') ?? '';
+
+        return view('components.current-system-release', compact('currentSystemRelease'));
     }
 }

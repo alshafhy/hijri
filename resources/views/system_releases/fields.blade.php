@@ -1,7 +1,7 @@
 <!-- Version Number Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('version_number', __('models/systemReleases.fields.version_number').':') !!}
-    {!! Form::text('version_number', null, ['class' => 'form-control', 'required']) !!}
+    {!! html()->label(__('models/systemReleases.fields.version_number').':', 'version_number') !!}
+    {!! html()->text('version_number')->class('form-control')->attribute('required', 'required')->id('version_number') !!}
 </div>
 
 <!-- Release Date Field -->

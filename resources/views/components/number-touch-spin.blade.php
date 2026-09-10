@@ -1,11 +1,8 @@
 <div>
-    {!! Form::label($name, $labelTitle.':') !!}   
-    <div class="input-group" >
-        @if ($defaultValue)
-        {!! Form::number($name, $defaultValue, ['class' => 'touchspin input-group-lg','id' => $name]) !!}
-        @else
-        {!! Form::number($name, null, ['class' => 'touchspin input-group-lg','id' => $name]) !!}
-        @endif
-   
-    </div>
+    {!! html()->label(($labelTitle ?? '').':', $name) !!}
+    @if (isset($defaultValue))
+        {!! html()->number($name, $defaultValue)->class('touchspin input-group-lg')->id($name) !!}
+    @else
+        {!! html()->number($name)->class('touchspin input-group-lg')->id($name) !!}
+    @endif
 </div>

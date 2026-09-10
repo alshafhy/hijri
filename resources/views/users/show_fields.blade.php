@@ -1,24 +1,19 @@
-<!-- Id Field -->
 <div class="col-sm-12">
-    {!! Form::label('id', __('models/users.fields.id').':') !!}
+    <label for="id">{{ __('models/users.fields.id') }}:</label>
     <p>{{ $user->id }}</p>
 </div>
 
-<!-- Name Field -->
 <div class="col-sm-12">
-    {!! Form::label('name', __('models/users.fields.name').':') !!}
+    <label for="name">{{ __('models/users.fields.name') }}:</label>
     <p>{{ $user->name }}</p>
 </div>
 
-<!-- Email Field -->
 <div class="col-sm-12">
-    {!! Form::label('email', __('models/users.fields.email').':') !!}
+    <label for="email">{{ __('models/users.fields.email') }}:</label>
     <p>{{ $user->email }}</p>
 </div>
 
-<!-- Username Field -->
 <div class="col-sm-12">
-    {!! Form::label('username', __('models/users.fields.username').':') !!}
+    <label for="username">{{ __('models/users.fields.username') }}:</label>
     <p>{{ $user->username }}</p>
 </div>
-

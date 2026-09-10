@@ -36,41 +36,11 @@
     {{-- <a class="dropdown-item" href="#">
       <i class="me-50" data-feather="settings"></i> {{__("Settings")}}
     </a> --}}
-    <a class="dropdown-item" href="{{route('systemReleasesShow')}}">
-      <i class="me-50" data-feather="settings"></i> {{__("system-releases")}}
-    </a>
-
-    <a class="dropdown-item" href="javascript:void(0)" id="register-passkey">
-      <i class="me-50" data-feather="key"></i> {{__("Enable Passkey")}}
-    </a>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const registerLink = document.getElementById('register-passkey');
-        if (registerLink) {
-          registerLink.addEventListener('click', function () {
-            const webauthn = new WebAuthn();
-            webauthn.register()
-              .then(response => {
-                alert('Passkey enabled successfully!');
-              })
-              .catch(error => {
-                console.error('WebAuthn Registration Error:', error);
-                if (error instanceof Response) {
-                  error.json().then(data => {
-                    console.error('WebAuthn Registration API Error Details:', data);
-                    alert('Error: ' + (data.message || data.error || 'Unknown API error during registration.'));
-                  });
-                } else {
-                  console.error('WebAuthn Registration Client-side Error:', error);
-                  alert('Failed to enable passkey. Make sure your device supports it and you are on a secure connection (HTTPS).');
-                }
-              });
-          });
-        }
-      });
-    </script>
-
+    @if (Route::has('systemReleasesShow'))
+      <a class="dropdown-item" href="{{ route('systemReleasesShow') }}">
+        <i class="me-50" data-feather="settings"></i> {{__("system-releases")}}
+      </a>
+    @endif
 
     @if (Auth::check())
       <a class="dropdown-item" href="{{ route('logout') }}"

@@ -1,6 +1,4 @@
 <div>
-    {{-- 'onchange'=>"chngStatus(this.value);" --}}
-    {!! Form::label($name, $labelTitle.':') !!}  
-    {{-- {!! Form::text('electrical_stations_type_id', null, ['class' => 'form-control']) !!} --}}
-    {!! Form::select($name, $options, $defaultValue, ['class' => $class, 'id' => $name]) !!}
+    {!! html()->label(($labelTitle ?? '').':', $name) !!}
+    {!! html()->select($name, $options ?? [], $defaultValue ?? null)->class($class ?? 'select2 form-select')->id($name) !!}
 </div>

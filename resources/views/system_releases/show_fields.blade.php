@@ -2,7 +2,7 @@
 <div class="col-sm-6">
     <div class="mb-1 row">
         <div class="col-sm-3 fw-bolder bold">
-                {!! Form::label('version_number', __('models/systemReleases.fields.version_number').':') !!}
+                {!! html()->label(__('models/systemReleases.fields.version_number').':', 'version_number') !!}
                 </div>
         <div class="col-sm-9 ">
             <p>{{ $systemRelease->version_number }}</p>
@@ -14,7 +14,7 @@
 <div class="col-sm-6">
     <div class="mb-1 row">
         <div class="col-sm-3 fw-bolder bold">
-                {!! Form::label('release_date', __('models/systemReleases.fields.release_date').':') !!}
+                {!! html()->label(__('models/systemReleases.fields.release_date').':', 'release_date') !!}
                 </div>
         <div class="col-sm-9 ">
             <p>{{ $systemRelease->release_date }}</p>
@@ -26,7 +26,7 @@
 <div class="col-sm-6">
     <div class="mb-1 row">
         <div class="col-sm-3 fw-bolder bold">
-                {!! Form::label('created_at', __('models/systemReleases.fields.created_at').':') !!}
+                {!! html()->label(__('models/systemReleases.fields.created_at').':', 'created_at') !!}
                 </div>
         <div class="col-sm-9 ">
             <p>{{ $systemRelease->created_at }}</p>
@@ -38,7 +38,7 @@
 <div class="col-sm-6">
     <div class="mb-1 row">
         <div class="col-sm-3 fw-bolder bold">
-                {!! Form::label('updated_at', __('models/systemReleases.fields.updated_at').':') !!}
+                {!! html()->label(__('models/systemReleases.fields.updated_at').':', 'updated_at') !!}
                 </div>
         <div class="col-sm-9 ">
             <p>{{ $systemRelease->updated_at }}</p>

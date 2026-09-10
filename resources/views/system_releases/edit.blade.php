@@ -13,7 +13,7 @@
 
         <div class="card">
 
-            {!! Form::model($systemRelease, ['route' => ['systemReleases.update', $systemRelease->id], 'method' => 'patch']) !!}
+            {!! html()->modelForm($systemRelease, 'PATCH', route('systemReleases.update', $systemRelease))->open() !!}
             <div class="card-header">
                 
                 <h4 class="card-title">
@@ -30,11 +30,11 @@
             </div>
 
             <div class="card-footer">
-                {!! Form::submit(__('crud.save'), ['class' => 'btn btn-primary']) !!}
+                {!! html()->submit(__('crud.save'))->class('btn btn-primary') !!}
                 <a href="{{ route('systemReleases.index') }}" class="btn btn-default"> @lang('crud.cancel') </a>
             </div>
 
-            {!! Form::close() !!}
+            {!! html()->form()->close() !!}
 
         </div>
     </div>

@@ -96,9 +96,8 @@ class RoleController extends AppBaseController
         return redirect(route('dashboard.roles.index'));
     }
 
-    public function getPermissionsView(int $id, ?int $objectId = null): View
+    public function getPermissionsView(Role $role, ?int $objectId = null): View
     {
-        $role = Role::query()->findOrFail($id);
         $this->authorize('update', $role);
 
         $node = SystemComponent::query()->find($objectId);
@@ -113,10 +112,16 @@ class RoleController extends AppBaseController
         $permission = Permission::query()->get();
 
         $rolePermissions = DB::table('role_has_permissions')
-            ->where('role_has_permissions.role_id', $id)
+            ->where('role_has_permissions.role_id', $role->id)
             ->pluck('role_has_permissions.permission_id', 'role_has_permissions.permission_id')
             ->all();
 
-        return view('roles._permissions', compact('permission', 'nodes', 'role', 'rolePermissions', 'objectId'));
+        return view('roles._permissions', [
+            'permission' => $permission,
+            'nodes' => $nodes,
+            'role' => $role,
+            'rolePermissions' => $rolePermissions,
+            'objectId' => $objectId,
+        ]);
     }
 }
