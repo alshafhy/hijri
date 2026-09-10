@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\LanguageController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\NotificationController;
+use App\Http\Controllers\Web\PropertyPictureController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\ValuationRequestController;
@@ -57,5 +58,8 @@ Route::middleware('auth')->group(function (): void {
         Route::post('valuation-requests/{valuationRequest}/official-report', [ValuationRequestController::class, 'uploadOfficialReport'])
             ->name('valuation-requests.official-report')
             ->middleware('permission:valuation_request.qima_upload');
+        Route::get('property-pictures/{propertyPicture}/file', [PropertyPictureController::class, 'file'])
+            ->name('property-pictures.file')
+            ->middleware('permission:valuation_request.view');
     });
 });

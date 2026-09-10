@@ -27,6 +27,23 @@
         <h5>{{ __('Property') }}</h5>
         <p>{{ $request->property->customer_name }} / {{ $request->property->owner_name }}</p>
         <p>{{ $request->property->instrument_no }}</p>
+
+        @if ($request->property->pictures->isNotEmpty())
+          <h6 class="mt-2">{{ __('Property pictures') }}</h6>
+          <div class="d-flex flex-wrap gap-1">
+            @foreach ($request->property->pictures as $picture)
+              <x-property-picture-thumb :picture="$picture" />
+            @endforeach
+          </div>
+          @php
+            $missingCount = $request->property->pictures->where('file_exists', false)->count();
+          @endphp
+          @if ($missingCount > 0)
+            <p class="text-muted small mb-0">
+              {{ __('Missing pictures count', ['count' => $missingCount]) }}
+            </p>
+          @endif
+        @endif
       @endif
     </div>
   </div>

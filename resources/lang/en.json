@@ -252,5 +252,10 @@
     "Upload and lock": "Upload and lock",
     "Official report uploaded and request locked.": "Official report uploaded and request locked.",
     "Yes": "Yes",
-    "No": "No"
+    "No": "No",
+    "Image unavailable": "Image unavailable",
+    "Property pictures": "Property pictures",
+    "Missing pictures count": ":count pictures missing on disk",
+    "Pictures missing on disk": "Pictures missing on disk",
+    "Run legacy:verify-pictures after mounting LEGACY_PICTURE_PATHS": "Run php artisan legacy:verify-pictures after mounting LEGACY_PICTURE_PATHS"
 }

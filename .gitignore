@@ -49,3 +49,6 @@ auth.json
 *.sql
 !database/migrations/
 !database/seeders/
+
+# Local analysis exports (do not commit)
+/storage/app/local-exports/

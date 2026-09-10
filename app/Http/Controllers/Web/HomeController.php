@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\ImportQuarantine;
 use App\Models\Property;
+use App\Models\PropertyPicture;
 use App\Models\ValuationRequest;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,8 @@ class HomeController extends Controller
                 ->where('uploaded_on_qima', false)
                 ->count(),
             'quarantine' => ImportQuarantine::query()->count(),
+            'pictures_missing' => PropertyPicture::query()->where('file_exists', false)->count(),
+            'pictures_total' => PropertyPicture::query()->count(),
         ];
 
         if ($user->hasRole('evaluator')) {

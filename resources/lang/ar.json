@@ -184,5 +184,10 @@
     "Upload and lock": "رفع وقفل",
     "Official report uploaded and request locked.": "تم رفع التقرير الرسمي وقفل الطلب.",
     "Yes": "نعم",
-    "No": "لا"
+    "No": "لا",
+    "Image unavailable": "الصورة غير متاحة",
+    "Property pictures": "صور العقار",
+    "Missing pictures count": ":count صورة غير متوفرة على القرص",
+    "Pictures missing on disk": "صور غير موجودة على القرص",
+    "Run legacy:verify-pictures after mounting LEGACY_PICTURE_PATHS": "شغّل php artisan legacy:verify-pictures بعد ربط LEGACY_PICTURE_PATHS"
 }

@@ -74,6 +74,18 @@
           </div>
         </div>
       </div>
+      <div class="col-lg-3 col-sm-6 col-12">
+        <div class="card border-warning">
+          <div class="card-body">
+            <h4 class="fw-bolder mb-0">
+              {{ number_format($widgets['pictures_missing']) }}
+              <small class="text-muted">/ {{ number_format($widgets['pictures_total']) }}</small>
+            </h4>
+            <p class="card-text">{{ __('Pictures missing on disk') }}</p>
+            <p class="small text-muted mb-0">{{ __('Run legacy:verify-pictures after mounting LEGACY_PICTURE_PATHS') }}</p>
+          </div>
+        </div>
+      </div>
     @endcan
   </div>
 </section>
