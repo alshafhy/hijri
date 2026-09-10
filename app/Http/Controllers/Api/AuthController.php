@@ -1,91 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Auth\LoginUserAction;
+use App\Actions\Auth\RegisterUserAction;
+use App\DTOs\User\CreateUserData;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Resources\UserResource;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // ✅ Register
-    public function register(Request $request)
+    public function register(RegisterRequest $request, RegisterUserAction $action): JsonResponse
     {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $result = $action(CreateUserData::fromRequest($request));
 
         return response()->json([
-            'message'      => 'User registered successfully',
-            'user'         => $user,
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
+            'message' => __('auth.registered'),
+            'user' => new UserResource($result['user']->loadMissing('roles')),
+            'access_token' => $result['token'],
+            'token_type' => (string) config('users.token_type'),
         ], 201);
     }
 
-    // ✅ Login
-    public function login(Request $request)
+    public function login(LoginRequest $request, LoginUserAction $action): JsonResponse
     {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
-
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json([
-                'message' => 'Invalid credentials',
-            ], 401);
-        }
-
-        $user  = User::where('email', $request->email)->firstOrFail();
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $result = $action(
+            (string) $request->input('email'),
+            (string) $request->input('password'),
+        );
 
         return response()->json([
-            'message'      => 'Login successful',
-            'user'         => $user,
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
+            'message' => __('auth.login_successful'),
+            'user' => new UserResource($result['user']->loadMissing('roles')),
+            'access_token' => $result['token'],
+            'token_type' => (string) config('users.token_type'),
         ]);
     }
 
-    // ✅ Get Profile
-    public function profile(Request $request)
+    public function profile(Request $request): JsonResponse
     {
         return response()->json([
-            'user' => $request->user(),
+            'user' => new UserResource($request->user()->loadMissing('roles')),
         ]);
     }
 
-    // ✅ Logout
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Logged out successfully',
+            'message' => __('auth.logged_out'),
         ]);
     }
 
-    // ✅ Logout from all devices
-    public function logoutAll(Request $request)
+    public function logoutAll(Request $request): JsonResponse
     {
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'message' => 'Logged out from all devices',
+            'message' => __('auth.logged_out_all'),
         ]);
     }
 }

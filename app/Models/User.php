@@ -1,26 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Spatie\Activitylog\LogOptions;
-use Spatie\Permission\Traits\HasRoles;
-use Spatie\Activitylog\Models\Activity;
-use Illuminate\Notifications\Notifiable;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Permission\Traits\HasRoles;
+
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, LogsActivity, HasRoles,HasApiTokens ;
-
-
+    use HasApiTokens;
+    use HasFactory;
+    use HasRoles;
+    use LogsActivity;
+    use Notifiable;
+    use SoftDeletes;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
+     * @var list<string>
      */
     protected $fillable = [
         'name',
@@ -28,43 +35,15 @@ class User extends Authenticatable
         'email',
         'password',
         'branch_id',
+        'status',
+        'pass_need_to_be_changed',
         'last_login_at',
         'last_login_ip_address',
-        'access_token',
-        'pass_need_to_be_changed'
+        'email_verified_at',
     ];
 
     /**
-     * Validation rules
-     *
-     * @var array
-     */
-    public static $rules = [
-        'name' => 'required',
-        'username' => 'required|unique:users',
-        'email' => 'required|email|unique:users'
-    ];
-
-    public static $rulesForUpdate = [
-        'name' => 'required',
-        'username' => 'required',
-        'email' => 'required|email'
-    ];
-
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->useLogName('User')
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->logOnly(['name', 'username', 'email']);
-    }
-
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
+     * @var list<string>
      */
     protected $hidden = [
         'password',
@@ -72,27 +51,66 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'last_login_at' => 'datetime',
-    ];
-
-
-
-    public function activities()
+    protected function casts(): array
     {
-        return $this->hasMany(Activity::class, 'subject_id', 'id')->where(['subject_type' => 'App\Models\User']);
+        return [
+            'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'status' => 'integer',
+            'pass_need_to_be_changed' => 'integer',
+            'branch_id' => 'integer',
+        ];
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     **/
-    public function branch()
+    public function getActivitylogOptions(): LogOptions
     {
-        return $this->belongsTo(\App\Models\Branch::class);
+        return LogOptions::defaults()
+            ->useLogName('User')
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->logOnly(['name', 'username', 'email', 'status', 'branch_id']);
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(Activity::class, 'subject_id', 'id')
+            ->where(['subject_type' => self::class]);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        if ($term === null || trim($term) === '') {
+            return $query;
+        }
+
+        $like = '%' . trim($term) . '%';
+
+        return $query->where(function (Builder $builder) use ($like): void {
+            $builder
+                ->where('name', 'like', $like)
+                ->orWhere('username', 'like', $like)
+                ->orWhere('email', 'like', $like);
+        });
+    }
+
+    public function scopeForBranch(Builder $query, ?int $branchId): Builder
+    {
+        if ($branchId === null) {
+            return $query;
+        }
+
+        return $query->where('branch_id', $branchId);
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', (int) config('users.status.active'));
     }
 }

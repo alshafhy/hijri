@@ -1,206 +1,122 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use Response;
-use App\Http\Requests;
-use Laracasts\Flash\Flash;
-use App\Overrides\Spatie\Role;
-use App\Utils\PermissionsUtil;
+use App\Actions\Role\SyncRolePermissionsAction;
 use App\DataTables\RoleDataTable;
-use Illuminate\Support\Facades\DB;
-use App\Overrides\Spatie\Permission;
 use App\Http\Requests\CreateRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
-use App\Http\Controllers\AppBaseController;
 use App\Models\SystemComponent;
+use App\Overrides\Spatie\Permission;
+use App\Overrides\Spatie\Role;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
+use Laracasts\Flash\Flash;
 
 class RoleController extends AppBaseController
 {
-    /**
-     * Display a listing of the Role.
-     *
-     * @param RoleDataTable $roleDataTable
-     * @return Response
-     */
     public function index(RoleDataTable $roleDataTable)
     {
+        $this->authorize('viewAny', Role::class);
+
         return $roleDataTable->render('roles.index');
     }
 
-    /**
-     * Show the form for creating a new Role.
-     *
-     * @return Response
-     */
-    public function create()
+    public function create(): View
     {
+        $this->authorize('create', Role::class);
+
         return view('roles.create');
     }
 
-    /**
-     * Store a newly created Role in storage.
-     *
-     * @param CreateRoleRequest $request
-     *
-     * @return Response
-     */
-    public function store(CreateRoleRequest $request)
+    public function store(CreateRoleRequest $request): RedirectResponse
     {
-        $input = $request->all();
+        $this->authorize('create', Role::class);
 
-        /** @var Role $role */
-        $role = Role::create($input);
+        $role = Role::query()->create($request->all());
 
         Flash::success(__('messages.saved', ['model' => __('models/roles.singular')]));
 
-        return redirect(route('roles.index'));
+        return redirect(route('dashboard.roles.index'));
     }
 
-    /**
-     * Display the specified Role.
-     *
-     * @param  int $id
-     *
-     * @return Response
-     */
-    public function show($id)
+    public function show(Role $role): View|RedirectResponse
     {
-        /** @var Role $role */
-        $role = Role::find($id);
-
-        if (empty($role)) {
-            Flash::error(__('models/roles.singular').' '.__('messages.not_found'));
-
-            return redirect(route('roles.index'));
-        }
+        $this->authorize('view', $role);
 
         return view('roles.show')->with('role', $role);
     }
 
-    /**
-     * Show the form for editing the specified Role.
-     *
-     * @param  int $id
-     *
-     * @return Response
-     */
-    public function edit($id)
+    public function edit(Role $role): View|RedirectResponse
     {
-        /** @var Role $role */
-        $role = Role::find($id);
+        $this->authorize('update', $role);
 
-        if (empty($role)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/roles.singular')]));
-
-            return redirect(route('roles.index'));
-        }
-
-        $sysScreens = SystemComponent::where('comp_type',1)->get();
-
-        $permissions = Permission::get();
-
-        $rolePermissions = $role->permissions();
+        $sysScreens = SystemComponent::query()->where('comp_type', 1)->get();
 
         return view('roles.edit')
-                ->with('role', $role)
-                ->with('sysScreens', $sysScreens)
-                ;
+            ->with('role', $role)
+            ->with('sysScreens', $sysScreens);
     }
 
-    /**
-     * Update the specified Role in storage.
-     *
-     * @param  int              $id
-     * @param UpdateRoleRequest $request
-     *
-     * @return Response
-     */
-    public function update($id, UpdateRoleRequest $request)
-    {
-        /** @var Role $role */
-        $role = Role::find($id);
-
-        if (empty($role)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/roles.singular')]));
-
-            return redirect(route('roles.index'));
-        }
+    public function update(
+        UpdateRoleRequest $request,
+        Role $role,
+        SyncRolePermissionsAction $syncRolePermissionsAction
+    ): RedirectResponse {
+        $this->authorize('update', $role);
 
         $role->fill($request->all());
         $role->save();
 
-        if($request->has("objectId")){
-            $parentNode = SystemComponent::find($request->objectId);    
-            $childNodes = SystemComponent::whereDescendantOf($parentNode)
-                                            ->get()
-                                            // ->where('comp_type', '=', 3)
-                                            ->whereIn('comp_type', [3,4])
-                                            ->pluck('id');
-
-            $objectsPermIds = Permission::whereIn('system_component_id', $childNodes)->get()->pluck('id');
-
-            $role->revokePermissionTo($objectsPermIds);
-            $role->givePermissionTo($request->input('permission'));
+        if ($request->has('objectId')) {
+            $permissionIds = $request->input('permission');
+            $syncRolePermissionsAction(
+                $role,
+                $request->filled('objectId') ? (int) $request->input('objectId') : null,
+                is_array($permissionIds) ? $permissionIds : null,
+            );
         }
-        
-        PermissionsUtil::clearPermissionCash();
 
         Flash::success(__('messages.updated', ['model' => __('models/roles.singular')]));
 
-        return redirect(route('roles.index'));
+        return redirect(route('dashboard.roles.index'));
     }
 
-    /**
-     * Remove the specified Role from storage.
-     *
-     * @param  int $id
-     *
-     * @throws \Exception
-     *
-     * @return Response
-     */
-    public function destroy($id)
+    public function destroy(Role $role): RedirectResponse
     {
-        /** @var Role $role */
-        $role = Role::find($id);
-
-        if (empty($role)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/roles.singular')]));
-
-            return redirect(route('roles.index'));
-        }
+        $this->authorize('delete', $role);
 
         $role->delete();
 
         Flash::success(__('messages.deleted', ['model' => __('models/roles.singular')]));
 
-        return redirect(route('roles.index'));
+        return redirect(route('dashboard.roles.index'));
     }
 
-    public function getPermissionsView($id, $objectId = null)
+    public function getPermissionsView(int $id, ?int $objectId = null): View
     {
-        $role = Role::find($id);
-        $node = SystemComponent::find($objectId);
+        $role = Role::query()->findOrFail($id);
+        $this->authorize('update', $role);
 
-        // $models= PermissionsUtil::getObjectsByParent($objectId);
+        $node = SystemComponent::query()->find($objectId);
 
-        $nodes = SystemComponent::whereDescendantOf($node)
-                                ->get()
-                                // ->where('comp_type', '=', 3)
-                                ->whereIn('comp_type', [3,4]);
-        // $filtered = $parents->where('comp_type', '=', 1)->pluck('route_name')->first();
+        $nodes = $node === null
+            ? collect()
+            : SystemComponent::query()
+                ->whereDescendantOf($node)
+                ->get()
+                ->whereIn('comp_type', [3, 4]);
 
-        $permission = Permission::get();
+        $permission = Permission::query()->get();
 
-        // $rolePermissions[] = $role->permissions();
+        $rolePermissions = DB::table('role_has_permissions')
+            ->where('role_has_permissions.role_id', $id)
+            ->pluck('role_has_permissions.permission_id', 'role_has_permissions.permission_id')
+            ->all();
 
-        $rolePermissions = DB::table("role_has_permissions")
-                                    ->where("role_has_permissions.role_id",$id)
-                                    ->pluck('role_has_permissions.permission_id','role_has_permissions.permission_id')
-                                    ->all();
-
-        return view('roles._permissions',compact('permission','nodes' , 'role' ,'rolePermissions' , 'objectId'));
+        return view('roles._permissions', compact('permission', 'nodes', 'role', 'rolePermissions', 'objectId'));
     }
-
 }

@@ -1,58 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DemoUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
-        // $branchData =  Branch::where("is_main_branch",1)->first();
-        // dd($branchData);
-        // $demoUser = User::create([
-        //     'name' => 'مدير النظام',
-        //     'username' => 'admin',
-        //     'email' => 'admin@demo.com',
-        //     'branch_id'=>$branchData->id,
-        //     'password' => Hash::make('Admin@123987'),
-        //     'remember_token' => Str::random(10)
-        // ]);
+        $admin = config('users.admin');
 
-        // $demoUser->assignRole('admin');
+        $user = User::query()->updateOrCreate(
+            ['username' => $admin['username']],
+            [
+                'name' => $admin['name'],
+                'email' => $admin['email'],
+                'password' => Hash::make((string) $admin['password']),
+                'branch_id' => (int) config('users.default_branch_id', 1),
+                'status' => (int) config('users.status.active'),
+                'remember_token' => null,
+            ]
+        );
 
-        $users = config('initiation-data.users');
-        //
-        foreach ($users as $user) {
-            if (isset($user['password']) && $user['password']) {
-                $password = Hash::make($user['password']);
-            } else {
-                $password = Hash::make($user['username'] . "@demo");
-            }
-            $userData = User::updateOrCreate(
-                ['username' => $user['username']],
-                [
-                    'name' => $user['name'],
-                    'email' => $user['email'],
-                    'password' => $password,
-                    'remember_token' => null
-                ]
-            );
-            if (isset($user['role']) && $user['role']) {
-                $userData->assignRole($user['role']);
-            }
-        }
-
-
+        $user->assignRole('super-admin');
     }
 }
-
-?>

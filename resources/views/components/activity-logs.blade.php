@@ -110,7 +110,7 @@
                                     @endswitch
                                     @php
                                     /*foreach ($activity->properties['attributes'] as $attributes){
-                                    var_dump($attributes);
+                                    {{-- cleaned --}}
                                     }**/
                                     @endphp
 
