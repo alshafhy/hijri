@@ -51,6 +51,19 @@ class SystemComponentsSeeder extends Seeder
                 'icon_class' => 'bi bi-house-door',
                 'sort_order' => 1,
                 'is_active' => true,
+                'permission_name' => 'dashboard.view',
+            ],
+            [
+                'comp_name' => 'valuation',
+                'comp_ar_label' => 'التقييم العقاري',
+                'comp_type' => 2,
+                'route_name' => null,
+                'prefix' => 'valuation',
+                'parent_id' => null,
+                'icon_name' => 'file-text',
+                'icon_class' => 'bi bi-building',
+                'sort_order' => 2,
+                'is_active' => true,
                 'permission_name' => null,
             ],
             [
@@ -62,7 +75,7 @@ class SystemComponentsSeeder extends Seeder
                 'parent_id' => null,
                 'icon_name' => 'users',
                 'icon_class' => 'bi bi-people',
-                'sort_order' => 2,
+                'sort_order' => 3,
                 'is_active' => true,
                 'permission_name' => null,
             ],
@@ -75,6 +88,20 @@ class SystemComponentsSeeder extends Seeder
     private function leaves(): array
     {
         return [
+            [
+                '_parent_key' => 'valuation',
+                'comp_name' => 'valuation_requests',
+                'comp_ar_label' => 'طلبات التقييم',
+                'comp_type' => 3,
+                'route_name' => 'dashboard.valuation-requests.index',
+                'prefix' => 'valuation-requests',
+                'parent_id' => null,
+                'icon_name' => 'list',
+                'icon_class' => 'bi bi-list-ul',
+                'sort_order' => 1,
+                'is_active' => true,
+                'permission_name' => 'valuation_request.view',
+            ],
             [
                 '_parent_key' => 'user_management',
                 'comp_name' => 'users',
