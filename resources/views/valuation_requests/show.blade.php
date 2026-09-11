@@ -19,7 +19,7 @@
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-1">
       <h4 class="card-title mb-0">{{ __('Valuation request') }} #{{ $request->id }}</h4>
       <div class="d-flex align-items-center gap-1 flex-wrap">
-        <span class="badge bg-primary">{{ $request->state }}</span>
+        <span class="badge bg-primary">{{ $request->stateLabel() }}</span>
         @can('exportPdf', $request)
           <div class="btn-group">
             <button type="button" class="btn btn-sm btn-outline-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -62,11 +62,19 @@
         <div class="col-md-3"><strong>{{ __('Evaluator') }}:</strong> {{ $request->evaluator?->name ?? '—' }}</div>
         <div class="col-md-3">
           <strong>{{ __('Final amount') }}:</strong>
-          {{ $finalAmount['amount'] !== null ? number_format((float) $finalAmount['amount'], 2) : '—' }}
+          {{ $finalAmount['amount'] !== null ? number_format((float) $finalAmount['amount'], 2).' '.__('SAR') : '—' }}
           @if (!empty($finalAmount['is_manual']))
             <span class="badge bg-info">{{ __('Manual') }}</span>
           @endif
         </div>
+        <div class="col-md-3"><strong>{{ __('Started at') }}:</strong> {{ optional($request->started_at)->format('Y-m-d H:i') ?? '—' }}</div>
+        <div class="col-md-3"><strong>{{ __('Evaluated at') }}:</strong> {{ optional($request->evaluated_at)->format('Y-m-d H:i') ?? '—' }}</div>
+        <div class="col-md-3"><strong>{{ __('Ended at') }}:</strong> {{ optional($request->ended_at)->format('Y-m-d H:i') ?? '—' }}</div>
+        @if ($request->property?->total)
+          <div class="col-md-3"><strong>{{ __('Total area') }}:</strong> {{ $request->property->total->total_area !== null ? number_format((float) $request->property->total->total_area, 2) : '—' }}</div>
+          <div class="col-md-3"><strong>{{ __('Forced sale %') }}:</strong> {{ $request->property->total->forced_sale_percentage !== null ? number_format((float) $request->property->total->forced_sale_percentage, 2).'%' : '—' }}</div>
+          <div class="col-md-3"><strong>{{ __('Forced sale amount') }}:</strong> {{ $request->property->total->forced_sale_amount !== null ? number_format((float) $request->property->total->forced_sale_amount, 2).' '.__('SAR') : '—' }}</div>
+        @endif
       </div>
 
       <div class="d-flex flex-wrap gap-50 mb-1">
@@ -110,10 +118,83 @@
         @if ($request->property->location)
           <p class="mb-25 text-muted">
             {{ $request->property->location->city?->name_ar }}
+            {{ $request->property->location->neighborhood?->name_ar }}
             {{ $request->property->location->street }}
             ({{ $request->property->location->x_axis }}, {{ $request->property->location->y_axis }})
           </p>
         @endif
+
+        <h6 class="mt-2">{{ __('Components') }}</h6>
+        <div class="table-responsive mb-1">
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>{{ __('Kind') }}</th>
+                <th>{{ __('Area') }}</th>
+                <th>{{ __('Value') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse ($request->property->components as $component)
+                <tr>
+                  <td>{{ __((string) ($component->component_key ?: '—')) }}</td>
+                  <td>{{ $component->area_value !== null ? number_format((float) $component->area_value, 2) : '—' }}</td>
+                  <td>{{ $component->price_value !== null ? number_format((float) $component->price_value, 2).' '.__('SAR') : '—' }}</td>
+                </tr>
+              @empty
+                <tr><td colspan="3" class="text-center text-muted">{{ __('No components') }}</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+
+        <h6 class="mt-2">{{ __('Comparables') }}</h6>
+        <div class="table-responsive mb-1">
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{{ __('Description') }}</th>
+                <th>{{ __('Area') }}</th>
+                <th>{{ __('Value') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse ($request->property->comparables as $comparable)
+                <tr>
+                  <td>{{ $comparable->sequence ?? $comparable->id }}</td>
+                  <td>{{ $comparable->real_estate_type ?? '—' }}</td>
+                  <td>{{ $comparable->area !== null ? number_format((float) $comparable->area, 2) : '—' }}</td>
+                  <td>{{ $comparable->price !== null ? number_format((float) $comparable->price, 2).' '.__('SAR') : '—' }}</td>
+                </tr>
+              @empty
+                <tr><td colspan="4" class="text-center text-muted">{{ __('No comparables') }}</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+
+        <h6 class="mt-2">{{ __('Adjustments') }}</h6>
+        <div class="table-responsive mb-1">
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>{{ __('Description') }}</th>
+                <th>{{ __('Value') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse ($request->property->adjustments as $adjustment)
+                <tr>
+                  <td>{{ $adjustment->type ?? '—' }}</td>
+                  <td>{{ $adjustment->total_adjustments_price !== null ? number_format((float) $adjustment->total_adjustments_price, 2).' '.__('SAR') : '—' }}</td>
+                </tr>
+              @empty
+                <tr><td colspan="2" class="text-center text-muted">{{ __('No adjustments') }}</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
 
         @if ($request->property->pictures->isNotEmpty())
           <h6 class="mt-2">{{ __('Property pictures') }}</h6>
@@ -138,6 +219,47 @@
           @endif
         @endif
       @endif
+
+      <hr>
+      <h5>{{ __('Related contracts') }}</h5>
+      <div class="table-responsive mb-1">
+        <table class="table table-sm">
+          <thead><tr><th>#</th><th>{{ __('Contractor') }}</th><th>{{ __('Fees') }}</th><th>{{ __('State') }}</th><th></th></tr></thead>
+          <tbody>
+            @forelse ($request->contracts as $contract)
+              <tr>
+                <td>{{ $contract->id }}</td>
+                <td>{{ $contract->contractor?->name ?? '—' }}</td>
+                <td>{{ number_format((float) ($contract->fees ?? 0), 2) }} {{ __('SAR') }}</td>
+                <td>{{ (int) $contract->state === 1 ? __('Paid') : __('Unpaid') }}</td>
+                <td><a href="{{ route('dashboard.contracts.show', $contract) }}" class="btn btn-sm btn-outline-primary">{{ __('View') }}</a></td>
+              </tr>
+            @empty
+              <tr><td colspan="5" class="text-center text-muted">{{ __('No results') }}</td></tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
+
+      <h5>{{ __('Related offers') }}</h5>
+      <div class="table-responsive mb-1">
+        <table class="table table-sm">
+          <thead><tr><th>#</th><th>{{ __('Number') }}</th><th>{{ __('Partner') }}</th><th>{{ __('State') }}</th><th></th></tr></thead>
+          <tbody>
+            @forelse ($request->offers as $offer)
+              <tr>
+                <td>{{ $offer->id }}</td>
+                <td>{{ $offer->number }}</td>
+                <td>{{ $offer->partner?->name ?? $offer->partner_name }}</td>
+                <td>{{ $offer->stateLabel() }}</td>
+                <td><a href="{{ route('dashboard.offers.show', $offer) }}" class="btn btn-sm btn-outline-primary">{{ __('View') }}</a></td>
+              </tr>
+            @empty
+              <tr><td colspan="5" class="text-center text-muted">{{ __('No results') }}</td></tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 

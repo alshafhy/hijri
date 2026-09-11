@@ -49,7 +49,7 @@ final class QuickSearchValuationAction
                 'id' => $r->id,
                 'number' => $r->number,
                 'reference' => $r->reference,
-                'state' => $r->state,
+                'state' => $r->stateLabel(),
                 'customer_name' => $r->property?->customer_name,
             ])->all(),
         ];

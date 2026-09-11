@@ -79,4 +79,14 @@ class Offer extends Model
     {
         return $this->state === self::STATE_ACCEPTED;
     }
+
+    public function stateLabel(): string
+    {
+        return match ((int) $this->state) {
+            self::STATE_WAITING => __('Waiting'),
+            self::STATE_REJECTED => __('Rejected'),
+            self::STATE_ACCEPTED => __('Accepted'),
+            default => __('Unknown'),
+        };
+    }
 }

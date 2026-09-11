@@ -13,11 +13,18 @@
     </div>
     <div class="card-body">
       <form method="GET" class="row g-1 mb-2">
+        <input type="hidden" name="sort" value="{{ $sort ?? request('sort', 'id') }}">
+        <input type="hidden" name="dir" value="{{ $dir ?? request('dir', 'desc') }}">
         <div class="col-md-3">
           <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="{{ __('Search') }}">
         </div>
-        <div class="col-md-2">
-          <input type="number" name="partner_id" value="{{ request('partner_id') }}" class="form-control" placeholder="{{ __('Partner') }} #">
+        <div class="col-md-3">
+          <select name="partner_id" class="form-select">
+            <option value="">{{ __('Partner') }}</option>
+            @foreach ($partners as $id => $name)
+              <option value="{{ $id }}" @selected((string) request('partner_id') === (string) $id)>{{ $name }}</option>
+            @endforeach
+          </select>
         </div>
         <div class="col-md-3">
           <select name="state" class="form-select">
@@ -36,12 +43,12 @@
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>#</th>
-            <th>{{ __('Number') }}</th>
-            <th>{{ __('Partner') }}</th>
-            <th>{{ __('City') }}</th>
-            <th>{{ __('Offered at') }}</th>
-            <th>{{ __('State') }}</th>
+            <th>@include('components.sortable-th', ['column' => 'id', 'label' => '#'])</th>
+            <th>@include('components.sortable-th', ['column' => 'number', 'label' => __('Number')])</th>
+            <th>@include('components.sortable-th', ['column' => 'partner_id', 'label' => __('Partner')])</th>
+            <th>@include('components.sortable-th', ['column' => 'city', 'label' => __('City')])</th>
+            <th>@include('components.sortable-th', ['column' => 'offered_at', 'label' => __('Offered at')])</th>
+            <th>@include('components.sortable-th', ['column' => 'state', 'label' => __('State')])</th>
             <th>{{ __('Actions') }}</th>
           </tr>
         </thead>

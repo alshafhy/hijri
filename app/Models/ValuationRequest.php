@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Valuation\RequestState;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -110,10 +111,15 @@ class ValuationRequest extends Model
 
     public function isFinallyApproved(): bool
     {
-        $state = mb_strtolower(trim((string) $this->state));
+        $mapped = RequestState::tryFromLegacy($this->state);
 
-        return in_array($state, ['approve', 'تم الاعتماد', 'تم الإعتماد'], true)
+        return ($mapped === RequestState::Approve)
             || $this->approve === 1;
+    }
+
+    public function stateLabel(): string
+    {
+        return RequestState::labelFor($this->state);
     }
 }
 

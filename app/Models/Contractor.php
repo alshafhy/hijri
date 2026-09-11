@@ -79,4 +79,19 @@ class Contractor extends Model
     {
         return $this->state === self::STATE_ACTIVE;
     }
+
+    public function stateLabel(): string
+    {
+        return match ((int) $this->state) {
+            self::STATE_ACTIVE => __('Active'),
+            self::STATE_INACTIVE => __('Inactive'),
+            self::STATE_DRAFT => __('Draft'),
+            default => __('Unknown'),
+        };
+    }
+
+    public function feesFormatted(): string
+    {
+        return number_format((float) ($this->fees ?? 0), 2);
+    }
 }

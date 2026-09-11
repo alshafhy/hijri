@@ -9,6 +9,7 @@ use App\Actions\Geo\DeleteGeoCityAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Geo\StoreGeoCityRequest;
 use App\Models\GeoCity;
+use App\Support\Query\AppliesListSort;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,20 +21,22 @@ class GeoCityController extends Controller
     {
         $this->authorize('viewAny', GeoCity::class);
 
-        $cities = GeoCity::query()
+        $query = GeoCity::query()
             ->withCount('neighborhoods')
-            ->when($request->filled('q'), function ($query) use ($request): void {
+            ->when($request->filled('q'), function ($builder) use ($request): void {
                 $term = '%'.trim((string) $request->string('q')).'%';
-                $query->where(function ($q) use ($term): void {
+                $builder->where(function ($q) use ($term): void {
                     $q->where('name_ar', 'like', $term)
                         ->orWhere('name_en', 'like', $term);
                 });
-            })
-            ->orderByDesc('id')
-            ->paginate(25)
-            ->withQueryString();
+            });
 
-        return view('geo_cities.index', compact('cities'));
+        AppliesListSort::apply($query, $request, ['id', 'name_ar', 'name_en', 'created_at']);
+
+        $cities = $query->paginate(25)->withQueryString();
+        $sortMeta = AppliesListSort::current($request);
+
+        return view('geo_cities.index', compact('cities') + $sortMeta);
     }
 
     public function create(): View

@@ -61,7 +61,7 @@ class ValuationRequestController extends Controller
         $this->authorize('viewAny', ValuationRequest::class);
 
         $filters = $httpRequest->only([
-            'q', 'state', 'uploaded_on_qima', 'evaluator_user_id', 'coordinator_user_id',
+            'q', 'state', 'uploaded_on_qima', 'evaluator_user_id', 'coordinator_user_id', 'sort', 'dir',
         ]);
 
         $requests = $search->execute($httpRequest->user(), $filters);
@@ -71,6 +71,8 @@ class ValuationRequestController extends Controller
             'filters' => $filters,
             'evaluators' => $this->usersForRole('evaluator'),
             'coordinators' => $this->usersForRole('coordinator'),
+            'sort' => $filters['sort'] ?? 'id',
+            'dir' => $filters['dir'] ?? 'desc',
         ]);
     }
 
@@ -99,10 +101,15 @@ class ValuationRequestController extends Controller
         $this->authorize('view', $valuationRequest);
         $valuationRequest->load([
             'property.location.city',
+            'property.location.neighborhood',
             'property.pictures',
             'property.components',
+            'property.comparables',
+            'property.adjustments',
             'property.total',
             'feeShares',
+            'contracts.contractor',
+            'offers.partner',
             'coordinator',
             'evaluator',
         ]);
@@ -497,9 +504,13 @@ class ValuationRequestController extends Controller
      */
     private function usersForRole(string $role)
     {
-        return User::query()
-            ->role($role)
-            ->orderBy('name')
-            ->pluck('name', 'id');
+        try {
+            return User::query()
+                ->role($role)
+                ->orderBy('name')
+                ->pluck('name', 'id');
+        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
+            return collect();
+        }
     }
 }

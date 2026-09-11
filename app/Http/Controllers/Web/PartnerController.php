@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\Contractor\CreatePartyContactAction;
 use App\Actions\Contractor\DeactivatePartyContactAction;
 use App\Actions\Partner\ActivatePartnerAction;
 use App\Actions\Partner\CreatePartnerAction;
 use App\Actions\Partner\DeactivatePartnerAction;
 use App\Actions\Partner\UpdatePartnerAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Contractor\StorePartyContactRequest;
 use App\Http\Requests\Partner\StorePartnerRequest;
 use App\Http\Requests\Partner\UpdatePartnerRequest;
 use App\Models\Partner;
 use App\Models\PartyContact;
+use App\Support\Query\AppliesListSort;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -25,22 +28,24 @@ class PartnerController extends Controller
     {
         $this->authorize('viewAny', Partner::class);
 
-        $partners = Partner::query()
+        $query = Partner::query()
             ->withCount('offers')
-            ->when($request->filled('q'), function ($query) use ($request): void {
+            ->when($request->filled('q'), function ($builder) use ($request): void {
                 $term = '%'.trim((string) $request->string('q')).'%';
-                $query->where(function ($q) use ($term): void {
+                $builder->where(function ($q) use ($term): void {
                     $q->where('name', 'like', $term)
                         ->orWhere('email', 'like', $term)
                         ->orWhere('phone_number', 'like', $term);
                 });
             })
-            ->when($request->filled('state'), fn ($q) => $q->where('state', (int) $request->input('state')))
-            ->latest('id')
-            ->paginate(25)
-            ->withQueryString();
+            ->when($request->filled('state'), fn ($q) => $q->where('state', (int) $request->input('state')));
 
-        return view('partners.index', compact('partners'));
+        AppliesListSort::apply($query, $request, ['id', 'name', 'email', 'phone_number', 'state', 'created_at']);
+
+        $partners = $query->paginate(25)->withQueryString();
+        $sortMeta = AppliesListSort::current($request);
+
+        return view('partners.index', compact('partners') + $sortMeta);
     }
 
     public function create(): View
@@ -71,6 +76,18 @@ class PartnerController extends Controller
         return view('partners.show', compact('partner'));
     }
 
+    public function storeContact(
+        StorePartyContactRequest $request,
+        Partner $partner,
+        CreatePartyContactAction $action
+    ): RedirectResponse {
+        $action->execute($request->user(), $partner, $request->validated());
+
+        Flash::success(__('Contact added'));
+
+        return back();
+    }
+
     public function deactivateContact(
         Partner $partner,
         PartyContact $contact,
@@ -78,7 +95,7 @@ class PartnerController extends Controller
     ): RedirectResponse {
         abort_unless($contact->partner_id === $partner->id, 404);
 
-        $action(request()->user(), $contact);
+        $action->execute(request()->user(), $contact);
 
         Flash::success(__('Contact removed'));
 

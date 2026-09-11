@@ -19,6 +19,11 @@ class ContractPolicy
         return $user->can('contract.view');
     }
 
+    public function create(User $user): bool
+    {
+        return $user->can('contract.create');
+    }
+
     public function markPaid(User $user, Contract $contract): bool
     {
         return $user->can('contract.mark_paid');

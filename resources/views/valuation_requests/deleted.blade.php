@@ -26,7 +26,7 @@
               <td>{{ $item->id }}</td>
               <td>{{ $item->reference }}</td>
               <td>{{ $item->number }}</td>
-              <td>{{ $item->state }}</td>
+              <td>{{ $item->stateLabel() }}</td>
               <td>{{ optional($item->deleted_at)->format('Y-m-d H:i') }}</td>
               <td>
                 @can('restore', $item)

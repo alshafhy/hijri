@@ -21,7 +21,7 @@
     <div class="card-body row">
       <div class="col-md-4"><strong>{{ __('Contractor') }}:</strong> {{ $contract->contractor?->name }}</div>
       <div class="col-md-4"><strong>{{ __('Valuation request') }}:</strong> {{ $contract->valuationRequest?->number }}</div>
-      <div class="col-md-4"><strong>{{ __('Fees') }}:</strong> {{ $contract->contractor?->fees }}</div>
+      <div class="col-md-4"><strong>{{ __('Fees') }}:</strong> {{ number_format((float) ($contract->contractor?->fees ?? 0), 2) }} {{ __('SAR') }}</div>
       <div class="col-md-4 mt-1">
         <strong>{{ __('State') }}:</strong>
         @if ($contract->isPaid())

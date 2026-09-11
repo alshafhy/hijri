@@ -91,33 +91,6 @@
       </div>
     @endisset
 
-    <div class="col-lg-3 col-sm-6 col-12">
-      <div class="card">
-        <div class="card-body">
-          <h4 class="fw-bolder mb-0">{{ number_format($widgets['approved_count']) }}</h4>
-          <p class="card-text">{{ __('Approved valuations') }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3 col-sm-6 col-12">
-      <div class="card">
-        <div class="card-body">
-          <h4 class="fw-bolder mb-0">{{ number_format($widgets['total_valued_area'], 2) }}</h4>
-          <p class="card-text">{{ __('Total valued area') }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3 col-sm-6 col-12">
-      <div class="card">
-        <div class="card-body">
-          <h4 class="fw-bolder mb-0">
-            {{ $widgets['average_turnaround_hours'] !== null ? number_format($widgets['average_turnaround_hours'], 2) : '—' }}
-          </h4>
-          <p class="card-text">{{ __('Average turnaround hours') }}</p>
-        </div>
-      </div>
-    </div>
-
     @can('valuation_request.view')
       <div class="col-lg-3 col-sm-6 col-12">
         <div class="card">

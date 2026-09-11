@@ -17,13 +17,35 @@
     <div class="card-body row">
       <div class="col-md-3"><strong>{{ __('Email') }}:</strong> {{ $contractor->email }}</div>
       <div class="col-md-3"><strong>{{ __('Phone') }}:</strong> {{ $contractor->phone_number }}</div>
-      <div class="col-md-3"><strong>{{ __('Fees') }}:</strong> {{ $contractor->fees }}</div>
-      <div class="col-md-3"><strong>{{ __('State') }}:</strong> {{ $contractor->state }}</div>
+      <div class="col-md-3"><strong>{{ __('Fees') }}:</strong> {{ number_format((float) $contractor->fees, 2) }} {{ __('SAR') }}</div>
+      <div class="col-md-3"><strong>{{ __('State') }}:</strong> {{ $contractor->stateLabel() }}</div>
     </div>
   </div>
 
   <div class="card mb-2">
     <div class="card-header"><h4 class="card-title mb-0">{{ __('Contacts') }}</h4></div>
+    @can('update', $contractor)
+      <div class="card-body border-bottom">
+        <form method="POST" action="{{ route('dashboard.contractors.contacts.store', $contractor) }}" class="row g-1 align-items-end">
+          @csrf
+          <div class="col-md-3">
+            <label class="form-label">{{ __('Name') }}</label>
+            <input name="name" class="form-control" value="{{ old('name') }}" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ __('Email') }}</label>
+            <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ __('Phone') }}</label>
+            <input name="phone_number" class="form-control" value="{{ old('phone_number') }}">
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-primary w-100" type="submit">{{ __('Add contact') }}</button>
+          </div>
+        </form>
+      </div>
+    @endcan
     <div class="table-responsive">
       <table class="table table-striped">
         <thead>

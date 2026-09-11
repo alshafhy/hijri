@@ -28,9 +28,11 @@ final class UnapproveValuationRequestAction
             'state' => 'evaluative',
             'approve' => -1,
             'ended_at' => null,
+            'uploaded_on_qima' => false,
+            'qima_locked_at' => null,
         ])->save();
 
-        ValuationActivity::log($actor, $request, 'unapproved', 'Valuation approval revoked');
+        ValuationActivity::log($actor, $request, 'unapproved', 'Valuation approval revoked and Qima lock cleared');
         $this->invalidateCache->execute();
 
         return $request->refresh();

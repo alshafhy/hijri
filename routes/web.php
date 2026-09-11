@@ -188,6 +188,7 @@ Route::middleware('auth')->group(function (): void {
             Route::delete('partners/{partner}', [PartnerController::class, 'destroy'])->name('partners.destroy')->middleware('permission:partner.delete');
             Route::post('partners/{partner}/activate', [PartnerController::class, 'activate'])->name('partners.activate')->middleware('permission:partner.activate');
             Route::post('partners/{partner}/deactivate', [PartnerController::class, 'deactivate'])->name('partners.deactivate')->middleware('permission:partner.activate');
+            Route::post('partners/{partner}/contacts', [PartnerController::class, 'storeContact'])->name('partners.contacts.store')->middleware('permission:partner.edit');
             Route::post('partners/{partner}/contacts/{contact}/deactivate', [PartnerController::class, 'deactivateContact'])->name('partners.contacts.deactivate')->middleware('permission:partner.edit');
         });
 
@@ -202,12 +203,15 @@ Route::middleware('auth')->group(function (): void {
             Route::delete('contractors/{contractor}', [ContractorController::class, 'destroy'])->name('contractors.destroy')->middleware('permission:contractor.delete');
             Route::post('contractors/{contractor}/activate', [ContractorController::class, 'activate'])->name('contractors.activate')->middleware('permission:contractor.activate');
             Route::post('contractors/{contractor}/deactivate', [ContractorController::class, 'deactivate'])->name('contractors.deactivate')->middleware('permission:contractor.activate');
+            Route::post('contractors/{contractor}/contacts', [ContractorController::class, 'storeContact'])->name('contractors.contacts.store')->middleware('permission:contractor.edit');
             Route::post('contractors/{contractor}/contacts/{contact}/deactivate', [ContractorController::class, 'deactivateContact'])->name('contractors.contacts.deactivate')->middleware('permission:contractor.edit');
         });
 
         // Contracts
         Route::middleware('permission:contract.view')->group(function (): void {
             Route::get('contracts', [ContractController::class, 'index'])->name('contracts.index');
+            Route::get('contracts/create', [ContractController::class, 'create'])->name('contracts.create')->middleware('permission:contract.create');
+            Route::post('contracts', [ContractController::class, 'store'])->name('contracts.store')->middleware('permission:contract.create');
             Route::get('contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
             Route::post('contracts/{contract}/mark-paid', [ContractController::class, 'markPaid'])->name('contracts.mark-paid')->middleware('permission:contract.mark_paid');
         });
@@ -222,6 +226,7 @@ Route::middleware('auth')->group(function (): void {
             Route::put('offers/{offer}', [OfferController::class, 'update'])->name('offers.update')->middleware('permission:offer.edit');
             Route::post('offers/{offer}/activate', [OfferController::class, 'activate'])->name('offers.activate')->middleware('permission:offer.activate');
             Route::post('offers/{offer}/deactivate', [OfferController::class, 'deactivate'])->name('offers.deactivate')->middleware('permission:offer.deactivate');
+            Route::post('offers/{offer}/estates', [OfferController::class, 'storeEstate'])->name('offers.estates.store')->middleware('permission:offer.edit');
             Route::post('offers/{offer}/estates/{estate}/mark-paid', [OfferController::class, 'markEstatePaid'])->name('offers.estates.mark-paid')->middleware('permission:offer.edit');
             Route::post('offers/{offer}/estates/{estate}/activate', [OfferController::class, 'activateEstate'])->name('offers.estates.activate')->middleware('permission:offer.edit');
             Route::post('offers/{offer}/estates/{estate}/deactivate', [OfferController::class, 'deactivateEstate'])->name('offers.estates.deactivate')->middleware('permission:offer.edit');
@@ -234,6 +239,10 @@ Route::middleware('auth')->group(function (): void {
             Route::post('geo-cities', [GeoCityController::class, 'store'])->name('geo-cities.store')->middleware('permission:geo_city.create');
             Route::get('geo-cities/{geoCity}', [GeoCityController::class, 'show'])->name('geo-cities.show');
             Route::delete('geo-cities/{geoCity}', [GeoCityController::class, 'destroy'])->name('geo-cities.destroy')->middleware('permission:geo_city.delete');
+        });
+
+        Route::middleware('permission:geo_neighborhood.view')->group(function (): void {
+            Route::get('geo-neighborhoods', [GeoNeighborhoodController::class, 'index'])->name('geo-neighborhoods.index');
             Route::post('geo-neighborhoods', [GeoNeighborhoodController::class, 'store'])->name('geo-neighborhoods.store')->middleware('permission:geo_neighborhood.create');
             Route::delete('geo-neighborhoods/{geoNeighborhood}', [GeoNeighborhoodController::class, 'destroy'])->name('geo-neighborhoods.destroy')->middleware('permission:geo_neighborhood.delete');
         });

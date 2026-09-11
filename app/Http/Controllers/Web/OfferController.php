@@ -7,15 +7,18 @@ namespace App\Http\Controllers\Web;
 use App\Actions\Offer\ActivateOfferAction;
 use App\Actions\Offer\ActivateOfferEstateAction;
 use App\Actions\Offer\CreateOfferAction;
+use App\Actions\Offer\CreateOfferEstateAction;
 use App\Actions\Offer\DeactivateOfferAction;
 use App\Actions\Offer\MarkOfferEstatePaidAction;
 use App\Actions\Offer\UpdateOfferAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Offer\StoreOfferEstateRequest;
 use App\Http\Requests\Offer\StoreOfferRequest;
 use App\Http\Requests\Offer\UpdateOfferRequest;
 use App\Models\Offer;
 use App\Models\OfferEstate;
 use App\Models\Partner;
+use App\Support\Query\AppliesListSort;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,24 +30,27 @@ class OfferController extends Controller
     {
         $this->authorize('viewAny', Offer::class);
 
-        $offers = Offer::query()
+        $query = Offer::query()
             ->with(['partner:id,name'])
             ->withCount('estates')
-            ->when($request->filled('q'), function ($query) use ($request): void {
+            ->when($request->filled('q'), function ($builder) use ($request): void {
                 $term = '%'.trim((string) $request->string('q')).'%';
-                $query->where(function ($q) use ($term): void {
+                $builder->where(function ($q) use ($term): void {
                     $q->where('number', 'like', $term)
                         ->orWhere('partner_name', 'like', $term)
                         ->orWhere('city', 'like', $term);
                 });
             })
             ->when($request->filled('state'), fn ($q) => $q->where('state', (int) $request->input('state')))
-            ->when($request->filled('partner_id'), fn ($q) => $q->where('partner_id', (int) $request->input('partner_id')))
-            ->latest('id')
-            ->paginate(25)
-            ->withQueryString();
+            ->when($request->filled('partner_id'), fn ($q) => $q->where('partner_id', (int) $request->input('partner_id')));
 
-        return view('offers.index', compact('offers'));
+        AppliesListSort::apply($query, $request, ['id', 'number', 'partner_id', 'city', 'offered_at', 'state', 'created_at']);
+
+        $offers = $query->paginate(25)->withQueryString();
+        $partners = Partner::query()->orderBy('name')->pluck('name', 'id');
+        $sortMeta = AppliesListSort::current($request);
+
+        return view('offers.index', compact('offers', 'partners') + $sortMeta);
     }
 
     public function create(): View
@@ -81,6 +87,18 @@ class OfferController extends Controller
         return view('offers.show', compact('offer'));
     }
 
+    public function storeEstate(
+        StoreOfferEstateRequest $request,
+        Offer $offer,
+        CreateOfferEstateAction $action
+    ): RedirectResponse {
+        $action->execute($request->user(), $offer, $request->validated());
+
+        Flash::success(__('Estate line added'));
+
+        return back();
+    }
+
     public function markEstatePaid(
         Offer $offer,
         OfferEstate $estate,
@@ -88,7 +106,7 @@ class OfferController extends Controller
     ): RedirectResponse {
         abort_unless($estate->offer_id === $offer->id, 404);
 
-        $action(request()->user(), $estate);
+        $action->execute(request()->user(), $estate);
 
         Flash::success(__('Estate marked as paid'));
 
@@ -102,7 +120,7 @@ class OfferController extends Controller
     ): RedirectResponse {
         abort_unless($estate->offer_id === $offer->id, 404);
 
-        $action(request()->user(), $estate, true);
+        $action->execute(request()->user(), $estate, true);
 
         Flash::success(__('Estate activated'));
 
@@ -116,7 +134,7 @@ class OfferController extends Controller
     ): RedirectResponse {
         abort_unless($estate->offer_id === $offer->id, 404);
 
-        $action(request()->user(), $estate, false);
+        $action->execute(request()->user(), $estate, false);
 
         Flash::success(__('Estate deactivated'));
 

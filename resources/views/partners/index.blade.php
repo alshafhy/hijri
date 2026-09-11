@@ -13,6 +13,8 @@
     </div>
     <div class="card-body">
       <form method="GET" class="row g-1 mb-2">
+        <input type="hidden" name="sort" value="{{ $sort ?? request('sort', 'id') }}">
+        <input type="hidden" name="dir" value="{{ $dir ?? request('dir', 'desc') }}">
         <div class="col-md-4">
           <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="{{ __('Search') }}">
         </div>
@@ -33,12 +35,12 @@
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>#</th>
-            <th>{{ __('Name') }}</th>
-            <th>{{ __('Email') }}</th>
-            <th>{{ __('Phone') }}</th>
+            <th>@include('components.sortable-th', ['column' => 'id', 'label' => '#'])</th>
+            <th>@include('components.sortable-th', ['column' => 'name', 'label' => __('Name')])</th>
+            <th>@include('components.sortable-th', ['column' => 'email', 'label' => __('Email')])</th>
+            <th>@include('components.sortable-th', ['column' => 'phone_number', 'label' => __('Phone')])</th>
             <th>{{ __('Offers count') }}</th>
-            <th>{{ __('State') }}</th>
+            <th>@include('components.sortable-th', ['column' => 'state', 'label' => __('State')])</th>
             <th>{{ __('Actions') }}</th>
           </tr>
         </thead>

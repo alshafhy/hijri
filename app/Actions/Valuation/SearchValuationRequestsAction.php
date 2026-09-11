@@ -88,6 +88,14 @@ final class SearchValuationRequestsAction
             });
         }
 
-        return $query->latest('id')->paginate($perPage)->withQueryString();
+        $allowedSorts = ['id', 'reference', 'number', 'state', 'created_at', 'started_at', 'evaluated_at', 'ended_at'];
+        $sort = (string) ($filters['sort'] ?? 'id');
+        $dir = strtolower((string) ($filters['dir'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'id';
+            $dir = 'desc';
+        }
+
+        return $query->orderBy($sort, $dir)->paginate($perPage)->withQueryString();
     }
 }

@@ -30,7 +30,7 @@
               <td>{{ $item->id }}</td>
               <td>{{ $item->reference }}</td>
               <td>{{ $item->number }}</td>
-              <td>{{ $item->state }}</td>
+              <td>{{ $item->stateLabel() }}</td>
               <td>{{ $item->property?->customer_name }}</td>
               <td class="text-nowrap">
                 <a href="{{ route('dashboard.valuation-requests.show', $item) }}" class="btn btn-sm btn-primary">{{ __('View') }}</a>

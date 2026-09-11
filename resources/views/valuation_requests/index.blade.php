@@ -29,13 +29,20 @@
     </div>
     <div class="card-body">
       <form method="get" class="row g-1 align-items-end">
+        <input type="hidden" name="sort" value="{{ $sort ?? request('sort', 'id') }}">
+        <input type="hidden" name="dir" value="{{ $dir ?? request('dir', 'desc') }}">
         <div class="col-md-3">
           <label class="form-label">{{ __('Search') }}</label>
           <input type="text" name="q" class="form-control" value="{{ $filters['q'] ?? '' }}">
         </div>
         <div class="col-md-2">
           <label class="form-label">{{ __('State') }}</label>
-          <input type="text" name="state" class="form-control" value="{{ $filters['state'] ?? '' }}">
+          <select name="state" class="form-select">
+            <option value="">{{ __('All') }}</option>
+            @foreach (\App\Enums\Valuation\RequestState::filterOptions() as $value => $label)
+              <option value="{{ $value }}" @selected(($filters['state'] ?? '') === $value)>{{ $label }}</option>
+            @endforeach
+          </select>
         </div>
         <div class="col-md-2">
           <label class="form-label">{{ __('Evaluator') }}</label>
@@ -75,10 +82,10 @@
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>#</th>
-            <th>{{ __('Reference') }}</th>
-            <th>{{ __('Number') }}</th>
-            <th>{{ __('State') }}</th>
+            <th>@include('components.sortable-th', ['column' => 'id', 'label' => '#'])</th>
+            <th>@include('components.sortable-th', ['column' => 'reference', 'label' => __('Reference')])</th>
+            <th>@include('components.sortable-th', ['column' => 'number', 'label' => __('Number')])</th>
+            <th>@include('components.sortable-th', ['column' => 'state', 'label' => __('State')])</th>
             <th>{{ __('Customer') }}</th>
             <th>{{ __('Qima') }}</th>
             <th>{{ __('Actions') }}</th>
@@ -90,7 +97,7 @@
               <td>{{ $item->id }}</td>
               <td>{{ $item->reference }}</td>
               <td>{{ $item->number }}</td>
-              <td>{{ $item->state }}</td>
+              <td>{{ $item->stateLabel() }}</td>
               <td>{{ $item->property?->customer_name }}</td>
               <td>
                 @if ($item->uploaded_on_qima)

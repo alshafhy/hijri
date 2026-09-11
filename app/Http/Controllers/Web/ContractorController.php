@@ -6,14 +6,17 @@ namespace App\Http\Controllers\Web;
 
 use App\Actions\Contractor\ActivateContractorAction;
 use App\Actions\Contractor\CreateContractorAction;
+use App\Actions\Contractor\CreatePartyContactAction;
 use App\Actions\Contractor\DeactivateContractorAction;
 use App\Actions\Contractor\DeactivatePartyContactAction;
 use App\Actions\Contractor\UpdateContractorAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contractor\StoreContractorRequest;
+use App\Http\Requests\Contractor\StorePartyContactRequest;
 use App\Http\Requests\Contractor\UpdateContractorRequest;
 use App\Models\Contractor;
 use App\Models\PartyContact;
+use App\Support\Query\AppliesListSort;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -25,22 +28,24 @@ class ContractorController extends Controller
     {
         $this->authorize('viewAny', Contractor::class);
 
-        $contractors = Contractor::query()
+        $query = Contractor::query()
             ->withCount('contracts')
-            ->when($request->filled('q'), function ($query) use ($request): void {
+            ->when($request->filled('q'), function ($builder) use ($request): void {
                 $term = '%'.trim((string) $request->string('q')).'%';
-                $query->where(function ($q) use ($term): void {
+                $builder->where(function ($q) use ($term): void {
                     $q->where('name', 'like', $term)
                         ->orWhere('email', 'like', $term)
                         ->orWhere('phone_number', 'like', $term);
                 });
             })
-            ->when($request->filled('state'), fn ($q) => $q->where('state', (int) $request->input('state')))
-            ->latest('id')
-            ->paginate(25)
-            ->withQueryString();
+            ->when($request->filled('state'), fn ($q) => $q->where('state', (int) $request->input('state')));
 
-        return view('contractors.index', compact('contractors'));
+        AppliesListSort::apply($query, $request, ['id', 'name', 'email', 'phone_number', 'fees', 'state', 'created_at']);
+
+        $contractors = $query->paginate(25)->withQueryString();
+        $sortMeta = AppliesListSort::current($request);
+
+        return view('contractors.index', compact('contractors') + $sortMeta);
     }
 
     public function create(): View
@@ -75,6 +80,18 @@ class ContractorController extends Controller
         return view('contractors.show', compact('contractor', 'contracts', 'contacts'));
     }
 
+    public function storeContact(
+        StorePartyContactRequest $request,
+        Contractor $contractor,
+        CreatePartyContactAction $action
+    ): RedirectResponse {
+        $action->execute($request->user(), $contractor, $request->validated());
+
+        Flash::success(__('Contact added'));
+
+        return back();
+    }
+
     public function deactivateContact(
         Contractor $contractor,
         PartyContact $contact,
@@ -82,7 +99,7 @@ class ContractorController extends Controller
     ): RedirectResponse {
         abort_unless($contact->contractor_id === $contractor->id, 404);
 
-        $action(request()->user(), $contact);
+        $action->execute(request()->user(), $contact);
 
         Flash::success(__('Contact removed'));
 

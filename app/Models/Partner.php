@@ -69,4 +69,14 @@ class Partner extends Model
     {
         return $this->state === self::STATE_ACTIVE;
     }
+
+    public function stateLabel(): string
+    {
+        return match ((int) $this->state) {
+            self::STATE_ACTIVE => __('Active'),
+            self::STATE_INACTIVE => __('Inactive'),
+            self::STATE_DRAFT => __('Draft'),
+            default => __('Unknown'),
+        };
+    }
 }

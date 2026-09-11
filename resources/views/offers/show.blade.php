@@ -31,12 +31,46 @@
       <div class="col-md-4"><strong>{{ __('City') }}:</strong> {{ $offer->city }}</div>
       <div class="col-md-4"><strong>{{ __('Offered at') }}:</strong> {{ optional($offer->offered_at)->format('Y-m-d') }}</div>
       <div class="col-md-4 mt-1"><strong>{{ __('Valuation request') }}:</strong> {{ $offer->valuationRequest?->number }}</div>
-      <div class="col-md-4 mt-1"><strong>{{ __('State') }}:</strong> {{ $offer->state }}</div>
+      <div class="col-md-4 mt-1"><strong>{{ __('State') }}:</strong> {{ $offer->stateLabel() }}</div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-header"><h4 class="card-title mb-0">{{ __('Estate lines') }}</h4></div>
+    @can('update', $offer)
+      <div class="card-body border-bottom">
+        <form method="POST" action="{{ route('dashboard.offers.estates.store', $offer) }}" class="row g-1 align-items-end">
+          @csrf
+          <div class="col-md-2">
+            <label class="form-label">{{ __('Kind') }}</label>
+            <input name="estate_kind" class="form-control" value="{{ old('estate_kind') }}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">{{ __('Type') }}</label>
+            <input name="estate_type" class="form-control" value="{{ old('estate_type') }}" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">{{ __('Instrument no') }}</label>
+            <input name="instrument_no" class="form-control" value="{{ old('instrument_no') }}">
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">{{ __('Area') }}</label>
+            <input type="number" min="0" name="area" class="form-control" value="{{ old('area') }}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">{{ __('Neighborhood') }}</label>
+            <input name="neighborhood" class="form-control" value="{{ old('neighborhood') }}">
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">{{ __('Fees') }}</label>
+            <input type="number" min="0" name="fees" class="form-control" value="{{ old('fees') }}">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit">{{ __('Add estate line') }}</button>
+          </div>
+        </form>
+      </div>
+    @endcan
     <div class="table-responsive">
       <table class="table table-striped">
         <thead>
@@ -60,9 +94,9 @@
               <td>{{ $estate->estate_kind }}</td>
               <td>{{ $estate->estate_type }}</td>
               <td>{{ $estate->instrument_no }}</td>
-              <td>{{ $estate->area }}</td>
+              <td>{{ number_format((float) ($estate->area ?? 0), 2) }}</td>
               <td>{{ $estate->neighborhood }}</td>
-              <td>{{ $estate->fees }}</td>
+              <td>{{ number_format((float) ($estate->fees ?? 0), 2) }} {{ __('SAR') }}</td>
               <td>{{ $estate->payment_status->label() }}</td>
               <td>{{ $estate->status->label() }}</td>
               <td class="d-flex gap-1 flex-wrap">

@@ -76,10 +76,7 @@ class ValuationRequestPolicy
 
     public function unapprove(User $user, ValuationRequest $request): bool
     {
-        if ($request->isQimaLocked()) {
-            return false;
-        }
-
+        // Managers may unapprove even after Qima lock — action clears the lock.
         return $user->can('valuation_request.unapprove')
             && $user->hasAnyRole(['super-admin', 'admin', 'manager']);
     }

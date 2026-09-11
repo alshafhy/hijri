@@ -16,11 +16,11 @@
     <div class="card-body">
       <div class="row g-2">
         <div class="col-md-2"><strong>{{ __('Requests count') }}:</strong> {{ $summary['requests_count'] }}</div>
-        <div class="col-md-2"><strong>{{ __('Coordinator share') }}:</strong> {{ $summary['coordinator_share_total'] }}</div>
-        <div class="col-md-2"><strong>{{ __('Evaluator share') }}:</strong> {{ $summary['evaluator_share_total'] }}</div>
-        <div class="col-md-2"><strong>{{ __('Manager share') }}:</strong> {{ $summary['manager_share_total'] }}</div>
-        <div class="col-md-2"><strong>{{ __('Contractor fees paid') }}:</strong> {{ $summary['contractor_fees_paid'] }}</div>
-        <div class="col-md-2"><strong>{{ __('Contractor fees unpaid') }}:</strong> {{ $summary['contractor_fees_unpaid'] }}</div>
+        <div class="col-md-2"><strong>{{ __('Coordinator share') }}:</strong> {{ number_format((float) $summary['coordinator_share_total'], 2) }}</div>
+        <div class="col-md-2"><strong>{{ __('Evaluator share') }}:</strong> {{ number_format((float) $summary['evaluator_share_total'], 2) }}</div>
+        <div class="col-md-2"><strong>{{ __('Manager share') }}:</strong> {{ number_format((float) $summary['manager_share_total'], 2) }}</div>
+        <div class="col-md-2"><strong>{{ __('Contractor fees paid') }}:</strong> {{ number_format((float) $summary['contractor_fees_paid'], 2) }}</div>
+        <div class="col-md-2"><strong>{{ __('Contractor fees unpaid') }}:</strong> {{ number_format((float) $summary['contractor_fees_unpaid'], 2) }}</div>
       </div>
     </div>
   </div>
@@ -48,9 +48,9 @@
               <td>{{ $request->number }}</td>
               <td>{{ $request->coordinator?->name }}</td>
               <td>{{ $request->evaluator?->name }}</td>
-              <td>{{ $shares?->coordinator_share }}</td>
-              <td>{{ $shares?->evaluator_share }}</td>
-              <td>{{ $shares?->manager_share }}</td>
+              <td>{{ number_format((float) ($shares?->coordinator_share ?? 0), 2) }}</td>
+              <td>{{ number_format((float) ($shares?->evaluator_share ?? 0), 2) }}</td>
+              <td>{{ number_format((float) ($shares?->manager_share ?? 0), 2) }}</td>
               <td>
                 <a href="{{ route('dashboard.valuation-requests.show', $request) }}" class="btn btn-sm btn-primary">{{ __('View') }}</a>
               </td>

@@ -17,7 +17,12 @@
           </div>
           <div class="col-md-2">
             <label class="form-label">{{ __('State') }}</label>
-            <input type="text" name="state" class="form-control" value="{{ $filters['state'] ?? '' }}">
+            <select name="state" class="form-select">
+              <option value="">{{ __('All') }}</option>
+              @foreach (\App\Enums\Valuation\RequestState::filterOptions() as $value => $label)
+                <option value="{{ $value }}" @selected(($filters['state'] ?? '') === $value)>{{ $label }}</option>
+              @endforeach
+            </select>
           </div>
           <div class="col-md-2">
             <label class="form-label">{{ __('Evaluator') }}</label>
@@ -106,7 +111,7 @@
                 <td>{{ $item->id }}</td>
                 <td>{{ $item->reference }}</td>
                 <td>{{ $item->number }}</td>
-                <td>{{ $item->state }}</td>
+                <td>{{ $item->stateLabel() }}</td>
                 <td>{{ $item->property?->customer_name }}</td>
                 <td>
                   <a href="{{ route('dashboard.valuation-requests.show', $item) }}" class="btn btn-sm btn-primary">{{ __('View') }}</a>

@@ -7,12 +7,17 @@
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-1">
       <h4 class="card-title mb-0">{{ __('Cities') }}</h4>
-      @can('create', App\Models\GeoCity::class)
-        <a href="{{ route('dashboard.geo-cities.create') }}" class="btn btn-sm btn-primary">{{ __('Add city') }}</a>
-      @endcan
+      <div class="d-flex flex-wrap gap-1">
+        <a href="{{ route('dashboard.geo-neighborhoods.index') }}" class="btn btn-sm btn-outline-secondary">{{ __('Neighborhoods') }}</a>
+        @can('create', App\Models\GeoCity::class)
+          <a href="{{ route('dashboard.geo-cities.create') }}" class="btn btn-sm btn-primary">{{ __('Add city') }}</a>
+        @endcan
+      </div>
     </div>
     <div class="card-body">
       <form method="GET" class="row g-1 mb-2">
+        <input type="hidden" name="sort" value="{{ $sort ?? request('sort', 'id') }}">
+        <input type="hidden" name="dir" value="{{ $dir ?? request('dir', 'desc') }}">
         <div class="col-md-4">
           <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="{{ __('Search') }}">
         </div>
@@ -25,9 +30,9 @@
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>#</th>
-            <th>{{ __('Arabic name') }}</th>
-            <th>{{ __('English name') }}</th>
+            <th>@include('components.sortable-th', ['column' => 'id', 'label' => '#'])</th>
+            <th>@include('components.sortable-th', ['column' => 'name_ar', 'label' => __('Arabic name')])</th>
+            <th>@include('components.sortable-th', ['column' => 'name_en', 'label' => __('English name')])</th>
             <th>{{ __('Neighborhoods') }}</th>
             <th>{{ __('Actions') }}</th>
           </tr>
