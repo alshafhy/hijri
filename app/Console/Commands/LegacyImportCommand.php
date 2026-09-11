@@ -21,11 +21,14 @@ use App\Services\LegacyImport\LandsImporter;
 use App\Services\LegacyImport\LegacyUsersMapImporter;
 use App\Services\LegacyImport\NeighborhoodsImporter;
 use App\Services\LegacyImport\OffersImporter;
+use App\Services\LegacyImport\OfferEstatesImporter;
+use App\Services\LegacyImport\PartyContactsImporter;
 use App\Services\LegacyImport\PartnersImporter;
 use App\Services\LegacyImport\PicturesImporter;
 use App\Services\LegacyImport\PropertiesImporter;
 use App\Services\LegacyImport\PropertyLocationsImporter;
 use App\Services\LegacyImport\ServicesImporter;
+use App\Services\LegacyImport\TotalsImporter;
 use App\Services\LegacyImport\ValuationRequestsImporter;
 use App\Support\Legacy\RequestPropertyLinker;
 use Illuminate\Console\Command;
@@ -58,6 +61,7 @@ class LegacyImportCommand extends Command
             ComparablesImporter::key() => ComparablesImporter::class,
             AdjustmentsImporter::key() => AdjustmentsImporter::class,
             ComponentsImporter::key() => ComponentsImporter::class,
+            TotalsImporter::key() => TotalsImporter::class,
             BordersImporter::key() => BordersImporter::class,
             LandsImporter::key() => LandsImporter::class,
             FacadesImporter::key() => FacadesImporter::class,
@@ -65,7 +69,9 @@ class LegacyImportCommand extends Command
             PicturesImporter::key() => PicturesImporter::class,
             FeeSharesImporter::key() => FeeSharesImporter::class,
             OffersImporter::key() => OffersImporter::class,
+            OfferEstatesImporter::key() => OfferEstatesImporter::class,
             ContractsImporter::key() => ContractsImporter::class,
+            PartyContactsImporter::key() => PartyContactsImporter::class,
         ];
     }
 

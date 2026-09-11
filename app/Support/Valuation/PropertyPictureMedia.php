@@ -92,7 +92,10 @@ SVG;
             $path = $this->absolutePath($picture);
 
             if ($path !== null) {
-                $images[] = ['path' => $path, 'label' => $label];
+                $images[] = [
+                    'path' => $this->toPdfSrc($path),
+                    'label' => $label,
+                ];
 
                 continue;
             }
@@ -106,5 +109,20 @@ SVG;
             'missing' => $missing,
             'notes' => $notes,
         ];
+    }
+
+    /**
+     * Embed local files as data-URIs so DomPDF is not limited by public chroot.
+     */
+    private function toPdfSrc(string $absolutePath): string
+    {
+        $mime = @mime_content_type($absolutePath) ?: 'image/jpeg';
+        $bytes = @file_get_contents($absolutePath);
+
+        if ($bytes === false || $bytes === '') {
+            return $this->placeholderDataUri();
+        }
+
+        return 'data:'.$mime.';base64,'.base64_encode($bytes);
     }
 }

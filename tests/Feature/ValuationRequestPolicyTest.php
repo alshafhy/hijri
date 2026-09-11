@@ -2,39 +2,83 @@
 
 declare(strict_types=1);
 
-use App\Policies\ValuationRequestPolicy;
+use App\Enums\UserStatus;
 use App\Models\User;
 use App\Models\ValuationRequest;
-use App\Enums\UserStatus;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
     foreach ([
         'valuation_request.view',
+        'valuation_request.create',
+        'valuation_request.edit',
         'valuation_request.approve_final',
         'valuation_request.unapprove',
         'valuation_request.mark_evaluated',
         'valuation_request.qima_upload',
+        'valuation_request.send',
+        'valuation_request.reject',
+        'valuation_request.cancel',
+        'valuation_request.duplicate',
+        'valuation_request.change_evaluator',
+        'valuation_request.change_coordinator',
+        'valuation_request.change_property_type',
+        'valuation_request.override_amount',
+        'valuation_request.manage_fee_shares',
+        'valuation_request.view_deleted',
+        'valuation_request.view_logs',
+        'valuation_request.advanced_search',
     ] as $permission) {
         Permission::findOrCreate($permission, 'web');
     }
 
     Role::findOrCreate('manager', 'web')->givePermissionTo([
         'valuation_request.view',
+        'valuation_request.create',
+        'valuation_request.edit',
         'valuation_request.approve_final',
         'valuation_request.unapprove',
         'valuation_request.mark_evaluated',
         'valuation_request.qima_upload',
+        'valuation_request.send',
+        'valuation_request.reject',
+        'valuation_request.cancel',
+        'valuation_request.duplicate',
+        'valuation_request.change_evaluator',
+        'valuation_request.change_coordinator',
+        'valuation_request.change_property_type',
+        'valuation_request.override_amount',
+        'valuation_request.manage_fee_shares',
+        'valuation_request.view_deleted',
+        'valuation_request.view_logs',
+        'valuation_request.advanced_search',
     ]);
 
     Role::findOrCreate('evaluator', 'web')->givePermissionTo([
         'valuation_request.view',
+        'valuation_request.edit',
         'valuation_request.mark_evaluated',
+        'valuation_request.advanced_search',
+    ]);
+
+    Role::findOrCreate('coordinator', 'web')->givePermissionTo([
+        'valuation_request.view',
+        'valuation_request.create',
+        'valuation_request.edit',
+        'valuation_request.send',
+        'valuation_request.reject',
+        'valuation_request.cancel',
+        'valuation_request.duplicate',
+        'valuation_request.change_evaluator',
+        'valuation_request.advanced_search',
     ]);
 });
 
@@ -71,4 +115,19 @@ it('allows assigned evaluator to mark evaluated but not after qima lock', functi
     $request->forceFill(['uploaded_on_qima' => true, 'qima_locked_at' => now()])->save();
 
     expect(Gate::forUser($evaluator)->allows('markEvaluated', $request))->toBeFalse();
+});
+
+it('allows coordinator to send and cancel but not override amount', function () {
+    $coordinator = User::factory()->create(['status' => UserStatus::Active]);
+    $coordinator->assignRole('coordinator');
+
+    $request = ValuationRequest::query()->create([
+        'legacy_id' => 900003,
+        'state' => 'waiting',
+        'coordinator_user_id' => $coordinator->id,
+    ]);
+
+    expect(Gate::forUser($coordinator)->allows('send', $request))->toBeTrue()
+        ->and(Gate::forUser($coordinator)->allows('cancel', $request))->toBeTrue()
+        ->and(Gate::forUser($coordinator)->allows('overrideAmount', $request))->toBeFalse();
 });

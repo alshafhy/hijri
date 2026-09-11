@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('valuation_requests', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('legacy_id')->unique();
+            $table->unsignedBigInteger('legacy_id')->nullable()->unique();
             $table->integer('reference')->nullable()->index();
             $table->string('number', 250)->nullable()->index();
             $table->string('deposit_number')->nullable();
@@ -42,7 +42,7 @@ return new class extends Migration
 
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('legacy_id')->unique();
+            $table->unsignedBigInteger('legacy_id')->nullable()->unique();
             $table->foreignId('valuation_request_id')->nullable()->unique()->constrained('valuation_requests')->nullOnDelete();
             $table->unsignedBigInteger('legacy_location_id')->nullable()->index();
             $table->string('customer_name', 128)->nullable();

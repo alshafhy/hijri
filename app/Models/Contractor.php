@@ -7,10 +7,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Contractor extends Model
 {
+    use LogsActivity;
     use SoftDeletes;
+
+    public const STATE_DRAFT = 0;
+
+    public const STATE_ACTIVE = 2;
+
+    public const STATE_INACTIVE = -1;
 
     protected $fillable = [
         'legacy_id',
@@ -47,8 +56,27 @@ class Contractor extends Model
         ];
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('Contractor')
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->logOnly(['name', 'email', 'phone_number', 'fees', 'date_from', 'date_to', 'state']);
+    }
+
     public function contracts(): HasMany
     {
         return $this->hasMany(Contract::class);
+    }
+
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(PartyContact::class);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->state === self::STATE_ACTIVE;
     }
 }

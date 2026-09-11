@@ -88,6 +88,11 @@ class ValuationRequest extends Model
         return $this->hasMany(Contract::class);
     }
 
+    public function offers(): HasMany
+    {
+        return $this->hasMany(Offer::class);
+    }
+
     public function coordinator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'coordinator_user_id');

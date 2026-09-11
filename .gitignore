@@ -52,3 +52,16 @@ auth.json
 
 # Local analysis exports (do not commit)
 /storage/app/local-exports/
+
+# Docs / plans — only root README.md may be tracked
+*.md
+!/README.md
+/docs/
+/implementation_plan.md
+/task.md
+/testing_plan.md
+/walkthrough.md
+/README_UPGRADE.md
+
+# Local docker backups
+/docker-compose.yml.backup

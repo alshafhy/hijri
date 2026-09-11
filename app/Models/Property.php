@@ -146,4 +146,9 @@ class Property extends Model
     {
         return $this->hasMany(PropertyService::class);
     }
+
+    public function total(): HasOne
+    {
+        return $this->hasOne(PropertyTotal::class);
+    }
 }

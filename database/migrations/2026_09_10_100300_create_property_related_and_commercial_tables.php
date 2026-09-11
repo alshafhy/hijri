@@ -94,7 +94,7 @@ return new class extends Migration
 
         Schema::create('request_fee_shares', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('legacy_id')->unique();
+            $table->unsignedBigInteger('legacy_id')->nullable()->unique();
             $table->foreignId('valuation_request_id')->constrained('valuation_requests')->cascadeOnDelete();
             $table->integer('coordinator_share')->nullable();
             $table->integer('evaluator_share')->nullable();

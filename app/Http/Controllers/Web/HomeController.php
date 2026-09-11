@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\Valuation\GetApprovedValuationsCountAction;
+use App\Actions\Valuation\GetAverageTurnaroundHoursAction;
+use App\Actions\Valuation\GetTotalValuedAreaAction;
 use App\Http\Controllers\Controller;
 use App\Models\ImportQuarantine;
 use App\Models\Property;
@@ -15,8 +18,11 @@ use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(): Renderable
-    {
+    public function index(
+        GetApprovedValuationsCountAction $approvedCount,
+        GetTotalValuedAreaAction $valuedArea,
+        GetAverageTurnaroundHoursAction $turnaround,
+    ): Renderable {
         $user = Auth::user();
         abort_unless($user !== null && $user->can('dashboard.view'), 403);
 
@@ -31,6 +37,9 @@ class HomeController extends Controller
             'quarantine' => ImportQuarantine::query()->count(),
             'pictures_missing' => PropertyPicture::query()->where('file_exists', false)->count(),
             'pictures_total' => PropertyPicture::query()->count(),
+            'approved_count' => $approvedCount->execute()['approved_count'],
+            'total_valued_area' => $valuedArea->execute()['total_valued_area'],
+            'average_turnaround_hours' => $turnaround->execute()['average_turnaround_hours'],
         ];
 
         if ($user->hasRole('evaluator')) {

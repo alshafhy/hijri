@@ -6,9 +6,9 @@ namespace App\Actions\Valuation;
 
 use App\Models\User;
 use App\Models\ValuationRequest;
+use App\Support\Valuation\ValuationActivity;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 
 final class UploadOfficialQimaReportAction
 {
@@ -23,6 +23,8 @@ final class UploadOfficialQimaReportAction
             'uploaded_on_qima' => true,
             'qima_locked_at' => now(),
         ])->save();
+
+        ValuationActivity::log($actor, $request, 'official_report_uploaded', 'Official Qima report uploaded and locked');
 
         return $request->refresh();
     }

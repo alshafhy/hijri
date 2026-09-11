@@ -7,10 +7,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Contract extends Model
 {
+    use LogsActivity;
     use SoftDeletes;
+
+    public const STATE_UNPAID = 0;
+
+    public const STATE_PAID = 1;
 
     protected $fillable = [
         'legacy_id',
@@ -36,6 +43,15 @@ class Contract extends Model
         ];
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('Contract')
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->logOnly(['state', 'contractor_id', 'valuation_request_id']);
+    }
+
     public function contractor(): BelongsTo
     {
         return $this->belongsTo(Contractor::class);
@@ -44,5 +60,10 @@ class Contract extends Model
     public function valuationRequest(): BelongsTo
     {
         return $this->belongsTo(ValuationRequest::class);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->state === self::STATE_PAID;
     }
 }
