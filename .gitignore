@@ -65,3 +65,10 @@ auth.json
 
 # Local docker backups
 /docker-compose.yml.backup
+
+# Docker — never track (local/runtime only)
+/docker/
+/docker-compose.yml
+/docker-compose.*.yml
+Dockerfile
+**/Dockerfile
