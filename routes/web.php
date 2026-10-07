@@ -17,6 +17,8 @@ use App\Http\Controllers\Web\PartnerController;
 use App\Http\Controllers\Web\PropertyPictureController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\UserController;
+use App\Http\Controllers\Web\ValuationAttachmentController;
+use App\Http\Controllers\Web\ValuationLookupController;
 use App\Http\Controllers\Web\ValuationReportExportController;
 use App\Http\Controllers\Web\ValuationRequestController;
 use Illuminate\Support\Facades\Auth;
@@ -172,6 +174,19 @@ Route::middleware('auth')->group(function (): void {
             ->name('valuation-requests.exports.download')
             ->whereIn('variant', ['enforcement', 'full', 'full-draft'])
             ->middleware('permission:valuation_request.export_pdf');
+
+        Route::get('valuation-requests/{valuationRequest}/attachments/{attachment}', [ValuationAttachmentController::class, 'download'])
+            ->name('valuation-requests.attachments.download')
+            ->middleware('permission:valuation_request.view');
+        Route::delete('valuation-requests/{valuationRequest}/attachments/{attachment}', [ValuationAttachmentController::class, 'destroy'])
+            ->name('valuation-requests.attachments.destroy')
+            ->middleware('permission:valuation_request.edit');
+
+        Route::prefix('valuation-lookups')->name('valuation-lookups.')->middleware('permission:valuation_request.view')->group(function (): void {
+            Route::get('cities/{geoCity}/neighborhoods', [ValuationLookupController::class, 'neighborhoods'])->name('neighborhoods');
+            Route::get('property-types/{kind}', [ValuationLookupController::class, 'propertyTypes'])->name('property-types');
+            Route::get('grid/{kind}/{type}', [ValuationLookupController::class, 'gridRows'])->name('grid');
+        });
 
         Route::get('property-pictures/{propertyPicture}/file', [PropertyPictureController::class, 'file'])
             ->name('property-pictures.file')

@@ -45,6 +45,7 @@ class PropertyAdjustment extends Model
         'meter_price_approximately',
         'proportional_adjustment',
         'settlement_ratio',
+        'transaction_gregorian_date',
     ];
 
     /**

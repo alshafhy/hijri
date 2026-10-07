@@ -44,9 +44,11 @@ use App\Http\Requests\Valuation\UpdateEvaluatorDataRequest;
 use App\Http\Requests\Valuation\UpdateFeeSharesRequest;
 use App\Models\Company;
 use App\Models\GeoCity;
+use App\Models\GeoNeighborhood;
 use App\Models\PropertyPicture;
 use App\Models\User;
 use App\Models\ValuationRequest;
+use App\Support\Valuation\ValuationFieldGrid;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -149,14 +151,26 @@ class ValuationRequestController extends Controller
     public function editInfo(ValuationRequest $valuationRequest): View
     {
         $this->authorize('update', $valuationRequest);
-        $valuationRequest->load(['property.location', 'property.components', 'property.total']);
+        $valuationRequest->load([
+            'property.location', 'property.components', 'property.total', 'property.lands', 'property.facades',
+            'property.services', 'property.flooring', 'property.building', 'property.ac', 'property.question',
+            'property.comparables', 'property.adjustments', 'property.pictures', 'attachments', 'customTableRows',
+        ]);
+        $property = $valuationRequest->property;
+        abort_if($property === null, 404);
 
-        $components = $valuationRequest->property?->components?->keyBy('component_key') ?? collect();
+        $cityId = $property->location?->city_id;
 
         return view('valuation_requests.edit_info', [
             'request' => $valuationRequest,
-            'components' => $components,
+            'property' => $property,
+            'components' => $property->components->keyBy('component_key'),
+            'gridRows' => ValuationFieldGrid::rows($property->property_kind, $property->property_type),
+            'isBuilding' => ValuationFieldGrid::isBuilding($property->property_kind),
             'cities' => GeoCity::query()->orderBy('name_ar')->pluck('name_ar', 'id'),
+            'neighborhoods' => $cityId
+                ? GeoNeighborhood::query()->where('city_id', $cityId)->orderBy('name_ar')->pluck('name_ar', 'id')
+                : collect(),
         ]);
     }
 

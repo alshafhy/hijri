@@ -198,4 +198,36 @@ class Property extends Model
     {
         return $this->hasOne(PropertyTotal::class);
     }
+
+    /**
+     * @return HasOne<PropertyBuilding, $this>
+     */
+    public function building(): HasOne
+    {
+        return $this->hasOne(PropertyBuilding::class);
+    }
+
+    /**
+     * @return HasOne<PropertyQuestion, $this>
+     */
+    public function question(): HasOne
+    {
+        return $this->hasOne(PropertyQuestion::class);
+    }
+
+    /**
+     * @return HasOne<PropertyAc, $this>
+     */
+    public function ac(): HasOne
+    {
+        return $this->hasOne(PropertyAc::class);
+    }
+
+    /**
+     * @return HasOne<PropertyFlooring, $this>
+     */
+    public function flooring(): HasOne
+    {
+        return $this->hasOne(PropertyFlooring::class);
+    }
 }

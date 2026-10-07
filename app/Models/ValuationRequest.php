@@ -141,6 +141,22 @@ class ValuationRequest extends Model
         return $this->belongsTo(User::class, 'evaluator_user_id');
     }
 
+    /**
+     * @return HasMany<ValuationAttachment, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(ValuationAttachment::class);
+    }
+
+    /**
+     * @return HasMany<ValuationCustomTableRow, $this>
+     */
+    public function customTableRows(): HasMany
+    {
+        return $this->hasMany(ValuationCustomTableRow::class)->orderBy('sort_order');
+    }
+
     public function isQimaLocked(): bool
     {
         return $this->qima_locked_at !== null || $this->uploaded_on_qima === true;

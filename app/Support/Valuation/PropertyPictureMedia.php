@@ -7,6 +7,7 @@ namespace App\Support\Valuation;
 use App\Models\PropertyPicture;
 use App\Support\Legacy\PropertyPictureVerifier;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Safe presentation / PDF helpers for property pictures when files may be missing.
@@ -19,19 +20,19 @@ final class PropertyPictureMedia
 
     public function isAvailable(PropertyPicture $picture): bool
     {
-        if (! $picture->file_exists) {
-            return false;
-        }
-
-        $resolved = $this->verifier->resolve($picture);
-
-        return $resolved['found'] === true;
+        return $this->absolutePath($picture) !== null;
     }
 
     public function absolutePath(PropertyPicture $picture): ?string
     {
         if (! $picture->file_exists) {
             return null;
+        }
+
+        if ($picture->legacy_id === null && $picture->relative_path) {
+            $disk = Storage::disk('local');
+
+            return $disk->exists($picture->relative_path) ? $disk->path($picture->relative_path) : null;
         }
 
         return $this->verifier->resolve($picture)['absolute_path'];
