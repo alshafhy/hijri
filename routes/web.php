@@ -9,13 +9,17 @@ use App\Http\Controllers\Web\FinancialController;
 use App\Http\Controllers\Web\GeoCityController;
 use App\Http\Controllers\Web\GeoNeighborhoodController;
 use App\Http\Controllers\Web\HomeController;
+use App\Http\Controllers\Web\InvitationController;
 use App\Http\Controllers\Web\LanguageController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OfferController;
 use App\Http\Controllers\Web\PartnerController;
+use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\PropertyPictureController;
 use App\Http\Controllers\Web\RoleController;
+use App\Http\Controllers\Web\StaffController;
+use App\Http\Controllers\Web\SupportRequestController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\ValuationAttachmentController;
 use App\Http\Controllers\Web\ValuationLookupController;
@@ -34,6 +38,11 @@ Route::get('/', [HomeController::class, 'pageComingSoon'])->name('home-page');
 
 Auth::routes();
 
+Route::middleware(['guest', 'throttle:10,1'])->group(function (): void {
+    Route::get('invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+    Route::post('invitations/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
+});
+
 Route::middleware('auth')->group(function (): void {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 
@@ -51,6 +60,24 @@ Route::middleware('auth')->group(function (): void {
             ->name('users.change-password');
         Route::match(['put', 'post'], 'users/change-password', [UserController::class, 'updatePassword'])
             ->name('users.update-password');
+
+        Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::post('profile/images/{type}', [ProfileController::class, 'uploadImage'])->name('profile.images.upload')->where('type', 'signature|avatar');
+        Route::get('profile/images/{user}/{type}', [ProfileController::class, 'image'])->name('profile.images.show')->where('type', 'signature|avatar');
+        Route::post('profile/support', [ProfileController::class, 'support'])->name('profile.support')->middleware('throttle:10,1');
+
+        Route::middleware('permission:user.view')->group(function (): void {
+            Route::post('users/invite', [StaffController::class, 'invite'])->name('users.invite')->middleware('permission:user.create');
+            Route::middleware('permission:user.edit')->group(function (): void {
+                Route::post('users/{user}/invitation', [StaffController::class, 'resendInvitation'])->name('users.invitation.resend');
+                Route::put('users/{user}/status', [StaffController::class, 'updateStatus'])->name('users.status');
+                Route::put('users/{user}/final-approval', [StaffController::class, 'updateFinalApproval'])->name('users.final-approval');
+                Route::put('users/{user}/membership', [StaffController::class, 'updateMembership'])->name('users.membership');
+                Route::put('support-requests/{supportRequest}', [SupportRequestController::class, 'update'])->name('support-requests.update');
+            });
+            Route::get('support-requests', [SupportRequestController::class, 'index'])->name('support-requests.index');
+        });
 
         Route::resource('users', UserController::class)
             ->middleware('permission:user.view');

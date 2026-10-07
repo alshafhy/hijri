@@ -7,6 +7,9 @@ return [
     'default_branch_id' => (int) env('DEFAULT_BRANCH_ID', 1),
     'api_token_name' => 'auth_token',
     'token_type' => 'Bearer',
+    'staff_limit' => (int) env('STAFF_LIMIT', 99),
+    'staff_roles' => ['coordinator', 'evaluator'],
+    'invitation_ttl_hours' => 72,
     'status' => [
         'active' => 1,
         'inactive' => 0,

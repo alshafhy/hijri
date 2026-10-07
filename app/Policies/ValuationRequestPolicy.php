@@ -71,7 +71,8 @@ class ValuationRequestPolicy
             return false;
         }
 
-        return $user->can('valuation_request.approve_final');
+        return $user->can('valuation_request.approve_final')
+            || ($user->can_approve_final_request && $user->isStaffMember());
     }
 
     public function unapprove(User $user, ValuationRequest $request): bool
