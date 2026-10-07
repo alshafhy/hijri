@@ -122,9 +122,44 @@ final class ReportPdfCacheService
         @unlink($this->lockPath($valuationRequestId, $key));
     }
 
+    /**
+     * Deletes cached files not modified for $days days and removes emptied directories.
+     *
+     * @return int number of deleted files
+     */
+    public function prune(int $days): int
+    {
+        $root = $this->root();
+        if (! is_dir($root)) {
+            return 0;
+        }
+
+        $threshold = now()->subDays($days)->getTimestamp();
+        $deleted = 0;
+
+        foreach (File::directories($root) as $directory) {
+            foreach (File::files($directory, true) as $file) {
+                if ($file->getMTime() < $threshold && @unlink($file->getPathname())) {
+                    $deleted++;
+                }
+            }
+
+            if (File::isEmptyDirectory($directory)) {
+                @rmdir($directory);
+            }
+        }
+
+        return $deleted;
+    }
+
+    private function root(): string
+    {
+        return storage_path('app/private/report-pdf-cache');
+    }
+
     private function directory(int $valuationRequestId): string
     {
-        return storage_path('app/private/report-pdf-cache/'.$valuationRequestId);
+        return $this->root().'/'.$valuationRequestId;
     }
 
     private function path(int $valuationRequestId, string $key): string

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\Valuation\ReportExportVariant;
+use App\Http\Controllers\ClientLogController;
 use App\Http\Controllers\Web\CompanyController;
 use App\Http\Controllers\Web\ContractController;
 use App\Http\Controllers\Web\ContractorController;
@@ -39,6 +40,7 @@ Route::get('/underMaintenance', [HomeController::class, 'underMaintenance'])->na
 Route::get('/pageComingSoon', [HomeController::class, 'pageComingSoon'])->name('pageComingSoon');
 Route::get('/', [LandingController::class, 'index'])->name('home-page');
 Route::post('contact', [LandingController::class, 'contact'])->name('landing.contact')->middleware('throttle:5,1');
+Route::post('client-log', [ClientLogController::class, 'store'])->name('client-log.store')->middleware('throttle:120,1');
 
 Auth::routes();
 

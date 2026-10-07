@@ -1,5 +1,6 @@
 <!-- BEGIN: Vendor JS-->
 <script src="{{ asset('vendors/js/vendors.min.js') }}"></script>
+@include('panels.client-error-logger')
 <!-- BEGIN Vendor JS-->
 <!-- BEGIN: Page Vendor JS-->
 <script src="{{asset('vendors/js/ui/jquery.sticky.js')}}"></script>

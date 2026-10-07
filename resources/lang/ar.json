@@ -898,5 +898,10 @@
     "Fees per valuation": "الأتعاب لكل تقييم",
     "Contract period": "مدة العقد",
     "Amount due": "المبلغ المستحق",
-    "Contract :number created.": "تم إنشاء العقد رقم :number."
+    "Contract :number created.": "تم إنشاء العقد رقم :number.",
+    "New valuation request #:reference created by :user": "طلب تقييم جديد رقم :reference أنشأه :user",
+    "Valuation request #:reference sent by :user": "تم إرسال طلب التقييم رقم :reference بواسطة :user",
+    "Valuation request #:reference moved under evaluation by :user": "طلب التقييم رقم :reference أصبح تحت التقييم بواسطة :user",
+    "Official report uploaded for valuation #:reference by :user": "تم رفع التقرير الرسمي للتقييم رقم :reference بواسطة :user",
+    "Qima status of valuation #:reference changed by :user": "تم تغيير حالة قيمة للتقييم رقم :reference بواسطة :user"
 }
