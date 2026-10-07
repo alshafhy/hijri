@@ -4,17 +4,32 @@ declare(strict_types=1);
 
 namespace App\Actions\Valuation;
 
+use App\Actions\Valuation\Concerns\WritesInitialData;
+use App\Models\Company;
+use App\Models\Contract;
+use App\Models\PartnerContract;
 use App\Models\Property;
-use App\Models\PropertyLocation;
+use App\Models\PropertyComponent;
 use App\Models\RequestFeeShare;
 use App\Models\User;
 use App\Models\ValuationRequest;
 use App\Support\Valuation\ValuationActivity;
+use App\Support\Valuation\ValuationFieldGrid;
+use App\Support\Valuation\ValuationUploadStore;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Throwable;
 
 final class CreateValuationRequestAction
 {
+    use WritesInitialData;
+
+    public const CLIENT_CONTRACTOR = 1;
+
+    public const CLIENT_PARTNER = 2;
+
+    public function __construct(private readonly ValuationUploadStore $uploads) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -22,65 +37,112 @@ final class CreateValuationRequestAction
     {
         Gate::forUser($actor)->authorize('create', ValuationRequest::class);
 
-        return DB::transaction(function () use ($actor, $data): ValuationRequest {
-            $request = ValuationRequest::query()->create([
-                'number' => $data['number'] ?? null,
-                'deposit_number' => $data['deposit_number'] ?? null,
-                'company_id' => $data['company_id'] ?? null,
-                'coordinator_user_id' => $data['coordinator_user_id'] ?? $actor->id,
-                'evaluator_user_id' => $data['evaluator_user_id'] ?? null,
-                'sub_user_id' => $data['sub_user_id'] ?? null,
-                'fellow_user_id' => $data['fellow_user_id'] ?? null,
-                'state' => 'waiting',
-                'approve' => 0,
-                'started_at' => now(),
-                'uploaded_on_qima' => false,
-            ]);
+        try {
+            return DB::transaction(fn (): ValuationRequest => $this->create($actor, $data));
+        } catch (Throwable $e) {
+            $this->uploads->rollback();
+            throw $e;
+        }
+    }
 
-            $request->forceFill([
-                'reference' => (int) $request->id + 10000,
-            ])->save();
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function create(User $actor, array $data): ValuationRequest
+    {
+        $company = isset($data['company_id'])
+            ? Company::query()->find($data['company_id'])
+            : Company::query()->orderBy('id')->first();
 
-            if (empty($data['number'])) {
-                $request->forceFill(['number' => (string) $request->reference])->save();
-            }
+        $request = ValuationRequest::query()->create([
+            'number' => $data['number'] ?? null,
+            'deposit_number' => $data['deposit_number'] ?? null,
+            'company_id' => $company?->id,
+            'coordinator_user_id' => $data['coordinator_user_id'] ?? $actor->id,
+            'evaluator_user_id' => $data['evaluator_user_id'] ?? null,
+            'sub_user_id' => $data['sub_user_id'] ?? null,
+            'state' => 'waiting',
+            'approve' => 0,
+            'started_at' => now(),
+            'uploaded_on_qima' => false,
+        ]);
 
-            $property = Property::query()->create([
+        $request->forceFill(['reference' => (int) $request->id + 10000])->save();
+        if (empty($data['number'])) {
+            $request->forceFill(['number' => (string) $request->reference])->save();
+        }
+
+        $this->linkClient($request, $data);
+
+        $property = Property::query()->create(array_merge($this->initialPropertyAttributes($data), [
+            'valuation_request_id' => $request->id,
+            'property_kind' => $data['property_kind'] ?? null,
+            'property_type' => $data['property_type'] ?? null,
+            'deposit_number' => $data['deposit_number'] ?? null,
+            'print_valuation_certificate' => 1,
+        ]));
+
+        if (! empty($data['city_id']) || ! empty($data['x_axis'])) {
+            $this->writeLocation($property, $data);
+        }
+        $this->writeBorders($property, (array) ($data['borders'] ?? []));
+        $this->writeComponentAreas($property, (array) ($data['components'] ?? []));
+
+        RequestFeeShare::query()->create([
+            'valuation_request_id' => $request->id,
+            'coordinator_share' => (int) ($data['coordinator_share'] ?? $company->default_coordinator_share ?? 0),
+            'evaluator_share' => (int) ($data['evaluator_share'] ?? $company->default_evaluator_share ?? 0),
+            'manager_share' => (int) ($data['manager_share'] ?? $company->default_manager_share ?? 0),
+        ]);
+
+        $this->uploads->storeAttachments($actor, $request, (array) ($data['new_attachments'] ?? []));
+
+        ValuationActivity::log($actor, $request, 'created', 'Valuation request created');
+
+        return $request->fresh(['property.location', 'feeShares']) ?? $request;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function linkClient(ValuationRequest $request, array $data): void
+    {
+        $clientType = (int) ($data['client_type'] ?? 0);
+
+        if ($clientType === self::CLIENT_CONTRACTOR && ! empty($data['contractor_id'])) {
+            Contract::query()->create([
+                'contractor_id' => $data['contractor_id'],
                 'valuation_request_id' => $request->id,
-                'customer_name' => $data['customer_name'] ?? null,
-                'owner_name' => $data['owner_name'] ?? null,
-                'property_kind' => $data['property_kind'] ?? null,
-                'property_type' => $data['property_type'] ?? null,
-                'instrument_no' => $data['instrument_no'] ?? null,
-                'instrument_date' => $data['instrument_date'] ?? null,
-                'instrument_gregorian_date' => $data['instrument_gregorian_date'] ?? null,
-                'deposit_number' => $data['deposit_number'] ?? null,
+                'state' => Contract::STATE_UNPAID,
             ]);
+        }
 
-            if (! empty($data['city_id']) || ! empty($data['street']) || ! empty($data['x_axis'])) {
-                PropertyLocation::query()->create([
-                    'property_id' => $property->id,
-                    'city_id' => $data['city_id'] ?? null,
-                    'neighborhood_id' => $data['neighborhood_id'] ?? null,
-                    'street' => $data['street'] ?? null,
-                    'sketch_no' => $data['sketch_no'] ?? null,
-                    'part_no' => $data['part_no'] ?? null,
-                    'piece_number' => $data['piece_number'] ?? null,
-                    'x_axis' => $data['x_axis'] ?? null,
-                    'y_axis' => $data['y_axis'] ?? null,
-                ]);
-            }
-
-            RequestFeeShare::query()->create([
+        if ($clientType === self::CLIENT_PARTNER && ! empty($data['partner_id'])) {
+            PartnerContract::query()->create([
+                'partner_id' => $data['partner_id'],
+                'offer_estate_id' => $data['offer_estate_id'] ?? null,
                 'valuation_request_id' => $request->id,
-                'coordinator_share' => (int) ($data['coordinator_share'] ?? 0),
-                'evaluator_share' => (int) ($data['evaluator_share'] ?? 0),
-                'manager_share' => (int) ($data['manager_share'] ?? 0),
             ]);
+        }
+    }
 
-            ValuationActivity::log($actor, $request, 'created', 'Valuation request created');
+    /**
+     * @param  array<string, mixed>  $components
+     */
+    private function writeComponentAreas(Property $property, array $components): void
+    {
+        $allowed = array_column(ValuationFieldGrid::rows((string) $property->property_kind, (string) $property->property_type), 'key');
 
-            return $request->fresh(['property.location', 'feeShares']) ?? $request;
-        });
+        foreach ($components as $key => $values) {
+            $area = $values['area_value'] ?? null;
+            if (! in_array($key, $allowed, true) || $area === null || $area === '') {
+                continue;
+            }
+            PropertyComponent::query()->create([
+                'property_id' => $property->id,
+                'component_key' => $key,
+                'area_value' => $area,
+            ]);
+        }
     }
 }

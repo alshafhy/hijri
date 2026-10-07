@@ -9,6 +9,8 @@ use App\Enums\Commercial\PartyContactStatus;
 use App\Enums\UserStatus;
 use App\Models\Contract;
 use App\Models\Contractor;
+use App\Models\GeoCity;
+use App\Models\GeoNeighborhood;
 use App\Models\Offer;
 use App\Models\OfferEstate;
 use App\Models\Partner;
@@ -133,8 +135,21 @@ it('runs the full valuation lifecycle with persistence and policy blocks', funct
     $coordinator = e2eUser('coordinator');
     $evaluator = e2eUser('evaluator');
 
+    $city = GeoCity::query()->create(['legacy_id' => 9001, 'name_ar' => 'الرياض']);
+    $neighborhood = GeoNeighborhood::query()->create(['legacy_id' => 9001, 'city_id' => $city->id, 'name_ar' => 'العليا']);
+    $client = Contractor::query()->create(['name' => 'جهة اختبار', 'state' => Contractor::STATE_ACTIVE]);
+    $location = [
+        'instrument_no' => 'DEED-1',
+        'city_id' => $city->id,
+        'neighborhood_id' => $neighborhood->id,
+        'x_axis' => '24.7136',
+        'y_axis' => '46.6753',
+    ];
+
     $this->actingAs($coordinator)
-        ->post(route('dashboard.valuation-requests.store'), [
+        ->post(route('dashboard.valuation-requests.store'), $location + [
+            'client_type' => 1,
+            'contractor_id' => $client->id,
             'customer_name' => 'عميل اختبار',
             'owner_name' => 'مالك اختبار',
             'property_kind' => 'سكني',
@@ -142,19 +157,20 @@ it('runs the full valuation lifecycle with persistence and policy blocks', funct
             'coordinator_user_id' => $coordinator->id,
             'evaluator_user_id' => $evaluator->id,
         ])
+        ->assertSessionHasNoErrors()
         ->assertRedirect();
 
     $request = ValuationRequest::query()->latest('id')->firstOrFail();
     expect($request->state)->toBe('waiting');
 
     $this->actingAs($coordinator)
-        ->put(route('dashboard.valuation-requests.update', $request), [
+        ->put(route('dashboard.valuation-requests.update', $request), $location + [
             'customer_name' => 'عميل محدث',
             'owner_name' => 'مالك محدث',
-            'property_kind' => 'سكني',
-            'property_type' => 'شقة',
+            'evaluator_user_id' => $evaluator->id,
             'deposit_number' => 'DEP-1',
         ])
+        ->assertSessionHasNoErrors()
         ->assertRedirect();
 
     expect($request->fresh()->property?->customer_name)->toBe('عميل محدث');

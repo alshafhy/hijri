@@ -189,6 +189,12 @@ class ValuationRequestPolicy
         return $this->view($user, $request);
     }
 
+    public function editInitialData(User $user, ValuationRequest $request): bool
+    {
+        return $this->update($user, $request)
+            && $user->hasAnyRole(['super-admin', 'admin', 'manager', 'coordinator']);
+    }
+
     public function deleteAttachment(User $user, ValuationRequest $request): bool
     {
         return $this->update($user, $request);

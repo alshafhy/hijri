@@ -29,6 +29,7 @@ use App\Services\LegacyImport\NeighborhoodsImporter;
 use App\Services\LegacyImport\OfferEstatesImporter;
 use App\Services\LegacyImport\OffersImporter;
 use App\Services\LegacyImport\OtherAttachmentsImporter;
+use App\Services\LegacyImport\PartnerContractsImporter;
 use App\Services\LegacyImport\PartnersImporter;
 use App\Services\LegacyImport\PartyContactsImporter;
 use App\Services\LegacyImport\PicturesImporter;
@@ -87,6 +88,7 @@ class LegacyImportCommand extends Command
             OffersImporter::key() => OffersImporter::class,
             OfferEstatesImporter::key() => OfferEstatesImporter::class,
             ContractsImporter::key() => ContractsImporter::class,
+            PartnerContractsImporter::key() => PartnerContractsImporter::class,
             PartyContactsImporter::key() => PartyContactsImporter::class,
         ];
     }

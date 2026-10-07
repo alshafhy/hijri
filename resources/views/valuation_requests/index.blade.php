@@ -104,7 +104,7 @@
               </td>
               <td class="text-nowrap">
                 <a href="{{ route('dashboard.valuation-requests.show', $item) }}" class="btn btn-sm btn-primary rounded">{{ __('View') }}</a>
-                @can('update', $item)
+                @can('editInitialData', $item)
                   <a href="{{ route('dashboard.valuation-requests.edit', $item) }}" class="btn btn-sm btn-outline-primary rounded">{{ __('Edit') }}</a>
                 @endcan
               </td>

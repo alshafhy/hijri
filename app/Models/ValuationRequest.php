@@ -118,6 +118,14 @@ class ValuationRequest extends Model
     }
 
     /**
+     * @return HasMany<PartnerContract, $this>
+     */
+    public function partnerContracts(): HasMany
+    {
+        return $this->hasMany(PartnerContract::class);
+    }
+
+    /**
      * @return HasMany<Offer, $this>
      */
     public function offers(): HasMany

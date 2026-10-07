@@ -186,6 +186,8 @@ Route::middleware('auth')->group(function (): void {
             Route::get('cities/{geoCity}/neighborhoods', [ValuationLookupController::class, 'neighborhoods'])->name('neighborhoods');
             Route::get('property-types/{kind}', [ValuationLookupController::class, 'propertyTypes'])->name('property-types');
             Route::get('grid/{kind}/{type}', [ValuationLookupController::class, 'gridRows'])->name('grid');
+            Route::get('partners/{partner}/offers', [ValuationLookupController::class, 'partnerOffers'])->name('partner-offers');
+            Route::get('offers/{offer}/estates', [ValuationLookupController::class, 'offerEstates'])->name('offer-estates');
         });
 
         Route::get('property-pictures/{propertyPicture}/file', [PropertyPictureController::class, 'file'])

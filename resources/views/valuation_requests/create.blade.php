@@ -3,113 +3,146 @@
 @section('title', __('Create valuation'))
 
 @section('content')
+@php
+  $clientType = (int) old('client_type', \App\Actions\Valuation\CreateValuationRequestAction::CLIENT_CONTRACTOR);
+  $tabs = ['initial' => __('Initial information'), 'detailed' => __('Detailed information'), 'map' => __('Location')];
+@endphp
 <section>
+  @include('valuation_requests.partials.flash')
+
   <div class="card">
     <div class="card-header">
       <h4 class="card-title">{{ __('Create valuation') }}</h4>
     </div>
-    <form method="post" action="{{ route('dashboard.valuation-requests.store') }}">
+    <form method="post" action="{{ route('dashboard.valuation-requests.store') }}" enctype="multipart/form-data" data-wizard>
       @csrf
       <div class="card-body">
-        <div class="row g-1">
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Number') }}</label>
-            <input type="text" name="number" class="form-control" value="{{ old('number') }}">
+        <div class="progress mb-1" style="height: 6px;"><div class="progress-bar" data-wizard-progress style="width: 33%"></div></div>
+        <ul class="nav nav-tabs" role="tablist">
+          @foreach ($tabs as $key => $label)
+            <li class="nav-item">
+              <button type="button" class="nav-link @if ($loop->first) active @endif" data-bs-toggle="tab" data-bs-target="#tab-{{ $key }}" role="tab">{{ $loop->iteration }}. {{ $label }}</button>
+            </li>
+          @endforeach
+        </ul>
+
+        <div class="tab-content pt-1">
+          <div class="tab-pane fade show active" id="tab-initial" role="tabpanel">
+            <h6>{{ __('Client') }}</h6>
+            <div class="row g-1 mb-2">
+              <div class="col-md-4">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="client_type" id="client-contractor" value="1" @checked($clientType === 1)>
+                  <label class="form-check-label" for="client-contractor">{{ __('Contractor') }}</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="client_type" id="client-partner" value="2" @checked($clientType === 2)>
+                  <label class="form-check-label" for="client-partner">{{ __('Partner') }}</label>
+                </div>
+              </div>
+              <div class="col-md-8" data-client="1">
+                <select name="contractor_id" id="contractor_id" class="form-select" @if ($clientType === 1) required @endif>
+                  <option value="">{{ __('Select contractor') }}</option>
+                  @foreach ($contractors as $id => $name)
+                    <option value="{{ $id }}" @selected((string) old('contractor_id') === (string) $id)>{{ $name }}</option>
+                  @endforeach
+                </select>
+              </div>
+              <div class="col-md-8" data-client="2">
+                <div class="row g-1">
+                  <div class="col-md-4">
+                    <select name="partner_id" id="partner_id" class="form-select" @if ($clientType === 2) required @endif>
+                      <option value="">{{ __('Select partner') }}</option>
+                      @foreach ($partners as $id => $name)
+                        <option value="{{ $id }}" @selected((string) old('partner_id') === (string) $id)>{{ $name }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <select id="offer_id" class="form-select"><option value="">{{ __('Price offer') }}</option></select>
+                  </div>
+                  <div class="col-md-4">
+                    <select name="offer_estate_id" id="offer_estate_id" class="form-select"><option value="">{{ __('Estate') }}</option></select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            @include('valuation_requests.form.initial', ['p' => null, 'request' => null])
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Deposit number') }}</label>
-            <input type="text" name="deposit_number" class="form-control" value="{{ old('deposit_number') }}">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Company') }}</label>
-            <select name="company_id" class="form-select">
-              <option value="">{{ __('Select') }}</option>
-              @foreach ($companies as $id => $name)
-                <option value="{{ $id }}" @selected(old('company_id') == $id)>{{ $name }}</option>
+
+          <div class="tab-pane fade" id="tab-detailed" role="tabpanel">
+            @include('valuation_requests.form.detailed', ['p' => null, 'request' => null])
+            <h6 class="mt-2">{{ __('Fee shares') }}</h6>
+            <div class="row g-1">
+              @foreach (['coordinator' => __('Coordinator share'), 'evaluator' => __('Evaluator share'), 'manager' => __('Manager share')] as $role => $label)
+                <div class="col-md-4">
+                  <label class="form-label">{{ $label }} %</label>
+                  <input type="number" name="{{ $role }}_share" class="form-control" min="0" max="100" value="{{ old("{$role}_share", $defaultShares[$role]) }}">
+                </div>
               @endforeach
-            </select>
+            </div>
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Evaluator') }}</label>
-            <select name="evaluator_user_id" class="form-select">
-              <option value="">{{ __('Select') }}</option>
-              @foreach ($evaluators as $id => $name)
-                <option value="{{ $id }}" @selected(old('evaluator_user_id') == $id)>{{ $name }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Coordinator') }}</label>
-            <select name="coordinator_user_id" class="form-select">
-              <option value="">{{ __('Select') }}</option>
-              @foreach ($coordinators as $id => $name)
-                <option value="{{ $id }}" @selected(old('coordinator_user_id') == $id)>{{ $name }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Customer') }}</label>
-            <input type="text" name="customer_name" class="form-control" value="{{ old('customer_name') }}">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Owner') }}</label>
-            <input type="text" name="owner_name" class="form-control" value="{{ old('owner_name') }}">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Property kind') }}</label>
-            <input type="text" name="property_kind" class="form-control" value="{{ old('property_kind') }}">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Property type') }}</label>
-            <input type="text" name="property_type" class="form-control" value="{{ old('property_type') }}">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Instrument number') }}</label>
-            <input type="text" name="instrument_no" class="form-control" value="{{ old('instrument_no') }}">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('City') }}</label>
-            <select name="city_id" class="form-select">
-              <option value="">{{ __('Select') }}</option>
-              @foreach ($cities as $id => $name)
-                <option value="{{ $id }}" @selected(old('city_id') == $id)>{{ $name }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Street') }}</label>
-            <input type="text" name="street" class="form-control" value="{{ old('street') }}">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">X</label>
-            <input type="text" name="x_axis" class="form-control" value="{{ old('x_axis') }}">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Y</label>
-            <input type="text" name="y_axis" class="form-control" value="{{ old('y_axis') }}">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Coordinator share') }}</label>
-            <input type="number" name="coordinator_share" class="form-control" value="{{ old('coordinator_share', 0) }}" min="0" max="100">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Evaluator share') }}</label>
-            <input type="number" name="evaluator_share" class="form-control" value="{{ old('evaluator_share', 0) }}" min="0" max="100">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Manager share') }}</label>
-            <input type="number" name="manager_share" class="form-control" value="{{ old('manager_share', 0) }}" min="0" max="100">
+
+          <div class="tab-pane fade" id="tab-map" role="tabpanel">
+            @include('valuation_requests.partials.map-picker', ['mapId' => 'create-map', 'latName' => 'x_axis', 'lngName' => 'y_axis', 'lat' => old('x_axis'), 'lng' => old('y_axis')])
           </div>
         </div>
-        @foreach ($errors->all() as $error)
-          <div class="text-danger mt-1">{{ $error }}</div>
-        @endforeach
       </div>
-      <div class="card-footer">
-        <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
+      <div class="card-footer d-flex justify-content-between">
         <a href="{{ route('dashboard.valuation-requests.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
+        <div class="d-flex gap-50">
+          <button type="button" class="btn btn-outline-primary" data-wizard-prev>{{ __('Previous') }}</button>
+          <button type="button" class="btn btn-primary" data-wizard-next>{{ __('Next') }}</button>
+          <button type="submit" class="btn btn-success d-none" data-wizard-submit>{{ __('Save') }}</button>
+        </div>
       </div>
     </form>
   </div>
 </section>
+@include('valuation_requests.partials.wizard-script')
 @endsection
+
+@push('page-script')
+  <script>
+    (function () {
+      var offersUrl = @json(route('dashboard.valuation-lookups.partner-offers', ['partner' => '__ID__']));
+      var estatesUrl = @json(route('dashboard.valuation-lookups.offer-estates', ['offer' => '__ID__']));
+      var partner = document.getElementById('partner_id');
+      var offer = document.getElementById('offer_id');
+      var estate = document.getElementById('offer_estate_id');
+
+      function toggleClient() {
+        var type = document.querySelector('input[name="client_type"]:checked').value;
+        document.querySelectorAll('[data-client]').forEach(function (box) {
+          var active = box.dataset.client === type;
+          box.style.display = active ? '' : 'none';
+          var main = box.querySelector('select');
+          main.required = active;
+          if (!active) { main.value = ''; }
+        });
+        if (type !== '2') { reset(offer, @json(__('Price offer'))); reset(estate, @json(__('Estate'))); }
+      }
+      function reset(select, placeholder) { select.innerHTML = '<option value="">' + placeholder + '</option>'; }
+      function fill(select, url, placeholder) {
+        reset(select, placeholder);
+        fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }).then(function (rows) {
+          rows.forEach(function (row) {
+            var opt = document.createElement('option');
+            opt.value = row.id; opt.textContent = row.name;
+            select.appendChild(opt);
+          });
+        });
+      }
+      document.querySelectorAll('input[name="client_type"]').forEach(function (r) { r.addEventListener('change', toggleClient); });
+      partner.addEventListener('change', function () {
+        reset(estate, @json(__('Estate')));
+        if (partner.value) { fill(offer, offersUrl.replace('__ID__', partner.value), @json(__('Price offer'))); } else { reset(offer, @json(__('Price offer'))); }
+      });
+      offer.addEventListener('change', function () {
+        if (offer.value) { fill(estate, estatesUrl.replace('__ID__', offer.value), @json(__('Estate'))); } else { reset(estate, @json(__('Estate'))); }
+      });
+      toggleClient();
+      if (partner.value) { partner.dispatchEvent(new Event('change')); }
+    })();
+  </script>
+@endpush

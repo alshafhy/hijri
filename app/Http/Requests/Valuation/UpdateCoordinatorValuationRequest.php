@@ -4,31 +4,42 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Valuation;
 
+use App\Http\Requests\Valuation\Concerns\ValidatesInitialData;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateCoordinatorValuationRequest extends FormRequest
 {
+    use ValidatesInitialData;
+
     public function authorize(): bool
     {
         $valuation = $this->route('valuationRequest');
 
-        return $this->user()?->can('update', $valuation) ?? false;
+        return $this->user()?->can('editInitialData', $valuation) ?? false;
     }
 
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        return [
-            'number' => ['nullable', 'string', 'max:250'],
+        return array_merge($this->initialDataRules(), [
             'deposit_number' => ['nullable', 'string', 'max:255'],
             'company_id' => ['nullable', 'integer', Rule::exists('companies', 'id')],
-            'evaluator_user_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
-            'customer_name' => ['nullable', 'string', 'max:128'],
-            'owner_name' => ['nullable', 'string', 'max:128'],
-            'instrument_no' => ['nullable', 'string', 'max:200'],
-            'property_kind' => ['nullable', 'string', 'max:45'],
-            'property_type' => ['nullable', 'string', 'max:32'],
+        ]);
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $this->validateNeighborhoodBelongsToCity($validator);
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'x_axis.required' => __('The property location was not selected on the map.'),
+            'y_axis.required' => __('The property location was not selected on the map.'),
         ];
     }
 }

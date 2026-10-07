@@ -43,8 +43,10 @@ use App\Http\Requests\Valuation\UpdateCoordinatorValuationRequest;
 use App\Http\Requests\Valuation\UpdateEvaluatorDataRequest;
 use App\Http\Requests\Valuation\UpdateFeeSharesRequest;
 use App\Models\Company;
+use App\Models\Contractor;
 use App\Models\GeoCity;
 use App\Models\GeoNeighborhood;
+use App\Models\Partner;
 use App\Models\PropertyPicture;
 use App\Models\User;
 use App\Models\ValuationRequest;
@@ -73,7 +75,7 @@ class ValuationRequestController extends Controller
         return view('valuation_requests.index', [
             'requests' => $requests,
             'filters' => $filters,
-            'evaluators' => $this->usersForRole('evaluator'),
+            'evaluators' => $this->usersForRole('evaluator')->union($this->usersForRole('manager'))->sort(),
             'coordinators' => $this->usersForRole('coordinator'),
             'sort' => $filters['sort'] ?? 'id',
             'dir' => $filters['dir'] ?? 'desc',
@@ -84,7 +86,18 @@ class ValuationRequestController extends Controller
     {
         $this->authorize('create', ValuationRequest::class);
 
-        return view('valuation_requests.create', $this->formLookups());
+        $company = Company::query()->orderBy('id')->first();
+
+        return view('valuation_requests.create', array_merge($this->formLookups(), [
+            'contractors' => Contractor::query()->where('state', Contractor::STATE_ACTIVE)->orderBy('name')->pluck('name', 'id'),
+            'partners' => Partner::query()->where('state', Partner::STATE_ACTIVE)->orderBy('name')->pluck('name', 'id'),
+            'kinds' => ValuationFieldGrid::kinds(),
+            'defaultShares' => [
+                'coordinator' => (int) ($company?->default_coordinator_share ?? 0),
+                'evaluator' => (int) ($company?->default_evaluator_share ?? 0),
+                'manager' => (int) ($company?->default_manager_share ?? 0),
+            ],
+        ]));
     }
 
     public function store(
@@ -121,18 +134,22 @@ class ValuationRequestController extends Controller
         return view('valuation_requests.show', [
             'request' => $valuationRequest,
             'finalAmount' => $resolveAmount->execute($valuationRequest),
-            'evaluators' => $this->usersForRole('evaluator'),
+            'evaluators' => $this->usersForRole('evaluator')->union($this->usersForRole('manager'))->sort(),
             'coordinators' => $this->usersForRole('coordinator'),
         ]);
     }
 
     public function edit(ValuationRequest $valuationRequest): View
     {
-        $this->authorize('update', $valuationRequest);
-        $valuationRequest->load(['property', 'feeShares']);
+        $this->authorize('editInitialData', $valuationRequest);
+        $valuationRequest->load(['property.location', 'property.borders', 'attachments', 'feeShares']);
+        $cityId = $valuationRequest->property?->location?->city_id;
 
         return view('valuation_requests.edit', array_merge($this->formLookups(), [
             'request' => $valuationRequest,
+            'neighborhoods' => $cityId
+                ? GeoNeighborhood::query()->where('city_id', $cityId)->orderBy('name_ar')->pluck('name_ar', 'id')
+                : collect(),
         ]));
     }
 
@@ -508,7 +525,7 @@ class ValuationRequestController extends Controller
     private function formLookups(): array
     {
         return [
-            'evaluators' => $this->usersForRole('evaluator'),
+            'evaluators' => $this->usersForRole('evaluator')->union($this->usersForRole('manager'))->sort(),
             'coordinators' => $this->usersForRole('coordinator'),
             'companies' => Company::query()->orderBy('name')->pluck('name', 'id'),
             'cities' => GeoCity::query()->orderBy('name_ar')->pluck('name_ar', 'id'),

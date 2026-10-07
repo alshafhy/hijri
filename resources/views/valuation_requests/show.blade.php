@@ -78,8 +78,10 @@
       </div>
 
       <div class="d-flex flex-wrap gap-50 mb-1">
+        @can('editInitialData', $request)
+          <a href="{{ route('dashboard.valuation-requests.edit', $request) }}" class="btn btn-sm btn-outline-secondary">{{ __('Coordinator data') }}</a>
+        @endcan
         @can('update', $request)
-          <a href="{{ route('dashboard.valuation-requests.edit', $request) }}" class="btn btn-sm btn-outline-secondary">{{ __('Coordinator edit') }}</a>
           <a href="{{ route('dashboard.valuation-requests.edit-info', $request) }}" class="btn btn-sm btn-outline-secondary">{{ __('Evaluator edit') }}</a>
         @endcan
         <a href="{{ route('dashboard.valuation-requests.barcode', $request) }}" class="btn btn-sm btn-outline-secondary">{{ __('Barcode') }}</a>

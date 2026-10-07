@@ -11,17 +11,16 @@ use App\Models\PropertyComponent;
 use App\Models\PropertyPicture;
 use App\Models\PropertyTotal;
 use App\Models\User;
-use App\Models\ValuationAttachment;
 use App\Models\ValuationCustomTableRow;
 use App\Models\ValuationRequest;
 use App\Support\Valuation\ComparablesCalculator;
 use App\Support\Valuation\CostApproachCalculator;
 use App\Support\Valuation\ValuationActivity;
 use App\Support\Valuation\ValuationFieldGrid;
+use App\Support\Valuation\ValuationUploadStore;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 final class UpdateEvaluatorDataAction
@@ -50,12 +49,10 @@ final class UpdateEvaluatorDataAction
         'other_value', 'other_percentage', 'proportional_adjustment',
     ];
 
-    /** @var list<string> */
-    private array $storedFiles = [];
-
     public function __construct(
         private readonly CostApproachCalculator $costCalculator,
         private readonly ComparablesCalculator $comparablesCalculator,
+        private readonly ValuationUploadStore $uploads,
     ) {}
 
     /**
@@ -116,16 +113,14 @@ final class UpdateEvaluatorDataAction
                 }
 
                 $this->savePictures($request, $property, $data);
-                $this->saveAttachments($actor, $request, (array) ($data['new_attachments'] ?? []));
+                $this->uploads->storeAttachments($actor, $request, (array) ($data['new_attachments'] ?? []));
 
                 ValuationActivity::log($actor, $request, 'evaluator_data_updated', 'Evaluator dossier data updated');
 
                 return $request->fresh(['property.location', 'property.components', 'property.total']) ?? $request;
             });
         } catch (Throwable $e) {
-            foreach ($this->storedFiles as $path) {
-                Storage::disk('local')->delete($path);
-            }
+            $this->uploads->rollback();
             throw $e;
         }
     }
@@ -384,7 +379,7 @@ final class UpdateEvaluatorDataAction
             if (! $file instanceof UploadedFile) {
                 continue;
             }
-            $path = $this->store($file, 'valuation-pictures/'.$request->id);
+            $path = $this->uploads->store($file, 'valuation-pictures/'.$request->id);
             PropertyPicture::query()->create([
                 'property_id' => $property->id,
                 'filename' => basename($path),
@@ -394,41 +389,6 @@ final class UpdateEvaluatorDataAction
                 'file_exists' => true,
             ]);
         }
-    }
-
-    /**
-     * @param  array<int, array{file?: mixed, type?: mixed}>  $attachments
-     */
-    private function saveAttachments(User $actor, ValuationRequest $request, array $attachments): void
-    {
-        foreach ($attachments as $item) {
-            $file = $item['file'] ?? null;
-            if (! $file instanceof UploadedFile) {
-                continue;
-            }
-            $path = $this->store($file, 'valuation-attachments/'.$request->id);
-            ValuationAttachment::query()->create([
-                'valuation_request_id' => $request->id,
-                'type' => $item['type'] ?? null,
-                'original_name' => $file->getClientOriginalName(),
-                'path' => $path,
-                'disk' => 'local',
-                'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize(),
-                'uploaded_by' => $actor->id,
-            ]);
-        }
-    }
-
-    private function store(UploadedFile $file, string $directory): string
-    {
-        $path = $file->store($directory, 'local');
-        if ($path === false) {
-            throw new \RuntimeException('Unable to store uploaded file.');
-        }
-        $this->storedFiles[] = $path;
-
-        return $path;
     }
 
     private function joinList(mixed $value): ?string
