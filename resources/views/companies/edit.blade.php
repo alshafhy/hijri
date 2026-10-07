@@ -85,6 +85,27 @@
       </form>
     </div>
 
+    <div class="card mb-2">
+      <div class="card-header"><h4 class="card-title">{{ __('Turnaround time (SLA)') }}</h4></div>
+      <form method="POST" action="{{ route('dashboard.companies.sla', $company) }}">
+        @csrf
+        @method('PUT')
+        <div class="card-body row g-2">
+          <p class="text-muted mb-0">{{ __('The details button turns red once a valuation stays longer than these hours in its stage.') }}</p>
+          @foreach (['request_sla_hours' => __('New request time (hours)'), 'evaluation_sla_hours' => __('Under evaluation time (hours)')] as $field => $label)
+            <div class="col-md-6">
+              <label class="form-label" for="{{ $field }}">{{ $label }}</label>
+              <input type="number" name="{{ $field }}" id="{{ $field }}" min="1" max="8760" value="{{ old($field, $company->{$field}) }}" class="form-control @error($field) is-invalid @enderror" required>
+              @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+          @endforeach
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
+        </div>
+      </form>
+    </div>
+
     <div class="card">
       <div class="card-header"><h4 class="card-title">{{ __('Branding') }}</h4></div>
       <div class="card-body">

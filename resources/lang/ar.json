@@ -757,5 +757,12 @@
     "Valuation details": "تفاصيل التقييم",
     "Valuation number": "تقييم رقم",
     "Valuation standard data": "بيانات معايير التقييم",
-    "in": "في"
+    "in": "في",
+    "SLA settings updated": "تم تحديث إعدادات مدة الإنجاز",
+    "Turnaround time (SLA)": "مدة الإنجاز (الخصوصية)",
+    "The details button turns red once a valuation stays longer than these hours in its stage.": "يتحول زر التفاصيل إلى الأحمر عند تجاوز التقييم هذه الساعات في مرحلته.",
+    "New request time (hours)": "مدة الطلب الجديد (ساعة)",
+    "Under evaluation time (hours)": "مدة التقييم (ساعة)",
+    "Within the turnaround time": "ضمن مدة الإنجاز",
+    "Over the turnaround time": "تجاوز مدة الإنجاز"
 }

@@ -132,7 +132,7 @@
                 <td>{{ optional($valuationDate)->format('Y/m/d') ?? '—' }}</td>
                 <td><span class="badge rounded-pill bg-light-primary">{{ $item->stateLabel() }}</span></td>
                 <td>
-                  <a href="{{ route('dashboard.valuation-requests.show', $item) }}" class="btn btn-sm btn-outline-primary rounded">{{ __('View') }}</a>
+                  <x-valuation.details-button :request="$item" />
                 </td>
               </tr>
             @empty

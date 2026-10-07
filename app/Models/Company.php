@@ -29,6 +29,8 @@ class Company extends Model
         'default_coordinator_share',
         'default_evaluator_share',
         'default_manager_share',
+        'request_sla_hours',
+        'evaluation_sla_hours',
         'status',
     ];
 
@@ -43,6 +45,8 @@ class Company extends Model
             'default_coordinator_share' => 'integer',
             'default_evaluator_share' => 'integer',
             'default_manager_share' => 'integer',
+            'request_sla_hours' => 'integer',
+            'evaluation_sla_hours' => 'integer',
         ];
     }
 
@@ -65,6 +69,8 @@ class Company extends Model
                 'default_coordinator_share',
                 'default_evaluator_share',
                 'default_manager_share',
+                'request_sla_hours',
+                'evaluation_sla_hours',
                 'status',
             ]);
     }

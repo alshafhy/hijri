@@ -275,6 +275,7 @@ Route::middleware('auth')->group(function (): void {
             Route::get('companies/{company}/edit', [CompanyController::class, 'edit'])->name('companies.edit');
             Route::put('companies/{company}/profile', [CompanyController::class, 'updateProfile'])->name('companies.profile')->middleware('permission:company.edit');
             Route::put('companies/{company}/shares', [CompanyController::class, 'updateShares'])->name('companies.shares')->middleware('permission:company.edit');
+            Route::put('companies/{company}/sla', [CompanyController::class, 'updateSla'])->name('companies.sla')->middleware('permission:company.edit');
             Route::post('companies/{company}/branding', [CompanyController::class, 'uploadBranding'])->name('companies.branding')->middleware('permission:company.edit');
         });
     });

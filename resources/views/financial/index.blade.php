@@ -52,7 +52,7 @@
               <td>{{ number_format((float) ($shares?->evaluator_share ?? 0), 2) }}</td>
               <td>{{ number_format((float) ($shares?->manager_share ?? 0), 2) }}</td>
               <td>
-                <a href="{{ route('dashboard.valuation-requests.show', $request) }}" class="btn btn-sm btn-primary">{{ __('View') }}</a>
+                <x-valuation.details-button :request="$request" />
               </td>
             </tr>
           @empty

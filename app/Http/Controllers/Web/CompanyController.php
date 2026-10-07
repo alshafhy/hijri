@@ -6,10 +6,12 @@ namespace App\Http\Controllers\Web;
 
 use App\Actions\Company\UpdateCompanyDefaultSharesAction;
 use App\Actions\Company\UpdateCompanyProfileAction;
+use App\Actions\Company\UpdateCompanySlaAction;
 use App\Actions\Company\UploadCompanyBrandingAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Company\UpdateCompanyProfileRequest;
 use App\Http\Requests\Company\UpdateCompanySharesRequest;
+use App\Http\Requests\Company\UpdateCompanySlaRequest;
 use App\Http\Requests\Company\UploadCompanyBrandingRequest;
 use App\Models\Company;
 use Illuminate\Http\RedirectResponse;
@@ -60,6 +62,18 @@ class CompanyController extends Controller
         $action($company, $request->validated());
 
         Flash::success(__('Company shares updated'));
+
+        return redirect()->route('dashboard.companies.edit', $company);
+    }
+
+    public function updateSla(
+        UpdateCompanySlaRequest $request,
+        Company $company,
+        UpdateCompanySlaAction $action
+    ): RedirectResponse {
+        $action($company, $request->validated());
+
+        Flash::success(__('SLA settings updated'));
 
         return redirect()->route('dashboard.companies.edit', $company);
     }
