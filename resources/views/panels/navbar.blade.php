@@ -61,16 +61,19 @@
     <x-current-system-release></x-current-system-release>
     @auth
       @can('viewAny', App\Models\ValuationRequest::class)
-        <form method="get" action="{{ route('dashboard.valuation-requests.quick-search') }}" class="d-none d-md-flex align-items-center ms-1" style="min-width: 260px;">
-          <input
-            type="text"
-            name="q"
-            class="form-control form-control-sm"
-            placeholder="{{ __('Quick search by valuation number') }}"
-            value="{{ request('q') }}"
-            autocomplete="off"
-          >
-          <button class="btn btn-sm btn-outline-primary ms-50 text-nowrap" type="submit">{{ __('Quick search') }}</button>
+        <form method="get" action="{{ route('dashboard.valuation-requests.quick-search') }}" class="d-none d-lg-flex align-items-center ms-1">
+          <div class="input-group input-group-merge" style="min-width: 280px;">
+            <span class="input-group-text"><i data-feather="search" class="font-small-4"></i></span>
+            <input
+              type="text"
+              name="q"
+              class="form-control"
+              placeholder="{{ __('Quick search by valuation number') }}"
+              value="{{ request('q') }}"
+              autocomplete="off"
+              aria-label="{{ __('Quick search by valuation number') }}"
+            >
+          </div>
         </form>
       @endcan
     @endauth

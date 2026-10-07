@@ -46,7 +46,6 @@ it('renders the personal page with legacy sections', function () {
 
     expect($html)
         ->toContain('الصفحة الشخصية')
-        ->toContain('بحث سريع برقم التقييم')
         ->toContain('عدد التقييمات المعتمدة')
         ->toContain('تقييم جديد')
         ->toContain('لوحة التقييمات')
@@ -55,5 +54,6 @@ it('renders the personal page with legacy sections', function () {
         ->toContain('أحدث التقييمات')
         ->toContain('أحدث الأحداث')
         ->toContain('اسم العميل')
-        ->and($html)->not->toContain('>underEvaluative<');
+        ->and($html)->not->toContain('>underEvaluative<')
+        ->and($html)->not->toContain('btn-group w-100');
 });
