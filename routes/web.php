@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\GeoCityController;
 use App\Http\Controllers\Web\GeoNeighborhoodController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\InvitationController;
+use App\Http\Controllers\Web\LandingController;
 use App\Http\Controllers\Web\LanguageController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\NotificationController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Web\PartnerController;
 use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\PropertyPictureController;
 use App\Http\Controllers\Web\RoleController;
+use App\Http\Controllers\Web\ServiceContractController;
 use App\Http\Controllers\Web\StaffController;
 use App\Http\Controllers\Web\SupportRequestController;
 use App\Http\Controllers\Web\UserController;
@@ -35,7 +37,8 @@ Route::get('locale/{locale}', [LocaleController::class, 'switch'])
 
 Route::get('/underMaintenance', [HomeController::class, 'underMaintenance'])->name('mm');
 Route::get('/pageComingSoon', [HomeController::class, 'pageComingSoon'])->name('pageComingSoon');
-Route::get('/', [HomeController::class, 'pageComingSoon'])->name('home-page');
+Route::get('/', [LandingController::class, 'index'])->name('home-page');
+Route::post('contact', [LandingController::class, 'contact'])->name('landing.contact')->middleware('throttle:5,1');
 
 Auth::routes();
 
@@ -61,6 +64,20 @@ Route::middleware('auth')->group(function (): void {
             ->name('users.change-password');
         Route::match(['put', 'post'], 'users/change-password', [UserController::class, 'updatePassword'])
             ->name('users.update-password');
+
+        Route::view('manual', 'pages.manual')->name('manual');
+
+        Route::middleware('permission:company.edit')->group(function (): void {
+            Route::get('service-contracts', [ServiceContractController::class, 'index'])->name('service-contracts.index');
+            Route::get('service-contracts/create', [ServiceContractController::class, 'create'])->name('service-contracts.create');
+            Route::post('service-contracts', [ServiceContractController::class, 'store'])->name('service-contracts.store');
+            Route::get('service-contracts/{serviceContract}/pdf', [ServiceContractController::class, 'pdf'])->name('service-contracts.pdf');
+        });
+
+        Route::middleware('permission:user.view')->group(function (): void {
+            Route::get('contact-messages', [LandingController::class, 'messages'])->name('contact-messages.index');
+            Route::put('contact-messages/{contactMessage}/read', [LandingController::class, 'markRead'])->name('contact-messages.read');
+        });
 
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -243,6 +260,7 @@ Route::middleware('auth')->group(function (): void {
             Route::get('contractors/create', [ContractorController::class, 'create'])->name('contractors.create')->middleware('permission:contractor.create');
             Route::post('contractors', [ContractorController::class, 'store'])->name('contractors.store')->middleware('permission:contractor.create');
             Route::get('contractors/{contractor}', [ContractorController::class, 'show'])->name('contractors.show');
+            Route::get('contractors/{contractor}/invoice', [ContractorController::class, 'invoice'])->name('contractors.invoice');
             Route::get('contractors/{contractor}/edit', [ContractorController::class, 'edit'])->name('contractors.edit')->middleware('permission:contractor.edit');
             Route::put('contractors/{contractor}', [ContractorController::class, 'update'])->name('contractors.update')->middleware('permission:contractor.edit');
             Route::delete('contractors/{contractor}', [ContractorController::class, 'destroy'])->name('contractors.destroy')->middleware('permission:contractor.delete');

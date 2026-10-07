@@ -84,33 +84,55 @@
   </div>
 
   <div class="card">
-    <div class="card-header"><h4 class="card-title">{{ __('Contracts') }}</h4></div>
+    <div class="card-header d-flex justify-content-between">
+      <h4 class="card-title mb-0">{{ __('Linked valuations') }}</h4>
+      <a href="{{ route('dashboard.contractors.invoice', $contractor) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">{{ __('Invoice') }}</a>
+    </div>
     <div class="table-responsive">
-      <table class="table table-striped">
+      <table class="table table-striped mb-0">
         <thead>
           <tr>
-            <th>#</th>
-            <th>{{ __('Valuation request') }}</th>
-            <th>{{ __('State') }}</th>
-            <th>{{ __('Actions') }}</th>
+            <th>{{ __('Reference') }}</th>
+            <th>{{ __('City') }}</th>
+            <th>{{ __('Neighborhood') }}</th>
+            <th>{{ __('Plan number') }}</th>
+            <th>{{ __('Fees') }}</th>
+            <th>{{ __('Status') }}</th>
+            <th>{{ __('Payment') }}</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           @forelse ($contracts as $contract)
+            @php($valuation = $contract->valuationRequest)
+            @php($location = $valuation?->property?->location)
             <tr>
-              <td>{{ $contract->id }}</td>
-              <td>{{ $contract->valuationRequest?->number }}</td>
+              <td>{{ $valuation?->reference ?? '—' }}</td>
+              <td>{{ $location?->city?->name_ar ?? '—' }}</td>
+              <td>{{ $location?->neighborhood?->name_ar ?? '—' }}</td>
+              <td>{{ $location?->sketch_no ?: '—' }}</td>
+              <td>{{ number_format((float) $contractor->fees, 2) }}</td>
+              <td>{{ $valuation?->stateLabel() ?? '—' }}</td>
               <td>
                 @if ($contract->isPaid())
                   <span class="badge bg-success">{{ __('Paid') }}</span>
                 @else
                   <span class="badge bg-warning">{{ __('Unpaid') }}</span>
+                  @can('markPaid', $contract)
+                    <form method="POST" action="{{ route('dashboard.contracts.mark-paid', $contract) }}" class="d-inline" onsubmit="return confirm(@json(__('Are you sure?')))">@csrf
+                      <button class="btn btn-sm btn-outline-success">{{ __('Mark paid') }}</button>
+                    </form>
+                  @endcan
                 @endif
               </td>
-              <td><a href="{{ route('dashboard.contracts.show', $contract) }}" class="btn btn-sm btn-primary">{{ __('View') }}</a></td>
+              <td>
+                @if ($valuation)
+                  <x-valuation.details-button :request="$valuation" />
+                @endif
+              </td>
             </tr>
           @empty
-            <tr><td colspan="4" class="text-center">{{ __('No records found') }}</td></tr>
+            <tr><td colspan="8" class="text-center">{{ __('No records found') }}</td></tr>
           @endforelse
         </tbody>
       </table>

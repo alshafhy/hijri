@@ -325,6 +325,10 @@ class SystemComponentsSeeder extends Seeder
                 'is_active' => true,
                 'permission_name' => 'role.view',
             ],
+            ...array_map(
+                fn (array $item): array => $item + ['comp_type' => 3, 'parent_id' => null, 'is_active' => true],
+                (require database_path('migrations/2026_10_07_140100_add_new_pages_to_system_components.php'))::items(),
+            ),
         ];
     }
 }
