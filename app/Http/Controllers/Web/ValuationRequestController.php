@@ -50,9 +50,12 @@ use App\Models\Partner;
 use App\Models\PropertyPicture;
 use App\Models\User;
 use App\Models\ValuationRequest;
+use App\Support\Valuation\ValuationBreakdown;
 use App\Support\Valuation\ValuationFieldGrid;
+use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use InvalidArgumentException;
@@ -124,19 +127,60 @@ class ValuationRequestController extends Controller
             'property.comparables',
             'property.adjustments',
             'property.total',
+            'property.lands',
+            'property.facades',
+            'property.services',
+            'property.borders',
+            'property.building',
+            'property.question',
+            'property.ac',
+            'property.flooring',
+            'attachments',
+            'customTableRows',
             'feeShares',
             'contracts.contractor',
+            'partnerContracts.partner',
+            'partnerContracts.offerEstate.offer',
             'offers.partner',
             'coordinator',
             'evaluator',
         ]);
+        $property = $valuationRequest->property;
 
         return view('valuation_requests.show', [
             'request' => $valuationRequest,
+            'property' => $property,
             'finalAmount' => $resolveAmount->execute($valuationRequest),
+            'breakdown' => $property !== null ? ValuationBreakdown::forProperty($property) : null,
+            'isBuilding' => $property !== null && ValuationFieldGrid::isBuilding((string) $property->property_kind),
+            'kinds' => ValuationFieldGrid::kinds(),
+            'timeline' => $this->timeline($valuationRequest),
             'evaluators' => $this->usersForRole('evaluator')->union($this->usersForRole('manager'))->sort(),
             'coordinators' => $this->usersForRole('coordinator'),
         ]);
+    }
+
+    /**
+     * @return list<array{label: string, at: Carbon|null, duration: string|null}>
+     */
+    private function timeline(ValuationRequest $request): array
+    {
+        $steps = [
+            ['label' => __('Started at'), 'at' => $request->started_at],
+            ['label' => __('Under evaluation'), 'at' => $request->under_evaluation_at],
+            ['label' => __('Evaluation completed'), 'at' => $request->evaluated_at],
+            ['label' => __('Final approval'), 'at' => $request->ended_at],
+        ];
+
+        $previous = null;
+        foreach ($steps as $i => $step) {
+            $steps[$i]['duration'] = $previous !== null && $step['at'] !== null
+                ? $previous->diffForHumans($step['at'], ['syntax' => CarbonInterface::DIFF_ABSOLUTE, 'parts' => 2])
+                : null;
+            $previous = $step['at'] ?? $previous;
+        }
+
+        return $steps;
     }
 
     public function edit(ValuationRequest $valuationRequest): View
@@ -510,11 +554,19 @@ class ValuationRequestController extends Controller
     ): RedirectResponse {
         $this->authorize('uploadOfficialReport', $valuationRequest);
 
-        $httpRequest->validate([
+        $validated = $httpRequest->validate([
             'official_report' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:20480'],
+            'report_number' => ['nullable', 'string', 'max:250'],
+            'deposit_number' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $action->execute($httpRequest->user(), $valuationRequest, $httpRequest->file('official_report'));
+        $action->execute(
+            $httpRequest->user(),
+            $valuationRequest,
+            $httpRequest->file('official_report'),
+            $validated['report_number'] ?? null,
+            $validated['deposit_number'] ?? null,
+        );
 
         return back()->with('success', __('Official report uploaded and request locked.'));
     }
