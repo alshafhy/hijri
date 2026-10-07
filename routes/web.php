@@ -24,6 +24,7 @@ use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\ServiceContractController;
 use App\Http\Controllers\Web\StaffController;
 use App\Http\Controllers\Web\SupportRequestController;
+use App\Http\Controllers\Web\SystemReleaseController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\ValuationAttachmentController;
 use App\Http\Controllers\Web\ValuationLookupController;
@@ -68,6 +69,7 @@ Route::middleware('auth')->group(function (): void {
             ->name('users.update-password');
 
         Route::view('manual', 'pages.manual')->name('manual');
+        Route::get('releases', [SystemReleaseController::class, 'index'])->name('releases');
 
         Route::middleware('permission:company.edit')->group(function (): void {
             Route::get('service-contracts', [ServiceContractController::class, 'index'])->name('service-contracts.index');
@@ -135,6 +137,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('valuation-requests/qima-pending', [ValuationRequestController::class, 'qimaPending'])
             ->name('valuation-requests.qima-pending')
             ->middleware('permission:valuation_request.qima_upload');
+        Route::get('valuation-requests/map', [ValuationRequestController::class, 'map'])
+            ->name('valuation-requests.map')
+            ->middleware('permission:valuation_request.view');
         Route::get('valuation-requests/activity-logs', [ValuationRequestController::class, 'activityLogs'])
             ->name('valuation-requests.activity-logs')
             ->middleware('permission:valuation_request.view_logs');

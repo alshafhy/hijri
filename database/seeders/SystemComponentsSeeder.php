@@ -327,7 +327,10 @@ class SystemComponentsSeeder extends Seeder
             ],
             ...array_map(
                 fn (array $item): array => $item + ['comp_type' => 3, 'parent_id' => null, 'is_active' => true],
-                (require database_path('migrations/2026_10_07_140100_add_new_pages_to_system_components.php'))::items(),
+                [
+                    ...(require database_path('migrations/2026_10_07_140100_add_new_pages_to_system_components.php'))::items(),
+                    ...(require database_path('migrations/2026_10_07_150100_add_map_and_releases_to_system_components.php'))::items(),
+                ],
             ),
         ];
     }

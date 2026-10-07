@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Actions\Valuation\ApproveValuationRequestAction;
+use App\Actions\Valuation\BuildValuationMapAction;
 use App\Actions\Valuation\CancelValuationRequestAction;
 use App\Actions\Valuation\ChangeCoordinatorAction;
 use App\Actions\Valuation\ChangeEvaluatorAction;
@@ -452,6 +453,16 @@ class ValuationRequestController extends Controller
         return view('valuation_requests.barcode', [
             'request' => $valuationRequest,
         ]);
+    }
+
+    public function map(Request $httpRequest, BuildValuationMapAction $action): View
+    {
+        $cityId = $httpRequest->integer('city') ?: null;
+
+        return view('valuation_requests.map', array_merge(
+            $action->execute($httpRequest->user(), $cityId),
+            ['cityId' => $cityId],
+        ));
     }
 
     public function qimaPending(ListQimaNotUploadedAction $action): View

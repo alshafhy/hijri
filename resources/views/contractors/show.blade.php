@@ -139,5 +139,12 @@
     </div>
     <div class="card-footer">{{ $contracts->links() }}</div>
   </div>
+
+  <div class="card">
+    <div class="card-header"><h4 class="card-title mb-0">{{ __('Location') }}</h4></div>
+    <div class="card-body">
+      @include('valuation_requests.partials.map-view', ['mapId' => 'contractor-location', 'lat' => $contractor->x_axis, 'lng' => $contractor->y_axis])
+    </div>
+  </div>
 </section>
 @endsection

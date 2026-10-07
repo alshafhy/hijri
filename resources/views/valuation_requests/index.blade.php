@@ -21,6 +21,9 @@
         @can('advancedSearch', App\Models\ValuationRequest::class)
           <a href="{{ route('dashboard.valuation-requests.advanced-search') }}" class="btn btn-outline-primary rounded">{{ __('Advanced search') }}</a>
         @endcan
+        @can('valuation_request.view')
+          <a href="{{ route('dashboard.valuation-requests.map') }}" class="btn btn-outline-primary rounded">{{ __('Valuations map') }}</a>
+        @endcan
       </div>
     </div>
     <div class="card-body border-top">

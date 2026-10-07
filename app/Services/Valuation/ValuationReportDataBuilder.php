@@ -12,6 +12,7 @@ use App\Models\ValuationRequest;
 use App\Support\Valuation\ArabicAmountInWords;
 use App\Support\Valuation\EnglishAmountInWords;
 use App\Support\Valuation\PropertyPictureMedia;
+use App\Support\Valuation\StaticMapImage;
 use App\Support\Valuation\ValuationReportPictureHtml;
 
 /**
@@ -25,6 +26,7 @@ final class ValuationReportDataBuilder
         private readonly EnglishAmountInWords $englishAmountInWords = new EnglishAmountInWords,
         private readonly PropertyPictureMedia $pictureMedia = new PropertyPictureMedia,
         private readonly ValuationReportPictureHtml $pictureHtml = new ValuationReportPictureHtml,
+        private readonly StaticMapImage $staticMap = new StaticMapImage,
     ) {}
 
     /**
@@ -75,6 +77,13 @@ final class ValuationReportDataBuilder
 
         $streetCount = $this->streetCount($facade, $border);
 
+        $locationMaps = StaticMapImage::isValidPoint($location?->x_axis, $location?->y_axis)
+            ? array_filter([
+                'streets' => $this->staticMap->dataUri($location?->x_axis, $location?->y_axis, StaticMapImage::STREETS),
+                'aerial' => $this->staticMap->dataUri($location?->x_axis, $location?->y_axis, StaticMapImage::AERIAL, 17),
+            ])
+            : [];
+
         return [
             'variant' => $variant,
             'request' => $request,
@@ -100,6 +109,7 @@ final class ValuationReportDataBuilder
             'forced_sale_amount' => $totals['forced_sale_amount'],
             'total_area' => $totals['total_area'],
             'street_count' => $streetCount,
+            'location_maps' => $locationMaps,
             'issue_date' => now()->format('d-m-Y'),
             'report_title' => $variant->label(),
             'watermark' => $variant->watermark(),
