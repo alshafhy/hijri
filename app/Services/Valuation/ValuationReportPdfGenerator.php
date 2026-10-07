@@ -21,12 +21,21 @@ final class ValuationReportPdfGenerator
      */
     public function prepare(ValuationRequest $request, ReportExportVariant $variant): array
     {
-        $data = $this->dataBuilder->build($request, $variant);
-        $html = View::make($variant->bladeView(), $data)->render();
+        $previousLocale = app()->getLocale();
+        app()->setLocale($variant->locale() ?? $previousLocale);
+
+        try {
+            $data = $this->dataBuilder->build($request, $variant);
+            $html = View::make($variant->bladeView(), $data)->render();
+        } finally {
+            app()->setLocale($previousLocale);
+        }
+
         $key = $this->cache->key($html, [
             'variant' => $variant->value,
             'draft' => $variant->isDraft(),
             'watermark' => $variant->watermark(),
+            'locale' => $variant->locale(),
         ]);
         $filename = $variant->filename($data['reference'] ?? $request->id);
 

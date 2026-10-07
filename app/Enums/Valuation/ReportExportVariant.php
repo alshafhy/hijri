@@ -9,6 +9,7 @@ enum ReportExportVariant: string
     case Enforcement = 'enforcement';
     case Full = 'full';
     case FullDraft = 'full-draft';
+    case FullEnglish = 'full-en';
 
     public function label(): string
     {
@@ -16,14 +17,23 @@ enum ReportExportVariant: string
             self::Enforcement => __('Enforcement Center report'),
             self::Full => __('Full report'),
             self::FullDraft => __('Full report draft'),
+            self::FullEnglish => __('English report'),
         };
+    }
+
+    /**
+     * Locale the report is rendered in; null keeps the current application locale.
+     */
+    public function locale(): ?string
+    {
+        return $this === self::FullEnglish ? 'en' : null;
     }
 
     public function bladeView(): string
     {
         return match ($this) {
             self::Enforcement => 'pdf.valuation.enforcement',
-            self::Full, self::FullDraft => 'pdf.valuation.full',
+            self::Full, self::FullDraft, self::FullEnglish => 'pdf.valuation.full',
         };
     }
 
@@ -45,6 +55,7 @@ enum ReportExportVariant: string
             self::Enforcement => 'تقرير مركز إنفاذ مرجعى '.$ref.'.pdf',
             self::Full => 'التقرير الكامل مرجعى '.$ref.'.pdf',
             self::FullDraft => 'تقرير مرجعى مسودة'.$ref.'.pdf',
+            self::FullEnglish => 'Valuation report '.$ref.'.pdf',
         };
     }
 

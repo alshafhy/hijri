@@ -10,6 +10,7 @@ use App\Models\PropertyTotal;
 use App\Models\User;
 use App\Models\ValuationRequest;
 use App\Services\Valuation\ValuationReportPdfGenerator;
+use App\Support\Valuation\EnglishAmountInWords;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Permission;
@@ -136,6 +137,33 @@ it('queues and downloads each export variant with manual final amount', function
     'enforcement',
     'full',
     'full-draft',
+    'full-en',
+]);
+
+it('renders the English report left-to-right with English labels and amount in words', function () {
+    [, $request] = makeExportFixtures();
+    app()->setLocale('ar');
+
+    $html = app(ValuationReportPdfGenerator::class)
+        ->prepare($request, ReportExportVariant::FullEnglish)['html'];
+
+    expect($html)->toContain('dir="ltr"')
+        ->and($html)->toContain('Executive summary')
+        ->and($html)->toContain('One million two hundred fifty thousand')
+        ->and($html)->not->toContain('الملخص التنفيذي')
+        ->and(app()->getLocale())->toBe('ar');
+
+    expect(ReportExportVariant::FullEnglish->filename(920001))->toBe('Valuation report 920001.pdf');
+});
+
+it('spells amounts in English', function (int $amount, string $words) {
+    expect((new EnglishAmountInWords)->convert($amount))->toBe($words);
+})->with([
+    [0, 'Zero'],
+    [15, 'Fifteen'],
+    [101, 'One hundred one'],
+    [2_045_090, 'Two million forty-five thousand ninety'],
+    [800_000, 'Eight hundred thousand'],
 ]);
 
 it('forbids export without permission', function () {

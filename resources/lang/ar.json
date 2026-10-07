@@ -829,5 +829,7 @@
     "Your account is active. Welcome!": "تم تفعيل حسابك. مرحباً بك!",
     "Your support request was sent.": "تم إرسال طلب الدعم.",
     "Your username": "اسم المستخدم",
-    "change-password": "تغيير كلمة المرور"
+    "change-password": "تغيير كلمة المرور",
+    "English report": "التقرير باللغة الإنجليزية",
+    "m": "م"
 }

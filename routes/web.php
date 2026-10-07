@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\Valuation\ReportExportVariant;
 use App\Http\Controllers\Web\CompanyController;
 use App\Http\Controllers\Web\ContractController;
 use App\Http\Controllers\Web\ContractorController;
@@ -191,15 +192,15 @@ Route::middleware('auth')->group(function (): void {
 
         Route::get('valuation-requests/{valuationRequest}/exports/{variant}', [ValuationReportExportController::class, 'queue'])
             ->name('valuation-requests.exports.queue')
-            ->whereIn('variant', ['enforcement', 'full', 'full-draft'])
+            ->whereIn('variant', ReportExportVariant::values())
             ->middleware('permission:valuation_request.export_pdf');
         Route::get('valuation-requests/{valuationRequest}/exports/{variant}/{key}/status', [ValuationReportExportController::class, 'status'])
             ->name('valuation-requests.exports.status')
-            ->whereIn('variant', ['enforcement', 'full', 'full-draft'])
+            ->whereIn('variant', ReportExportVariant::values())
             ->middleware('permission:valuation_request.export_pdf');
         Route::get('valuation-requests/{valuationRequest}/exports/{variant}/{key}/download', [ValuationReportExportController::class, 'download'])
             ->name('valuation-requests.exports.download')
-            ->whereIn('variant', ['enforcement', 'full', 'full-draft'])
+            ->whereIn('variant', ReportExportVariant::values())
             ->middleware('permission:valuation_request.export_pdf');
 
         Route::get('valuation-requests/{valuationRequest}/attachments/{attachment}', [ValuationAttachmentController::class, 'download'])

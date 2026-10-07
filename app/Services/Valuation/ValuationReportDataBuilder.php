@@ -10,6 +10,7 @@ use App\Models\Property;
 use App\Models\PropertyBorder;
 use App\Models\ValuationRequest;
 use App\Support\Valuation\ArabicAmountInWords;
+use App\Support\Valuation\EnglishAmountInWords;
 use App\Support\Valuation\PropertyPictureMedia;
 use App\Support\Valuation\ValuationReportPictureHtml;
 
@@ -21,6 +22,7 @@ final class ValuationReportDataBuilder
     public function __construct(
         private readonly ResolveValuationFinalAmountAction $resolveFinalAmount = new ResolveValuationFinalAmountAction,
         private readonly ArabicAmountInWords $amountInWords = new ArabicAmountInWords,
+        private readonly EnglishAmountInWords $englishAmountInWords = new EnglishAmountInWords,
         private readonly PropertyPictureMedia $pictureMedia = new PropertyPictureMedia,
         private readonly ValuationReportPictureHtml $pictureHtml = new ValuationReportPictureHtml,
     ) {}
@@ -51,8 +53,10 @@ final class ValuationReportDataBuilder
         $totals = $this->resolveFinalAmount->execute($request);
         $amount = $totals['amount'];
         $finalFormatted = $amount !== null ? number_format($amount, 2) : '—';
+        $english = $variant->locale() === 'en';
+        $converter = $english ? $this->englishAmountInWords : $this->amountInWords;
         $words = $amount !== null
-            ? trim($this->amountInWords->convert($amount).' '.__('Saudi riyal'))
+            ? trim($converter->convert($amount).' '.__('Saudi riyal'))
             : '';
 
         $border = $property?->borders->first();
@@ -103,8 +107,14 @@ final class ValuationReportDataBuilder
             'report_images' => $reportImages,
             'hide_comparisons' => (bool) ($totals['property_total']?->hide_comparisons_info_table),
             'hide_evaluation' => (bool) ($totals['property_total']?->hide_evaluation_info_table),
-            'city_name' => $location?->city?->name_ar,
-            'neighborhood_name' => $location?->neighborhood?->name_ar,
+            'city_name' => $english
+                ? ($location?->city?->name_en ?: $location?->city?->name_ar)
+                : $location?->city?->name_ar,
+            'neighborhood_name' => $english
+                ? ($location?->neighborhood?->name_en ?: $location?->neighborhood?->name_ar)
+                : $location?->neighborhood?->name_ar,
+            'locale' => $english ? 'en' : 'ar',
+            'direction' => $english ? 'ltr' : 'rtl',
             'reference' => $request->reference ?? $request->number ?? $request->id,
         ];
     }

@@ -62,6 +62,7 @@
           <li><a class="dropdown-item" href="{{ route('dashboard.valuation-requests.exports.queue', [$request, 'enforcement']) }}">{{ __('Enforcement Center report') }}</a></li>
           <li><a class="dropdown-item" href="{{ route('dashboard.valuation-requests.exports.queue', [$request, 'full']) }}">{{ __('Full report') }}</a></li>
           <li><a class="dropdown-item" href="{{ route('dashboard.valuation-requests.exports.queue', [$request, 'full-draft']) }}">{{ __('Full report draft') }}</a></li>
+          <li><a class="dropdown-item" href="{{ route('dashboard.valuation-requests.exports.queue', [$request, 'full-en']) }}">{{ __('English report') }}</a></li>
         </ul>
       </div>
     @endif

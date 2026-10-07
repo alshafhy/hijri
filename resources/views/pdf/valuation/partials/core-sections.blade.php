@@ -70,22 +70,22 @@
         <tr>
             <td class="label">{{ __('North') }}</td>
             <td>{{ $border->north ?: $dash }}</td>
-            <td>{{ $border->north_length !== null ? $border->north_length.' م' : $dash }}</td>
+            <td>{{ $border->north_length !== null ? $border->north_length.' '.__('m') : $dash }}</td>
         </tr>
         <tr>
             <td class="label">{{ __('South') }}</td>
             <td>{{ $border->south ?: $dash }}</td>
-            <td>{{ $border->south_length !== null ? $border->south_length.' م' : $dash }}</td>
+            <td>{{ $border->south_length !== null ? $border->south_length.' '.__('m') : $dash }}</td>
         </tr>
         <tr>
             <td class="label">{{ __('East') }}</td>
             <td>{{ $border->east ?: $dash }}</td>
-            <td>{{ $border->east_length !== null ? $border->east_length.' م' : $dash }}</td>
+            <td>{{ $border->east_length !== null ? $border->east_length.' '.__('m') : $dash }}</td>
         </tr>
         <tr>
             <td class="label">{{ __('West') }}</td>
             <td>{{ $border->west ?: $dash }}</td>
-            <td>{{ $border->west_length !== null ? $border->west_length.' م' : $dash }}</td>
+            <td>{{ $border->west_length !== null ? $border->west_length.' '.__('m') : $dash }}</td>
         </tr>
     </tbody>
 </table>

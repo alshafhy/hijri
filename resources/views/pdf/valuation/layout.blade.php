@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+@php($direction = $direction ?? 'rtl')
+<html lang="{{ $locale ?? 'ar' }}" dir="{{ $direction }}">
 <head>
     <meta charset="utf-8">
     <title>{{ $report_title }}</title>
@@ -9,8 +10,8 @@
             font-family: DejaVu Sans, sans-serif;
             font-size: 11px;
             color: #1a1a1a;
-            direction: rtl;
-            text-align: right;
+            direction: {{ $direction }};
+            text-align: {{ $direction === 'rtl' ? 'right' : 'left' }};
             line-height: 1.45;
         }
         h1, h2, h3 { margin: 0 0 8px; color: #1f3864; }
