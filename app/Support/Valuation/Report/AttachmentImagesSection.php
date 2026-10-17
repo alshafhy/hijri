@@ -42,9 +42,12 @@ final class AttachmentImagesSection
             return str_starts_with($mime, 'image/');
         }
 
-        $extension = strtolower(pathinfo($attachment->original_name ?: (string) $attachment->path, PATHINFO_EXTENSION));
+        $extension = pathinfo((string) $attachment->original_name, PATHINFO_EXTENSION);
+        if ($extension === '') {
+            $extension = pathinfo((string) $attachment->path, PATHINFO_EXTENSION);
+        }
 
-        return in_array($extension, self::IMAGE_EXTENSIONS, true);
+        return in_array(strtolower($extension), self::IMAGE_EXTENSIONS, true);
     }
 
     private function isOfficialReport(ValuationAttachment $attachment): bool
@@ -56,7 +59,7 @@ final class AttachmentImagesSection
     {
         $path = $attachment->absolutePath();
 
-        return $attachment->mime_type === 'image/webp' ? $this->webpAsPng($path) : ReportImage::fromPath($path);
+        return trim((string) $attachment->mime_type) === 'image/webp' ? $this->webpAsPng($path) : ReportImage::fromPath($path);
     }
 
     /**

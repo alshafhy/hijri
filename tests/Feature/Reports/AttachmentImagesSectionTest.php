@@ -59,6 +59,26 @@ it('falls back to the file extension when the mime type is missing and to the fi
     expect(array_column($images, 'label'))->toBe(['صورة للعقار', 'extra.jpg']);
 });
 
+it('uses the stored path extension when the original name has none', function () {
+    $request = reportFixture();
+    attachmentImage($request->id, 'صورة إضافية', '', 'photo');
+
+    $images = (new AttachmentImagesSection)->build($request->refresh());
+
+    expect(array_column($images, 'label'))->toBe(['صورة للعقار', 'صورة إضافية']);
+});
+
+it('excludes non-image files when the mime type is missing', function () {
+    $request = reportFixture();
+    $file = UploadedFile::fake()->create('scan.pdf', 5, 'application/pdf');
+    ValuationAttachment::query()->create([
+        'valuation_request_id' => $request->id, 'type' => 'مستند', 'original_name' => 'scan.pdf',
+        'path' => $file->store("valuation-attachments/{$request->id}", 'local'), 'disk' => 'local', 'mime_type' => '  ', 'size' => 1,
+    ]);
+
+    expect(array_column((new AttachmentImagesSection)->build($request->refresh()), 'label'))->toBe(['صورة للعقار']);
+});
+
 it('skips webp attachments that cannot be decoded', function () {
     $request = reportFixture();
     attachmentImage($request->id, 'صورة إضافية', 'image/webp');
