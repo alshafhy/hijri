@@ -11,4 +11,6 @@ return [
     'file_deleted' => 'File deleted successfully',
     'filesUploaded' => 'Files uploaded successfully',
     'filesNotUploaded' => 'One or more files failed to upload',
+    'select' => 'Select',
+    'none' => 'None',
 ];
