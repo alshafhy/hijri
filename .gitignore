@@ -3,7 +3,8 @@
 /public/build
 /public/data
 /public/fonts
-/public/images
+/public/images/*
+!/public/images/report/
 /public/storage
 /public/js
 /public/css
