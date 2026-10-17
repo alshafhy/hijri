@@ -29,6 +29,11 @@ enum ReportExportVariant: string
         return $this === self::FullEnglish ? 'en' : null;
     }
 
+    public function direction(): string
+    {
+        return $this === self::FullEnglish ? 'ltr' : 'rtl';
+    }
+
     public function bladeView(): string
     {
         return match ($this) {

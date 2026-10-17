@@ -20,3 +20,11 @@ it('embeds the configured Arabic font and the watermark', function () {
     expect($bytes)->toContain('DINNextLTArabic')
         ->and($bytes)->toContain('/ExtGState');
 });
+
+it('renders html larger than the default pcre backtrack limit', function () {
+    $html = '<p>تقرير</p><!--'.str_repeat('x', 1_200_000).'-->';
+
+    $bytes = app(ReportPdfRenderer::class)->render($html, new ReportRenderOptions(direction: 'rtl'));
+
+    expect($bytes)->toStartWith('%PDF');
+});

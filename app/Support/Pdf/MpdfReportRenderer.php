@@ -43,8 +43,23 @@ final class MpdfReportRenderer implements ReportPdfRenderer
         if ($options->css !== '') {
             $mpdf->WriteHTML($options->css, HTMLParserMode::HEADER_CSS);
         }
-        $mpdf->WriteHTML($html, HTMLParserMode::HTML_BODY);
+        $this->writeBody($mpdf, $html);
 
         return $mpdf->Output('', Destination::STRING_RETURN);
+    }
+
+    /**
+     * mPDF rejects HTML longer than pcre.backtrack_limit; reports embed base64 images well past the 1M default.
+     */
+    private function writeBody(Mpdf $mpdf, string $html): void
+    {
+        $previous = (string) ini_get('pcre.backtrack_limit');
+        ini_set('pcre.backtrack_limit', (string) max((int) $previous, strlen($html) * 2));
+
+        try {
+            $mpdf->WriteHTML($html, HTMLParserMode::DEFAULT_MODE);
+        } finally {
+            ini_set('pcre.backtrack_limit', $previous);
+        }
     }
 }

@@ -120,6 +120,10 @@ it('queues and downloads each export variant with manual final amount', function
     expect($download->headers->get('content-type'))->toContain('pdf');
     expect(strlen($download->getContent()))->toBeGreaterThan(500);
 
+    if ($variant !== 'full-en') {
+        expect($download->getContent())->toContain('DINNextLTArabic');
+    }
+
     $html = app(ValuationReportPdfGenerator::class)
         ->prepare($request, ReportExportVariant::from($variant))['html'];
 
