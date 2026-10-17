@@ -1,4 +1,4 @@
-@if ($certificate || $static_pages || $summary || $scope)
+@if ($breaks['framework'] ?? true)
     <pagebreak />
 @endif
 <table class="rpt-card rpt-framework">

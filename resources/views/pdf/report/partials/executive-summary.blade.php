@@ -1,4 +1,4 @@
-@if ($certificate || $static_pages)
+@if ($breaks['summary'] ?? true)
     <pagebreak />
 @endif
 <table class="rpt-card rpt-executive-summary">

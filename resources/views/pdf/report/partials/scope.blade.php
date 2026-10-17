@@ -1,4 +1,6 @@
-<pagebreak />
+@if ($breaks['scope'] ?? true)
+    <pagebreak />
+@endif
 <table class="rpt-card rpt-scope">
     <thead><tr><th colspan="2">{{ __('pdf.work_scope') }}</th></tr></thead>
     <tbody>

@@ -1,3 +1,6 @@
+@if ($breaks['certificate'] ?? true)
+    <pagebreak />
+@endif
 <div class="rpt-certificate">
     <h1 class="rpt-certificate-title">{{ __('pdf.real_estate_appraisal_certificate') }}</h1>
     <table class="rpt-certificate-table">

@@ -199,6 +199,8 @@ it('renders the valuation framework card and the nine standards', function () {
         ->and($framework)->toContain(e(__('pdf.continuous_improvement_des')))
         ->and($standards)->toContain(__('pdf.valuation_standards'));
 
+    expect(config('report_branding.standards'))->toHaveCount(9);
+
     foreach (config('report_branding.standards') as $standard) {
         expect($standards)->toContain(e(__("pdf.standard_{$standard}")))
             ->and($standards)->toContain(e(__("pdf.standard_{$standard}_des")));
@@ -310,4 +312,148 @@ it('only builds static pages for the full variants', function () {
 
     expect($builder->build($request, ReportExportVariant::Enforcement)['static_pages'])->toBe([])
         ->and($builder->build($request, ReportExportVariant::FullDraft)['static_pages'])->toHaveCount(2);
+});
+
+/**
+ * @param  array<string, mixed>  $overrides
+ */
+function fullReportData(?ValuationRequest $request = null, array $overrides = []): array
+{
+    return $overrides + app(ValuationReportDataBuilder::class)->build($request ?? reportFixture(), ReportExportVariant::Full);
+}
+
+function basicDataRows(ValuationRequest $request): array
+{
+    $data = app(ValuationReportDataBuilder::class)->build($request->refresh(), ReportExportVariant::Full);
+
+    return array_column($data['basic_data']['rows'], 'value', 'label');
+}
+
+it('builds the basic evaluation data rows', function () {
+    $request = reportFixture();
+    $request->property?->update(['issued_by' => 'كتابة عدل الرياض', 'license_no' => 'L-55', 'license_date' => '1444/05/05']);
+
+    expect(basicDataRows($request))->toBe([
+        __('pdf.request_number') => 'R-REPORT-1',
+        __('pdf.date') => '1445/01/01',
+        __('pdf.instrument_number') => '310101010101',
+        __('pdf.issued_by') => 'كتابة عدل الرياض',
+        __('pdf.license_number') => 'L-55',
+        __('pdf.license_date') => '1444/05/05',
+    ]);
+});
+
+it('falls back through the instrument dates to the instrument text and a dash', function () {
+    $request = reportFixture();
+    $request->update(['number' => null]);
+    $property = $request->property;
+
+    $property?->update(['instrument_date' => null, 'instrument_gregorian_date' => '2023-07-19']);
+    $gregorian = basicDataRows($request);
+
+    $property?->update(['instrument_gregorian_date' => ' ', 'according_instrument' => true]);
+    $according = basicDataRows($request);
+
+    $property?->update(['according_instrument' => false, 'instrument_no' => null]);
+    $dash = basicDataRows($request);
+
+    expect($gregorian[__('pdf.date')])->toBe('2023-07-19')
+        ->and($gregorian[__('pdf.request_number')])->toBe('77001')
+        ->and($according[__('pdf.date')])->toBe(__('pdf.according_to_instrument'))
+        ->and($dash[__('pdf.date')])->toBe('—')
+        ->and($dash[__('pdf.instrument_number')])->toBe('—')
+        ->and($dash[__('pdf.issued_by')])->toBe('—')
+        ->and($dash)->not->toHaveKey(__('pdf.license_number'));
+});
+
+it('renders the basic data card and the property information cards', function () {
+    $html = renderFullReport();
+    $basic = htmlBetween($html, 'rpt-basic-data"', '</table>');
+    $cards = htmlBetween($html, 'class="rpt-property-cards"', 'class="rpt-closing-page"');
+
+    expect($basic)->toContain(__('pdf.basic_evaluation_data'))
+        ->and($basic)->toContain('R-REPORT-1')
+        ->and($basic)->toContain('1445/01/01')
+        ->and($cards)->toContain(__('pdf.basic_property_data'))
+        ->and($cards)->toContain(__('pdf.property_borders'))
+        ->and($cards)->toContain('25 '.__('pdf.meter'))
+        ->and($cards)->toContain(__('pdf.description_finishes_and_construction'))
+        ->and($cards)->toContain(__('pdf.best_use_current').'</td><td>'.__('pdf.نعم'))
+        ->and($cards)->toContain(__('pdf.inspection_type').'</td><td>'.__('pdf.inspection_inside_outside'))
+        ->and(substr_count($cards, '<table class="rpt-card'))->toBe(6);
+});
+
+it('omits the finishes card for a land property', function () {
+    $request = reportFixture();
+    $request->property?->update(['property_kind' => 'أرض']);
+    $cards = htmlBetween(renderFullReport(request: $request->refresh()), 'class="rpt-property-cards"', 'class="rpt-closing-page"');
+
+    expect($cards)->toContain(__('pdf.property_borders'))
+        ->and($cards)->not->toContain(__('pdf.description_finishes_and_construction'))
+        ->and($cards)->not->toContain(__('pdf.best_use_current'));
+});
+
+it('renders the location maps after the property cards', function () {
+    $map = 'data:image/png;base64,c3RyZWV0cw==';
+    $html = view('pdf.report.full', fullReportData(overrides: ['location_maps' => ['streets' => $map, 'aerial' => $map]]))->render();
+    $block = htmlBetween($html, 'class="rpt-location-maps"', 'class="rpt-closing-page"');
+
+    expect($block)->toContain(__('pdf.location_on_map'))
+        ->and($block)->toContain(__('pdf.location_of_property'))
+        ->and($block)->toContain(__('pdf.picture_from_above'))
+        ->and($block)->toContain('24.7136')
+        ->and($block)->toContain('46.6753')
+        ->and(substr_count($block, 'src="'.$map.'"'))->toBe(2)
+        ->and(strpos($html, 'class="rpt-location-maps"'))->toBeGreaterThan((int) strpos($html, 'class="rpt-property-cards"'))
+        ->and(strpos($html, 'rpt-basic-data"'))->toBeGreaterThan((int) strpos($html, 'rpt-framework"'));
+});
+
+it('skips the location maps block without map images', function () {
+    $html = view('pdf.report.full', fullReportData(overrides: ['location_maps' => []]))->render();
+
+    expect($html)->not->toContain('class="rpt-location-maps"');
+});
+
+it('computes the page breaks from the sections that precede each one', function () {
+    config(['report_branding.assets.static_pages.ar' => []]);
+
+    $request = reportFixture();
+    $breaks = fullReportData($request)['breaks'];
+    $request->property?->update(['print_valuation_certificate' => true]);
+    $withCertificate = fullReportData($request->refresh())['breaks'];
+
+    expect($breaks)->toMatchArray([
+        'certificate' => false, 'static_pages' => false, 'summary' => false, 'scope' => true,
+        'framework' => true, 'basic_data' => true, 'property_cards' => false, 'location_maps' => true,
+    ])->and($withCertificate['certificate'])->toBeFalse()
+        ->and($withCertificate['summary'])->toBeTrue();
+});
+
+it('never starts the main pages with an empty page', function (bool $certificate, bool $staticPages) {
+    if (! $staticPages) {
+        config(['report_branding.assets.static_pages.ar' => []]);
+    }
+    $request = $certificate ? certificateFixture() : reportFixture();
+    $map = 'data:image/png;base64,c3RyZWV0cw==';
+
+    $html = view('pdf.report.full', fullReportData($request, ['location_maps' => ['streets' => $map]]))->render();
+    $main = substr(htmlBetween($html, 'class="rpt-main">', 'class="rpt-closing-page"'), strlen('class="rpt-main">'));
+
+    expect(ltrim($main))->not->toStartWith('<pagebreak')
+        ->and(preg_match('/<pagebreak[^>]*>\s*<pagebreak/', $html))->toBe(0);
+})->with([
+    'no certificate, no static pages' => [false, false],
+    'no certificate, static pages' => [false, true],
+    'certificate, no static pages' => [true, false],
+    'certificate and static pages' => [true, true],
+]);
+
+it('does not open the framework with a page break without a property', function () {
+    $request = reportFixture();
+    $request->property?->delete();
+    $html = renderFullReport(request: $request->refresh());
+    $main = substr(htmlBetween($html, 'class="rpt-main">', 'class="rpt-closing-page"'), strlen('class="rpt-main">'));
+
+    expect(ltrim($main))->not->toStartWith('<pagebreak')
+        ->and($html)->not->toContain('rpt-basic-data');
 });

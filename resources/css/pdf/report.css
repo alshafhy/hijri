@@ -125,6 +125,12 @@ td.rpt-summary-team-label { width: 25%; font-weight: bold; }
 td.rpt-summary-team-name { width: 35%; }
 td.rpt-scope-deposit { color: #C00000; }
 table.rpt-standards td { padding: 5px 10px; }
+table.rpt-map-coordinates { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 13px; }
+table.rpt-map-coordinates td { width: 33%; padding: 5px 20px; text-align: center; font-weight: bold; }
+table.rpt-map { width: 100%; border-collapse: collapse; margin-bottom: 12px; page-break-inside: avoid; }
+table.rpt-map th { background-color: #F79C20; color: #ffffff; font-weight: bold; text-align: center; padding: 8px; font-size: 13px; }
+table.rpt-map td { text-align: center; padding: 6px 0; }
+img.rpt-map-image { width: 160mm; padding: 6px; border: 2px solid #F79C20; }
 .section-note {
     background: #fcfcfc;
     border: 1px solid #e2e8f0;

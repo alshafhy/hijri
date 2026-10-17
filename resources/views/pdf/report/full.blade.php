@@ -22,6 +22,18 @@
         @endif
 
         @include('pdf.report.partials.framework')
+
+        @if ($basic_data)
+            @include('pdf.report.partials.basic-data')
+        @endif
+
+        @if ($property_cards)
+            @include('pdf.report.partials.property-cards')
+        @endif
+
+        @if ($location_maps)
+            @include('pdf.report.partials.location-maps')
+        @endif
     </div>
 
     @include('pdf.report.partials.closing')

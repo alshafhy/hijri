@@ -12,6 +12,7 @@ use App\Support\HijriDate;
 use App\Support\Pdf\ReportImage;
 use App\Support\Valuation\PropertyPictureMedia;
 use App\Support\Valuation\Report\AttachmentImagesSection;
+use App\Support\Valuation\Report\BasicDataSection;
 use App\Support\Valuation\Report\BrandingSection;
 use App\Support\Valuation\Report\CertificateSection;
 use App\Support\Valuation\Report\ComparablesSection;
@@ -19,6 +20,7 @@ use App\Support\Valuation\Report\CostTableSection;
 use App\Support\Valuation\Report\CoverSection;
 use App\Support\Valuation\Report\CustomTableSection;
 use App\Support\Valuation\Report\FrameworkSection;
+use App\Support\Valuation\Report\PageBreaks;
 use App\Support\Valuation\Report\PropertyInfoSection;
 use App\Support\Valuation\Report\ScopeSection;
 use App\Support\Valuation\Report\SignaturesSection;
@@ -49,6 +51,8 @@ final class ValuationReportDataBuilder
         private readonly SummarySection $summary = new SummarySection,
         private readonly ScopeSection $scope = new ScopeSection,
         private readonly FrameworkSection $framework = new FrameworkSection,
+        private readonly BasicDataSection $basicData = new BasicDataSection,
+        private readonly PageBreaks $pageBreaks = new PageBreaks,
     ) {}
 
     /**
@@ -110,7 +114,7 @@ final class ValuationReportDataBuilder
             ])
             : [];
 
-        return $this->sections($request, $property, $variant) + [
+        $data = $this->sections($request, $property, $variant) + [
             'variant' => $variant,
             'request' => $request,
             'property' => $property,
@@ -152,7 +156,12 @@ final class ValuationReportDataBuilder
             'locale' => $english ? 'en' : 'ar',
             'direction' => $english ? 'ltr' : 'rtl',
             'reference' => $request->reference ?? $request->number ?? $request->id,
+            'map_coordinates' => StaticMapImage::isValidPoint($location?->x_axis, $location?->y_axis)
+                ? ['latitude' => (string) $location?->x_axis, 'longitude' => (string) $location?->y_axis]
+                : null,
         ];
+
+        return $data + ['breaks' => $this->pageBreaks->build($data)];
     }
 
     /**
@@ -176,6 +185,7 @@ final class ValuationReportDataBuilder
             'summary' => $this->summary->build($request, $property, $branding['name'] ?? '', $signatures),
             'scope' => $this->scope->build($property, $cover),
             'framework' => $this->framework->build($locale),
+            'basic_data' => $this->basicData->build($request, $property),
             'signatures' => $signatures,
             'cost' => $property === null ? null : $this->costTable->build($property, $locale),
             'comparables_section' => $property === null ? null : $this->comparables->build($property),
