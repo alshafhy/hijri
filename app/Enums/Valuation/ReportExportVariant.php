@@ -47,6 +47,11 @@ enum ReportExportVariant: string
         return $this === self::FullDraft;
     }
 
+    public function showsSignatures(): bool
+    {
+        return ! $this->isDraft();
+    }
+
     public function watermark(): ?string
     {
         return $this->isDraft() ? 'مسودة' : null;

@@ -8,8 +8,17 @@ use App\Enums\Valuation\ReportExportVariant;
 use App\Models\Property;
 use App\Models\PropertyBorder;
 use App\Models\ValuationRequest;
+use App\Support\HijriDate;
+use App\Support\Pdf\ReportImage;
 use App\Support\Valuation\PropertyPictureMedia;
+use App\Support\Valuation\Report\AttachmentImagesSection;
+use App\Support\Valuation\Report\BrandingSection;
+use App\Support\Valuation\Report\ComparablesSection;
 use App\Support\Valuation\Report\CostTableSection;
+use App\Support\Valuation\Report\CustomTableSection;
+use App\Support\Valuation\Report\PropertyInfoSection;
+use App\Support\Valuation\Report\SignaturesSection;
+use App\Support\Valuation\Report\StandardsSection;
 use App\Support\Valuation\StaticMapImage;
 use App\Support\Valuation\ValuationReportPictureHtml;
 
@@ -23,6 +32,13 @@ final class ValuationReportDataBuilder
         private readonly PropertyPictureMedia $pictureMedia = new PropertyPictureMedia,
         private readonly ValuationReportPictureHtml $pictureHtml = new ValuationReportPictureHtml,
         private readonly StaticMapImage $staticMap = new StaticMapImage,
+        private readonly BrandingSection $branding = new BrandingSection,
+        private readonly SignaturesSection $signatures = new SignaturesSection,
+        private readonly ComparablesSection $comparables = new ComparablesSection,
+        private readonly PropertyInfoSection $propertyInfo = new PropertyInfoSection,
+        private readonly StandardsSection $standards = new StandardsSection,
+        private readonly CustomTableSection $customTables = new CustomTableSection,
+        private readonly AttachmentImagesSection $attachmentImages = new AttachmentImagesSection,
     ) {}
 
     /**
@@ -45,6 +61,13 @@ final class ValuationReportDataBuilder
             'property.components',
             'property.comparables',
             'property.adjustments',
+            'property.building',
+            'property.question',
+            'property.ac',
+            'property.flooring',
+            'customTableRows',
+            'attachments',
+            'subUser',
         ]);
 
         $property = $request->property;
@@ -77,7 +100,7 @@ final class ValuationReportDataBuilder
             ])
             : [];
 
-        return [
+        return $this->sections($request, $property, $variant) + [
             'variant' => $variant,
             'request' => $request,
             'property' => $property,
@@ -120,6 +143,46 @@ final class ValuationReportDataBuilder
             'direction' => $english ? 'ltr' : 'rtl',
             'reference' => $request->reference ?? $request->number ?? $request->id,
         ];
+    }
+
+    /**
+     * Section arrays consumed by the report layout; labels follow the current app locale.
+     *
+     * @return array<string, mixed>
+     */
+    private function sections(ValuationRequest $request, ?Property $property, ReportExportVariant $variant): array
+    {
+        $locale = $variant->locale() === 'en' ? 'en' : 'ar';
+
+        return [
+            'branding' => $request->company === null ? null : $this->branding->build($request->company),
+            'signatures' => $this->signatures->build($request),
+            'cost' => $property === null ? null : $this->costTable->build($property, $locale),
+            'comparables_section' => $property === null ? null : $this->comparables->build($property),
+            'property_cards' => $property === null ? [] : $this->propertyInfo->build($property),
+            'standards' => $property === null ? [] : $this->standards->build($property),
+            'custom_tables' => $this->customTables->build($request),
+            'attachment_images' => $this->attachmentImages->build($request),
+            'static_pages' => $this->staticPages($locale),
+            'show_signatures' => $variant->showsSignatures(),
+            'hijri_issue_date' => HijriDate::fromGregorian(now())->numeric(),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function staticPages(string $locale): array
+    {
+        $pages = [];
+        foreach ((array) config("report_branding.assets.static_pages.{$locale}", []) as $relative) {
+            $src = ReportImage::fromPath(public_path((string) $relative));
+            if ($src !== null) {
+                $pages[] = $src;
+            }
+        }
+
+        return $pages;
     }
 
     private function streetCount(mixed $facade, ?PropertyBorder $border): int
