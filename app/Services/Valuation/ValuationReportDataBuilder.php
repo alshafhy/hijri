@@ -13,6 +13,7 @@ use App\Support\Pdf\ReportImage;
 use App\Support\Valuation\PropertyPictureMedia;
 use App\Support\Valuation\Report\AttachmentImagesSection;
 use App\Support\Valuation\Report\BrandingSection;
+use App\Support\Valuation\Report\CertificateSection;
 use App\Support\Valuation\Report\ComparablesSection;
 use App\Support\Valuation\Report\CostTableSection;
 use App\Support\Valuation\Report\CoverSection;
@@ -20,6 +21,7 @@ use App\Support\Valuation\Report\CustomTableSection;
 use App\Support\Valuation\Report\PropertyInfoSection;
 use App\Support\Valuation\Report\SignaturesSection;
 use App\Support\Valuation\Report\StandardsSection;
+use App\Support\Valuation\Report\SummarySection;
 use App\Support\Valuation\StaticMapImage;
 use App\Support\Valuation\ValuationReportPictureHtml;
 
@@ -41,6 +43,8 @@ final class ValuationReportDataBuilder
         private readonly CustomTableSection $customTables = new CustomTableSection,
         private readonly AttachmentImagesSection $attachmentImages = new AttachmentImagesSection,
         private readonly CoverSection $cover = new CoverSection,
+        private readonly CertificateSection $certificate = new CertificateSection,
+        private readonly SummarySection $summary = new SummarySection,
     ) {}
 
     /**
@@ -156,11 +160,15 @@ final class ValuationReportDataBuilder
     private function sections(ValuationRequest $request, ?Property $property, ReportExportVariant $variant): array
     {
         $locale = $variant->locale();
+        $branding = $request->company === null ? null : $this->branding->build($request->company);
+        $signatures = $this->signatures->build($request);
 
         return [
-            'branding' => $request->company === null ? null : $this->branding->build($request->company),
+            'branding' => $branding,
             'cover' => $this->cover->build($request, $property),
-            'signatures' => $this->signatures->build($request),
+            'certificate' => $this->certificate->build($request, $property),
+            'summary' => $this->summary->build($request, $property, $branding['name'] ?? '', $signatures),
+            'signatures' => $signatures,
             'cost' => $property === null ? null : $this->costTable->build($property, $locale),
             'comparables_section' => $property === null ? null : $this->comparables->build($property),
             'property_cards' => $property === null ? [] : $this->propertyInfo->build($property),

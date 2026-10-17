@@ -39,10 +39,8 @@ final class StandardsSection
     private function purposeRows(Property $property): array
     {
         return [
-            [Card::label('purpose_of_evaluation'), Card::text($property->valuation_type_desc)
-                ?? $this->labels->option('valuation_type', $property->valuation_type)],
-            [Card::label('intended_use'), Card::text($property->valuation_usage_desc)
-                ?? $this->labels->option('valuation_usage', $property->valuation_usage)],
+            [Card::label('purpose_of_evaluation'), $this->purpose($property)],
+            [Card::label('intended_use'), $this->intendedUse($property)],
             [Card::label('base_value'), $this->labels->option('base_value', $property->base_value)],
             [Card::label('note_base_value'), Card::text($property->note_base_value)],
             [Card::label('value_assumption'), $this->labels->option('value_assumption', $property->value_assumption)],
@@ -70,18 +68,51 @@ final class StandardsSection
         ];
     }
 
+    public function purpose(Property $property): ?string
+    {
+        return Card::text($property->valuation_type_desc)
+            ?? $this->labels->option('valuation_type', $property->valuation_type);
+    }
+
+    public function intendedUse(Property $property): ?string
+    {
+        return Card::text($property->valuation_usage_desc)
+            ?? $this->labels->option('valuation_usage', $property->valuation_usage);
+    }
+
     /**
-     * @return list<array{0: string, 1: ?string}>
+     * Market / income / cost approach rows (`main - sub`), always all three as in the legacy certificate.
+     *
+     * @return list<array{label: string, value: ?string}>
      */
-    private function approachRows(Property $property): array
+    public function approaches(Property $property): array
     {
         $rows = [];
         foreach (self::APPROACHES as $approach => $labelKey) {
             $main = $property->{"{$approach}_valuation_way_main"};
             $sub = $main ? $this->labels->option("{$approach}_valuation_way_sub", $property->{"{$approach}_valuation_way_sub"}) : null;
-            $rows[] = [Card::label($labelKey), Card::join([$this->labels->option("{$approach}_valuation_way_main", $main), $sub], ' - ')];
+            $rows[] = ['label' => Card::label($labelKey), 'value' => Card::join([$this->labels->option("{$approach}_valuation_way_main", $main), $sub], ' - ')];
         }
 
+        return $rows;
+    }
+
+    public function evaluationDate(Property $property): ?DateTimeInterface
+    {
+        $date = $property->getAttribute('evaluation_date');
+
+        return $date instanceof DateTimeInterface ? $date : null;
+    }
+
+    /**
+     * @return list<array{0: string, 1: ?string}>
+     */
+    private function approachRows(Property $property): array
+    {
+        $rows = array_map(
+            static fn (array $row): array => [$row['label'], $row['value']],
+            $this->approaches($property),
+        );
         $rows[] = [Card::label('method_of_extracting_value_label'), Card::text($property->note_valuation_way_type)];
 
         return $rows;
@@ -96,12 +127,5 @@ final class StandardsSection
         }
 
         return HijriDate::fromGregorian($date)->numeric();
-    }
-
-    private function evaluationDate(Property $property): ?DateTimeInterface
-    {
-        $date = $property->getAttribute('evaluation_date');
-
-        return $date instanceof DateTimeInterface ? $date : null;
     }
 }
