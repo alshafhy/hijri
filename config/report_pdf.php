@@ -9,4 +9,16 @@ return [
     'lock_ttl' => (int) env('REPORT_PDF_LOCK_TTL', 600),
     'paper' => env('REPORT_PDF_PAPER', 'a4'),
     'orientation' => env('REPORT_PDF_ORIENTATION', 'portrait'),
+    'temp_dir' => storage_path('app/mpdf'),
+    'font_dir' => resource_path('fonts'),
+    'default_font' => 'dinnextlt',
+    'fonts' => [
+        'dinnextlt' => [
+            'R' => 'dinnextlt/dinnextltarabic-light.ttf',
+            'B' => 'dinnextlt/DINNextLTArabic-Medium.ttf',
+            'useOTL' => 0xFF,
+            'useKashida' => 75,
+        ],
+    ],
+    'watermark_alpha' => 0.12,
 ];
