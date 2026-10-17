@@ -123,6 +123,8 @@ table.rpt-card table.rpt-summary-team { width: 100%; border-collapse: collapse; 
 table.rpt-summary-team td { padding: 4px 8px; border-bottom: none; background-color: transparent; }
 td.rpt-summary-team-label { width: 25%; font-weight: bold; }
 td.rpt-summary-team-name { width: 35%; }
+td.rpt-scope-deposit { color: #C00000; }
+table.rpt-standards td { padding: 5px 10px; }
 .section-note {
     background: #fcfcfc;
     border: 1px solid #e2e8f0;

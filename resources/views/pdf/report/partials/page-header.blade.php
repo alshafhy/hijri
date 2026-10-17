@@ -35,11 +35,7 @@
     <table class="rpt-footer">
         <tr>
             <td class="rpt-footer-page">&nbsp;</td>
-            <td class="rpt-footer-text">
-                {{ $branding['name'] ?? '' }} - {{ __('pdf.Evaluation and Studies Department') }}: {{ $branding['address'] ?? '' }}
-                - {{ __('pdf.Membership of the Saudi Authority for Residents - accredited') }}: {{ $branding['membership_number'] ?? '' }}
-                - {{ __('pdf.company reg number') }}: {{ $branding['reg_number'] ?? '' }}
-            </td>
+            <td class="rpt-footer-text">{{ $page_footer }}</td>
             <td class="rpt-footer-page rpt-footer-number-{{ $direction }}">{nbpg}/{PAGENO}</td>
         </tr>
     </table>

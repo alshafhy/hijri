@@ -63,6 +63,8 @@ it('returns safe empty section values for a request without property or company'
     expect($data['branding'])->toBeNull()
         ->and($data['certificate'])->toBeNull()
         ->and($data['summary'])->toBeNull()
+        ->and($data['scope'])->toBeNull()
+        ->and($data['page_footer'])->toBeNull()
         ->and($data['signatures'])->toBe(['evaluator' => null, 'coordinator' => null, 'approver' => null])
         ->and($data['cost'])->toBeNull()
         ->and($data['comparables_section'])->toBeNull()

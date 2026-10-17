@@ -59,22 +59,13 @@
     @if ($branding)
         <p class="rpt-certificate-company">
             <strong>{{ $branding['name'] }}</strong><br>
-            <strong>{{ __('pdf.evaluation_and_studies_department') }}: {{ $branding['address'] }}</strong><br>
-            <strong>{{ __('pdf.membership_saudi_authority') }}</strong>: {{ $branding['membership_number'] }}<br>
-            <strong>{{ __('pdf.company_membership_number') }}</strong>: {{ $branding['membership_number'] }}
-            @if ($branding['membership_date'])
-                &nbsp;|&nbsp; <strong>{{ __('pdf.membership_date') }}</strong>: {{ $branding['membership_date'] }}
-            @endif
-            <br>
-            @if ($signatures['evaluator'])
-                <strong>{{ __('pdf.membership_branch') }}</strong>: {{ $signatures['evaluator']['membership_branch_type'] }}
-                - <strong>{{ __('pdf.membership_category') }}</strong>: {{ $signatures['evaluator']['membership_category'] }}
+            <strong>{{ __('pdf.evaluation_and_studies_department') }}@if ($branding['address']): {{ $branding['address'] }}@endif</strong>
+            @foreach ($certificate['company_lines'] as $line)
                 <br>
-            @endif
-            <strong>{{ __('pdf.company_reg_number') }}</strong>: {{ $branding['reg_number'] }}
-            @if ($certificate['approved'] && $branding['accreditation_end_date'])
-                &nbsp;|&nbsp; <strong>{{ __('pdf.end_date') }}</strong>: {{ $branding['accreditation_end_date'] }}
-            @endif
+                @foreach ($line['parts'] as $part)
+                    @unless ($loop->first){{ $line['separator'] }}@endunless<strong>{{ $part['label'] }}</strong>: {{ $part['value'] }}
+                @endforeach
+            @endforeach
         </p>
     @endif
 </div>

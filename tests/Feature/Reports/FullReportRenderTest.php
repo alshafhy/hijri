@@ -6,6 +6,7 @@ use App\Enums\Valuation\ReportExportVariant;
 use App\Models\ValuationRequest;
 use App\Services\Valuation\ValuationReportDataBuilder;
 use App\Services\Valuation\ValuationReportPdfGenerator;
+use App\Support\Valuation\Report\ReportLabels;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\View;
@@ -35,6 +36,22 @@ function pageHeaderAndFooter(string $html): string
     $end = (int) strpos($html, '</htmlpagefooter>');
 
     return substr($html, $start, $end - $start);
+}
+
+function htmlBetween(string $html, string $from, string $to): string
+{
+    $start = strpos($html, $from);
+    if ($start === false) {
+        return '';
+    }
+    $end = strpos($html, $to, $start + strlen($from));
+
+    return substr($html, $start, ($end === false ? strlen($html) : $end) - $start);
+}
+
+function certificateCompany(string $html): string
+{
+    return htmlBetween($html, 'class="rpt-certificate-company"', '</p>');
 }
 
 it('defines the page header and footer with page numbers', function () {
@@ -112,9 +129,102 @@ it('renders the valuation certificate only when the property asks for it', funct
         ->and($html)->toContain(__('pdf.inspection_inside_outside'))
         ->and($html)->toContain('2017-01-01')
         ->and($html)->toContain('2027-09-15')
-        ->and($html)->toContain('أساسي')
-        ->and($html)->toContain('عقار')
+        ->and(certificateCompany($html))->toContain(__('pdf.membership_branch').'</strong>: عقار')
+        ->and(certificateCompany($html))->toContain(__('pdf.membership_category').'</strong>: أساسي')
+        ->and(certificateCompany($html))->toContain(__('pdf.company_membership_number').'</strong>: 1110000001')
+        ->and(certificateCompany($html))->toContain(__('pdf.company_reg_number').'</strong>: 1010000001')
         ->and($html)->not->toContain(__('pdf.branch_and_category'));
+});
+
+it('omits the certificate company rows whose values are empty', function () {
+    $request = certificateFixture();
+    $request->company?->update(['address' => null, 'company_membership_number' => null, 'company_reg_number' => '', 'membership_date' => null]);
+    $request->evaluator?->update(['membership_branch_type' => null]);
+
+    $html = renderFullReport(request: $request->refresh());
+    $company = certificateCompany($html);
+
+    expect($company)->toContain('شركة التقييم للاختبار')
+        ->and($company)->toContain(__('pdf.evaluation_and_studies_department').'</strong>')
+        ->and($company)->toContain(__('pdf.membership_category').'</strong>: أساسي')
+        ->and($company)->toContain(__('pdf.end_date').'</strong>: 2027-09-15')
+        ->and($company)->not->toContain(__('pdf.membership_saudi_authority'))
+        ->and($company)->not->toContain(__('pdf.company_membership_number'))
+        ->and($company)->not->toContain(__('pdf.company_reg_number'))
+        ->and($company)->not->toContain(__('pdf.membership_branch').'</strong>');
+});
+
+it('leaves no dangling separators in the page footer when company values are empty', function () {
+    $request = reportFixture();
+    $request->company?->update(['address' => null, 'company_membership_number' => null, 'company_reg_number' => null]);
+
+    $footer = htmlBetween(renderFullReport(request: $request->refresh()), 'class="rpt-footer-text"', '</td>');
+    $text = trim((string) preg_replace('/\s+/u', ' ', strip_tags('<td '.$footer)));
+
+    expect($text)->toBe('شركة التقييم للاختبار - '.__('pdf.Evaluation and Studies Department'));
+});
+
+it('renders the scope of work card', function () {
+    $scope = htmlBetween(renderFullReport(), 'rpt-scope"', '</table>');
+
+    expect($scope)->toContain(__('pdf.work_scope'))
+        ->and($scope)->toContain(e(__('pdf.restrictions_on_use_des')))
+        ->and($scope)->toContain(e(__('pdf.data_available_in_instrument')))
+        ->and($scope)->toContain(__('pdf.التقرير الكامل'))
+        ->and($scope)->toContain('('.app(ReportLabels::class)->option('base_value', 1).')')
+        ->and($scope)->toContain(e(__('pdf.liquidation_value_des')))
+        ->and($scope)->toContain('منصة السوق')
+        ->and($scope)->toContain('سكني - فيلا')
+        ->and($scope)->toContain(e(__('pdf.internal_evaluation')))
+        ->and($scope)->toContain(e(__('pdf.seg_considered')))
+        ->and($scope)->toContain(e(__('pdf.resident_independence_details')))
+        ->and($scope)->toContain(e(__('pdf.disclaimer_des')))
+        ->and($scope)->toContain(__('pdf.use_nature'))
+        ->and($scope)->toContain('class="rpt-scope-deposit">DEP-1')
+        ->and($scope)->not->toContain(__('pdf.conclusion_value'))
+        ->and($scope)->not->toContain(__('pdf.important_assumptions'));
+});
+
+it('renders the valuation framework card and the nine standards', function () {
+    $html = renderFullReport();
+    $framework = htmlBetween($html, 'rpt-framework"', '</table>');
+    $standards = htmlBetween($html, 'rpt-standards"', '</table>');
+
+    expect($framework)->toContain(__('pdf.evaluation_framework'))
+        ->and($framework)->toContain(__('pdf.ethics'))
+        ->and($framework)->toContain(e(__('pdf.privacy_des')))
+        ->and($framework)->toContain(__('pdf.competence'))
+        ->and($framework)->toContain(e(__('pdf.professional_development_des')))
+        ->and($framework)->toContain(__('pdf.quality'))
+        ->and($framework)->toContain(e(__('pdf.continuous_improvement_des')))
+        ->and($standards)->toContain(__('pdf.valuation_standards'));
+
+    foreach (config('report_branding.standards') as $standard) {
+        expect($standards)->toContain(e(__("pdf.standard_{$standard}")))
+            ->and($standards)->toContain(e(__("pdf.standard_{$standard}_des")));
+    }
+});
+
+it('shows the standards page only in the arabic report', function () {
+    $builder = app(ValuationReportDataBuilder::class);
+    $request = reportFixture();
+
+    expect($builder->build($request, ReportExportVariant::Full)['framework']['show_standards'])->toBeTrue()
+        ->and($builder->build($request, ReportExportVariant::FullEnglish)['framework']['show_standards'])->toBeFalse()
+        ->and(renderFullReport(ReportExportVariant::FullEnglish, $request))->not->toContain('rpt-standards"')
+        ->and(renderFullReport(ReportExportVariant::FullEnglish, $request))->toContain('rpt-framework"');
+});
+
+it('orders the summary, scope, framework and standards before the closing page', function () {
+    $html = renderFullReport();
+
+    $positions = array_map(fn (string $marker): int|false => strpos($html, $marker), [
+        'rpt-executive-summary"', 'rpt-scope"', 'rpt-framework"', 'rpt-standards"', 'class="rpt-closing-page"',
+    ]);
+    $sorted = $positions;
+    sort($sorted);
+
+    expect($positions)->not->toContain(false)->and($positions)->toBe($sorted);
 });
 
 it('omits the certificate company dates that are not set', function () {

@@ -16,6 +16,12 @@
         @if ($summary)
             @include('pdf.report.partials.executive-summary')
         @endif
+
+        @if ($scope)
+            @include('pdf.report.partials.scope')
+        @endif
+
+        @include('pdf.report.partials.framework')
     </div>
 
     @include('pdf.report.partials.closing')

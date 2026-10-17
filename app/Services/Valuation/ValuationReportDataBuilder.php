@@ -18,7 +18,9 @@ use App\Support\Valuation\Report\ComparablesSection;
 use App\Support\Valuation\Report\CostTableSection;
 use App\Support\Valuation\Report\CoverSection;
 use App\Support\Valuation\Report\CustomTableSection;
+use App\Support\Valuation\Report\FrameworkSection;
 use App\Support\Valuation\Report\PropertyInfoSection;
+use App\Support\Valuation\Report\ScopeSection;
 use App\Support\Valuation\Report\SignaturesSection;
 use App\Support\Valuation\Report\StandardsSection;
 use App\Support\Valuation\Report\SummarySection;
@@ -45,6 +47,8 @@ final class ValuationReportDataBuilder
         private readonly CoverSection $cover = new CoverSection,
         private readonly CertificateSection $certificate = new CertificateSection,
         private readonly SummarySection $summary = new SummarySection,
+        private readonly ScopeSection $scope = new ScopeSection,
+        private readonly FrameworkSection $framework = new FrameworkSection,
     ) {}
 
     /**
@@ -162,12 +166,16 @@ final class ValuationReportDataBuilder
         $locale = $variant->locale();
         $branding = $request->company === null ? null : $this->branding->build($request->company);
         $signatures = $this->signatures->build($request);
+        $cover = $this->cover->build($request, $property);
 
         return [
             'branding' => $branding,
-            'cover' => $this->cover->build($request, $property),
-            'certificate' => $this->certificate->build($request, $property),
+            'page_footer' => $this->branding->footer($branding),
+            'cover' => $cover,
+            'certificate' => $this->certificate->build($request, $property, $branding, $signatures['evaluator']),
             'summary' => $this->summary->build($request, $property, $branding['name'] ?? '', $signatures),
+            'scope' => $this->scope->build($property, $cover),
+            'framework' => $this->framework->build($locale),
             'signatures' => $signatures,
             'cost' => $property === null ? null : $this->costTable->build($property, $locale),
             'comparables_section' => $property === null ? null : $this->comparables->build($property),
