@@ -77,7 +77,29 @@ it('builds the legacy property cards with coded values resolved to labels', func
     expect(propertyInfoValue($finishes, __('pdf.building_age')))->toBe('10')
         ->and(propertyInfoValue($finishes, __('pdf.ceiling_type')))->toBe('خرسانة مسلحة')
         ->and(propertyInfoValue($finishes, __('pdf.air_conditioning')))->toBe(__('pdf.split_ac'))
-        ->and(propertyInfoValue($finishes, __('pdf.composite_no')))->toBe('6');
+        ->and(propertyInfoValue($finishes, __('pdf.composite_no')))->toBeNull();
+});
+
+it('shows the composite ac count inline within the air conditioning row', function () {
+    $property = reportFixture()->property;
+    $property->ac()->update(['types' => 'سبليت,مركب', 'ac_count' => 3]);
+
+    $finishes = propertyInfoCard((new PropertyInfoSection)->build($property->refresh()), __('pdf.description_finishes_and_construction'));
+
+    expect(propertyInfoValue($finishes, __('pdf.air_conditioning')))->toBe(__('pdf.split_ac').' , '.__('pdf.composite_no').' (3)')
+        ->and(propertyInfoValue($finishes, __('pdf.composite_no')))->toBeNull();
+});
+
+it('skips "other" flooring areas whose description is blank', function () {
+    $property = reportFixture()->property;
+    $property->flooring()->update([
+        'flooring_yards' => 'أخرى', 'yards_description' => '  ',
+        'flooring_rooms' => 'أخرى', 'rooms_description' => 'باركيه',
+    ]);
+
+    $land = propertyInfoCard((new PropertyInfoSection)->build($property->refresh()), __('pdf.basic_land_data'));
+
+    expect(propertyInfoValue($land, __('pdf.flooring_typeco')))->toBe(__('pdf.the_rooms').': باركيه');
 });
 
 it('resolves the "other" ownership and usage codes to their descriptions', function () {

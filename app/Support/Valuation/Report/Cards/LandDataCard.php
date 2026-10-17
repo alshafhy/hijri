@@ -135,8 +135,10 @@ final class LandDataCard
         $parts = [];
         foreach (self::FLOORING_AREAS as $area => $labelKey) {
             $type = (string) $flooring->getAttribute("flooring_{$area}");
-            if (str_contains($type, 'اخري') || str_contains($type, 'أخرى') || stripos($type, 'other') !== false) {
-                $parts[] = Card::label($labelKey).': '.trim((string) $flooring->getAttribute("{$area}_description"));
+            $description = trim((string) $flooring->getAttribute("{$area}_description"));
+            $isOther = str_contains($type, 'اخري') || str_contains($type, 'أخرى') || stripos($type, 'other') !== false;
+            if ($isOther && $description !== '') {
+                $parts[] = Card::label($labelKey).': '.$description;
             }
         }
 

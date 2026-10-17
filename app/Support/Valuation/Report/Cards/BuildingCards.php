@@ -19,9 +19,10 @@ final class BuildingCards
         'سبليت' => 'split_ac',
         'شباك' => 'window_ac',
         'غير مركب' => 'not_installed',
-        'مركب' => 'composite_no',
         'توجد التوصيلات فقط' => 'connections',
     ];
+
+    private const AC_COMPOSITE = 'مركب';
 
     private const QUESTIONS = [
         'populated' => 'is_property_occupied',
@@ -53,7 +54,6 @@ final class BuildingCards
             [Card::label('default_building_age'), Card::number($building->default_build_age ?? 0)],
             [Card::label('remaining_building_age'), Card::number($building->remaining_build_age ?? 0)],
             [Card::label('air_conditioning'), $this->acTypes($property->ac)],
-            [Card::label('composite_no'), Card::positive($property->ac?->ac_count)],
         ]);
     }
 
@@ -100,8 +100,13 @@ final class BuildingCards
     private function acTypes(?PropertyAc $ac): string
     {
         $types = array_values(array_filter(array_map('trim', explode(',', (string) $ac?->types))));
+        $composite = Card::label('composite_no').' ('.(int) $ac?->ac_count.')';
         $labels = array_map(
-            static fn (string $type): string => isset(self::AC_LABELS[$type]) ? Card::label(self::AC_LABELS[$type]) : $type,
+            static fn (string $type): string => match (true) {
+                $type === self::AC_COMPOSITE => $composite,
+                isset(self::AC_LABELS[$type]) => Card::label(self::AC_LABELS[$type]),
+                default => $type,
+            },
             $types,
         );
 
