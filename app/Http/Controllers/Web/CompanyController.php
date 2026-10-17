@@ -14,6 +14,7 @@ use App\Http\Requests\Company\UpdateCompanySharesRequest;
 use App\Http\Requests\Company\UpdateCompanySlaRequest;
 use App\Http\Requests\Company\UploadCompanyBrandingRequest;
 use App\Models\Company;
+use App\Support\Company\CompanyBrandingPreviews;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Laracasts\Flash\Flash;
@@ -35,11 +36,13 @@ class CompanyController extends Controller
         return view('companies.index', compact('companies'));
     }
 
-    public function edit(Company $company): View
+    public function edit(Company $company, CompanyBrandingPreviews $previews): View
     {
         $this->authorize('view', $company);
 
-        return view('companies.edit', compact('company'));
+        $brandingPreviews = $previews->build($company);
+
+        return view('companies.edit', compact('company', 'brandingPreviews'));
     }
 
     public function updateProfile(

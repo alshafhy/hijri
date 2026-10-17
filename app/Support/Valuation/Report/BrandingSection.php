@@ -6,6 +6,7 @@ namespace App\Support\Valuation\Report;
 
 use App\Models\Company;
 use App\Support\Pdf\ReportImage;
+use Carbon\Exceptions\InvalidFormatException;
 use DateTimeInterface;
 
 /**
@@ -56,17 +57,12 @@ final class BrandingSection
 
     private function date(Company $company, string $column): ?string
     {
-        $value = $company->getAttribute($column);
-        if ($value instanceof DateTimeInterface) {
-            return $value->format('Y-m-d');
-        }
-
-        if (! is_string($value) || trim($value) === '') {
+        try {
+            $value = $company->getAttribute($column);
+        } catch (InvalidFormatException) {
             return null;
         }
 
-        $timestamp = strtotime($value);
-
-        return $timestamp === false ? trim($value) : date('Y-m-d', $timestamp);
+        return $value instanceof DateTimeInterface ? $value->format('Y-m-d') : null;
     }
 }

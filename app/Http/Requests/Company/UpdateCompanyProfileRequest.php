@@ -25,6 +25,8 @@ class UpdateCompanyProfileRequest extends FormRequest
             'address' => ['nullable', 'string', 'max:500'],
             'company_membership_number' => ['nullable', 'string', 'max:100'],
             'company_reg_number' => ['nullable', 'string', 'max:100'],
+            'membership_date' => ['nullable', 'date'],
+            'accreditation_end_date' => ['nullable', 'date', 'after_or_equal:membership_date'],
         ];
     }
 }

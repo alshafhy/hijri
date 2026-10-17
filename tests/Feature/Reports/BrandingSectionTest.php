@@ -26,6 +26,33 @@ it('resolves company branding with the report logo falling back to the main logo
         ->and($branding['name'])->toBe('شركة الاختبار');
 });
 
+it('uses the dedicated report logo when one is uploaded', function () {
+    Storage::fake('public');
+    $company = Company::query()->create([
+        'name' => 'شركة',
+        'main_logo_path' => UploadedFile::fake()->image('l.png', 10, 10)->store('company/1/logo', 'public'),
+        'report_logo_path' => UploadedFile::fake()->image('r.png', 20, 30)->store('company/1/report_logo', 'public'),
+    ]);
+
+    $branding = (new BrandingSection)->build($company);
+
+    expect($branding['report_logo'])->toStartWith('data:image/png')
+        ->and($branding['report_logo'])->not->toBe($branding['logo']);
+});
+
+it('formats the accreditation dates as Y-m-d', function () {
+    $company = Company::query()->create([
+        'name' => 'شركة',
+        'membership_date' => '2017-01-01',
+        'accreditation_end_date' => '2027-09-15 10:30:00',
+    ]);
+
+    $branding = (new BrandingSection)->build($company->fresh());
+
+    expect($branding['membership_date'])->toBe('2017-01-01')
+        ->and($branding['accreditation_end_date'])->toBe('2027-09-15');
+});
+
 it('exposes company text columns and null images when nothing is uploaded', function () {
     Storage::fake('public');
     $company = Company::query()->create([
