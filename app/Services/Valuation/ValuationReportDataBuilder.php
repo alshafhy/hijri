@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Valuation;
 
-use App\Actions\Valuation\ResolveValuationFinalAmountAction;
 use App\Enums\Valuation\ReportExportVariant;
 use App\Models\Property;
 use App\Models\PropertyBorder;
 use App\Models\ValuationRequest;
-use App\Support\Valuation\ArabicAmountInWords;
-use App\Support\Valuation\EnglishAmountInWords;
 use App\Support\Valuation\PropertyPictureMedia;
+use App\Support\Valuation\Report\CostTableSection;
 use App\Support\Valuation\StaticMapImage;
 use App\Support\Valuation\ValuationReportPictureHtml;
 
@@ -21,9 +19,7 @@ use App\Support\Valuation\ValuationReportPictureHtml;
 final class ValuationReportDataBuilder
 {
     public function __construct(
-        private readonly ResolveValuationFinalAmountAction $resolveFinalAmount = new ResolveValuationFinalAmountAction,
-        private readonly ArabicAmountInWords $amountInWords = new ArabicAmountInWords,
-        private readonly EnglishAmountInWords $englishAmountInWords = new EnglishAmountInWords,
+        private readonly CostTableSection $costTable = new CostTableSection,
         private readonly PropertyPictureMedia $pictureMedia = new PropertyPictureMedia,
         private readonly ValuationReportPictureHtml $pictureHtml = new ValuationReportPictureHtml,
         private readonly StaticMapImage $staticMap = new StaticMapImage,
@@ -52,14 +48,11 @@ final class ValuationReportDataBuilder
         ]);
 
         $property = $request->property;
-        $totals = $this->resolveFinalAmount->execute($request);
+        $totals = $this->costTable->totals($request);
         $amount = $totals['amount'];
         $finalFormatted = $amount !== null ? number_format($amount, 2) : '—';
         $english = $variant->locale() === 'en';
-        $converter = $english ? $this->englishAmountInWords : $this->amountInWords;
-        $words = $amount !== null
-            ? trim($converter->convert($amount).' '.__('Saudi riyal'))
-            : '';
+        $words = $this->costTable->inWords($amount, $english ? 'en' : 'ar');
 
         $border = $property?->borders->first();
         $land = $property?->lands->first();
