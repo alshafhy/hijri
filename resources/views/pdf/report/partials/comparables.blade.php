@@ -16,14 +16,16 @@
         </thead>
         <tbody>
             @foreach ($market_approach['comparables'] as $comparable)
-                <tr>
-                    <td class="rpt-data-label">{{ $comparable['label'] }}</td>
-                    <td>{{ $comparable['type'] }}</td>
-                    <td>{{ $comparable['front_type'] }}</td>
-                    <td>{{ $comparable['area'] }}</td>
-                    <td>{{ $comparable['price_per_meter'] }}</td>
-                    <td>{{ $comparable['total'] }}</td>
-                </tr>
+                @if ($comparable['type'])
+                    <tr>
+                        <td class="rpt-data-label">{{ $comparable['label'] }}</td>
+                        <td>{{ $comparable['type'] }}</td>
+                        <td>{{ $comparable['front_type'] }}</td>
+                        <td>{{ $comparable['area'] }}</td>
+                        <td>{{ $comparable['price_per_meter'] }}</td>
+                        <td>{{ $comparable['total'] }}</td>
+                    </tr>
+                @endif
             @endforeach
             @foreach ($market_approach['comparables'] as $comparable)
                 @if ($comparable['coordinates_url'])
@@ -43,6 +45,5 @@
 
     @if ($market_approach['columns'] !== [])
         @include('pdf.report.partials.adjustments')
-        @include('pdf.report.partials.settlement')
     @endif
 </div>

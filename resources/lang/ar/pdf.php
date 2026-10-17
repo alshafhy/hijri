@@ -355,7 +355,6 @@ return [
     'proportional adjustment' => 'التعديل النسبي',
     'meter price' => 'سعر المتر',
     'meter price approximately' => 'سعر المتر تقريباً',
-    'final_settlement' => 'التسوية النهائية',
 
     // Adjustments Table — مفاتيح camelCase
     'adjustments_table' => 'جدول التسويات',

@@ -79,6 +79,14 @@ final class ComparablesSection
     }
 
     /**
+     * Whether the matrix row has a settlement ratio next to its value (criteria) or only a value (subtotals, prices).
+     */
+    public static function hasRatio(string $key): bool
+    {
+        return (self::ROWS[$key][2] ?? null) !== null;
+    }
+
+    /**
      * @param  Collection<int, PropertyComparable>  $comparables
      * @param  Collection<int, PropertyAdjustment>  $adjustments
      * @return list<array{sequence: int, type: ?string, front_type: ?string, street_width: ?string, area: ?float, price_per_meter: ?float, total: ?float, percentage: ?float, coordinates_url: ?string, transaction_date: ?string}>

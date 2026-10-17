@@ -30,5 +30,13 @@
                 @endforeach
             </tr>
         @endforeach
+        <tr class="rpt-highlight">
+            <td class="rpt-data-label">{{ __('pdf.meter price') }}</td>
+            <td colspan="{{ $market_approach['span'] - 1 }}">{{ $market_approach['settlement']['weighted_meter_price'] }}</td>
+        </tr>
+        <tr class="rpt-highlight">
+            <td class="rpt-data-label">{{ __('pdf.meter price approximately') }}</td>
+            <td colspan="{{ $market_approach['span'] - 1 }}">{{ $market_approach['settlement']['approximate_meter_price'] }}</td>
+        </tr>
     </tbody>
 </table>

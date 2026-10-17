@@ -291,7 +291,6 @@ return [
     'total adjustments value' => 'total adjustments value',
     'proportional adjustment' => 'proportional adjustment',
     'meter price approximately' => 'meter price approximately',
-    'final_settlement' => 'Final settlement',
 
     // Property types
     'land' => 'Land',

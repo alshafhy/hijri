@@ -6,6 +6,7 @@ use App\Enums\Valuation\ReportExportVariant;
 use App\Models\ValuationRequest;
 use App\Services\Valuation\ValuationReportDataBuilder;
 use App\Services\Valuation\ValuationReportPdfGenerator;
+use App\Support\Valuation\Report\ComparablesPresenter;
 use App\Support\Valuation\Report\PageBreaks;
 use App\Support\Valuation\Report\ReportLabels;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -531,12 +532,11 @@ function renderFullReportWithMapTiles(ValuationRequest $request): string
     }
 }
 
-it('renders the comparables, their map, the adjustments matrix and the settlement', function () {
+it('renders the comparables, their map and the adjustments matrix with the meter price rows', function () {
     $html = renderFullReportWithMapTiles(reportFixture());
     $block = htmlBetween($html, 'class="rpt-market-approach"', 'class="rpt-closing-page"');
     $comparables = (string) preg_replace('/>\s+</', '><', htmlBetween($block, 'rpt-comparables"', '</table>'));
     $matrix = (string) preg_replace('/>\s+</', '><', htmlBetween($block, 'rpt-adjustments', '</table>'));
-    $settlement = (string) preg_replace('/>\s+</', '><', htmlBetween($block, 'rpt-settlement ', '</table>'));
 
     expect($comparables)->toContain(__('pdf.comparative_real_estate'))
         ->and($comparables)->toContain('<td class="rpt-data-label">'.__('pdf.comparative').' 1</td><td>أرض</td><td>شمالية</td><td>500</td><td>3,000.00</td><td>1,500,000.00</td>')
@@ -550,10 +550,11 @@ it('renders the comparables, their map, the adjustments matrix and the settlemen
         ->and($matrix)->not->toContain(__('pdf.The fourth comparator'))
         ->and($matrix)->toContain('<td class="rpt-data-label">'.__('pdf.Total settlement percentages').'</td><td colspan="2">5%</td><td colspan="2">3%</td><td colspan="2">0%</td>')
         ->and($matrix)->toContain('<td class="rpt-data-label">'.__('pdf.market conditions value').'</td><td></td><td>5%</td>')
-        ->and($settlement)->toContain('<td class="rpt-data-label">'.__('pdf.weight').'</td><td colspan="2">40%</td><td colspan="2">30%</td><td colspan="2">30%</td>')
-        ->and($settlement)->toContain('<td class="rpt-data-label">'.__('pdf.Price after adjustments').'</td><td colspan="2">3,087.00</td>')
-        ->and($settlement)->toContain('<tr class="rpt-highlight"><td class="rpt-data-label">'.__('pdf.meter price').'</td><td colspan="6">3,050.00</td></tr>')
-        ->and($settlement)->toContain('<tr class="rpt-highlight"><td class="rpt-data-label">'.__('pdf.meter price approximately').'</td><td colspan="6">3,000.00</td></tr>')
+        ->and($matrix)->toContain('<td class="rpt-data-label">'.__('pdf.proportional adjustment').'</td><td colspan="2">40%</td><td colspan="2">30%</td><td colspan="2">30%</td>')
+        ->and(rtrim($matrix))->toEndWith('<tr class="rpt-highlight"><td class="rpt-data-label">'.__('pdf.meter price').'</td><td colspan="6">3,050.00</td></tr>'
+            .'<tr class="rpt-highlight"><td class="rpt-data-label">'.__('pdf.meter price approximately').'</td><td colspan="6">3,000.00</td></tr></tbody>')
+        ->and($block)->not->toContain('rpt-settlement')
+        ->and(substr_count($block, '<table class="rpt-data-table'))->toBe(2)
         ->and(strpos($html, 'class="rpt-market-approach"'))->toBeGreaterThan((int) strpos($html, 'class="rpt-property-cards"'));
 });
 
@@ -578,4 +579,30 @@ it('opens the comparables block on a new page', function () {
 
     expect($breaks['market_approach'])->toBeTrue()
         ->and($main)->toContain('<pagebreak /><div class="rpt-market-approach">');
+});
+
+it('keeps value and ratio cells on criterion rows even without ratios', function () {
+    $section = app(ValuationReportDataBuilder::class)->build(reportFixture(), ReportExportVariant::Full)['comparables_section'];
+    foreach ($section['adjustments']['rows'] as $index => $row) {
+        if ($row['key'] === 'area') {
+            $section['adjustments']['rows'][$index]['percentages'] = [null, null, null];
+        }
+    }
+    $presented = (new ComparablesPresenter)->build($section);
+    $matrix = (string) preg_replace('/>\s+</', '><', view('pdf.report.partials.adjustments', ['market_approach' => $presented])->render());
+    $rows = array_column((array) $presented['rows'], 'merged', 'key');
+
+    expect($matrix)->toContain('<td class="rpt-data-label">'.__('pdf.space').'</td><td>500.00</td><td></td><td>600.00</td><td></td>')
+        ->and($rows['area'])->toBeFalse()
+        ->and($rows['proportional_adjustment'])->toBeTrue();
+});
+
+it('prints a comparable row only when the comparable has a type', function () {
+    $request = reportFixture();
+    $request->property?->comparables()->where('sequence', 2)->update(['real_estate_type' => null]);
+    $comparables = htmlBetween(renderFullReport(request: $request->refresh()), 'rpt-comparables"', '</table>');
+
+    expect(substr_count($comparables, '<td class="rpt-data-label">'.__('pdf.comparative').' '))->toBe(2)
+        ->and($comparables)->not->toContain('>'.__('pdf.comparative').' 2<')
+        ->and($comparables)->toContain(__('pdf.comparative_coordinates').' 2');
 });

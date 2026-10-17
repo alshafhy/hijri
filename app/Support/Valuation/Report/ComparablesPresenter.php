@@ -7,7 +7,7 @@ namespace App\Support\Valuation\Report;
 use App\Support\Valuation\Report\Cards\Card;
 
 /**
- * Market approach pages of the full report (comparables table, comparables map, adjustments matrix, settlement)
+ * Market approach pages of the full report (comparables table, comparables map, adjustments matrix with the meter price rows)
  * built from the ComparablesSection data, with every cell formatted for printing.
  *
  * @phpstan-type Comparable array{sequence: int, type: ?string, front_type: ?string, area: ?float, price_per_meter: ?float, total: ?float, coordinates_url: ?string}
@@ -28,7 +28,7 @@ final class ComparablesPresenter
      * Null when the comparisons are hidden or there is nothing to compare, which skips the whole block.
      *
      * @param  Section|null  $section
-     * @return array{comparables: list<array{label: string, type: ?string, front_type: ?string, area: ?string, price_per_meter: ?string, total: ?string, coordinates_label: string, coordinates_url: ?string}>, information_source: ?string, map: ?string, columns: list<string>, span: int, rows: list<array{label: string, values: list<?string>, percentages: list<?string>, merged: bool}>, settlement: array{final_meter_prices: list<string>, weights: list<string>, weighted_meter_price: string, approximate_meter_price: string}}|null
+     * @return array{comparables: list<array{label: string, type: ?string, front_type: ?string, area: ?string, price_per_meter: ?string, total: ?string, coordinates_label: string, coordinates_url: ?string}>, information_source: ?string, map: ?string, columns: list<string>, span: int, rows: list<array{key: string, label: string, values: list<?string>, percentages: list<?string>, merged: bool}>, settlement: array{weighted_meter_price: string, approximate_meter_price: string}}|null
      */
     public function build(?array $section): ?array
     {
@@ -68,27 +68,24 @@ final class ComparablesPresenter
     }
 
     /**
-     * Rows without settlement ratios (subtotals, prices, weights) print one merged cell per comparable.
+     * Rows without a settlement ratio field (subtotals, prices, weights) print one merged cell per comparable;
+     * criterion rows always print value + ratio.
      *
      * @param  Row  $row
-     * @return array{label: string, values: list<?string>, percentages: list<?string>, merged: bool}
+     * @return array{key: string, label: string, values: list<?string>, percentages: list<?string>, merged: bool}
      */
     private function row(array $row): array
     {
-        $merged = array_filter($row['percentages'], static fn (?string $percentage): bool => $percentage !== null) === [];
-
-        return ['label' => $row['label'], 'values' => $row['values'], 'percentages' => $row['percentages'], 'merged' => $merged];
+        return $row + ['merged' => ! ComparablesSection::hasRatio($row['key'])];
     }
 
     /**
      * @param  Settlement  $settlement
-     * @return array{final_meter_prices: list<string>, weights: list<string>, weighted_meter_price: string, approximate_meter_price: string}
+     * @return array{weighted_meter_price: string, approximate_meter_price: string}
      */
     private function settlement(array $settlement): array
     {
         return [
-            'final_meter_prices' => array_map(fn (?float $price): string => $this->money($price) ?? '—', $settlement['final_meter_prices']),
-            'weights' => array_map(static fn (?float $weight): string => (Card::number($weight ?? 0) ?? '0').'%', $settlement['weights']),
             'weighted_meter_price' => $this->money($settlement['weighted_meter_price']) ?? '—',
             'approximate_meter_price' => $this->money($settlement['approximate_meter_price']) ?? '—',
         ];
