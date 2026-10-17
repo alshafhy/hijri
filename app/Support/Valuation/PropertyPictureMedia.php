@@ -6,6 +6,7 @@ namespace App\Support\Valuation;
 
 use App\Models\PropertyPicture;
 use App\Support\Legacy\PropertyPictureVerifier;
+use App\Support\Pdf\ReportImage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
@@ -113,17 +114,10 @@ SVG;
     }
 
     /**
-     * Embed local files as data-URIs so DomPDF is not limited by public chroot.
+     * Embed local files as data-URIs so mPDF never resolves file paths or URLs.
      */
     private function toPdfSrc(string $absolutePath): string
     {
-        $mime = @mime_content_type($absolutePath) ?: 'image/jpeg';
-        $bytes = @file_get_contents($absolutePath);
-
-        if ($bytes === false || $bytes === '') {
-            return $this->placeholderDataUri();
-        }
-
-        return 'data:'.$mime.';base64,'.base64_encode($bytes);
+        return ReportImage::fromPath($absolutePath) ?? $this->placeholderDataUri();
     }
 }
