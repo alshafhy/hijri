@@ -28,7 +28,7 @@ final class PropertyInfoSection
     ) {}
 
     /**
-     * @return list<array{title: string, rows: list<array{label: string, value: string}>}>
+     * @return list<array{title: string, rows: list<array{label: string, value: string}>, columns: int, lines: list<list<array{label: string, value: string}>>}>
      */
     public function build(Property $property): array
     {

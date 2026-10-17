@@ -25,6 +25,43 @@ final class Card
         return $kept === [] ? null : ['title' => $title, 'rows' => $kept];
     }
 
+    /**
+     * Legacy 4-column card: two label/value pairs per printed line; a row whose label is in `$wideLabels`
+     * (and a row left without a partner) takes the whole line.
+     *
+     * @param  array{title: string, rows: list<array{label: string, value: string}>}|null  $card
+     * @param  list<string>  $wideLabels
+     * @return array{title: string, rows: list<array{label: string, value: string}>, columns: int, lines: list<list<array{label: string, value: string}>>}|null
+     */
+    public static function paired(?array $card, array $wideLabels = []): ?array
+    {
+        if ($card === null) {
+            return null;
+        }
+
+        $lines = [];
+        $pending = null;
+        foreach ($card['rows'] as $row) {
+            $wide = in_array($row['label'], $wideLabels, true);
+            if ($pending !== null && ! $wide) {
+                $lines[] = [$pending, $row];
+                $pending = null;
+
+                continue;
+            }
+            if ($pending !== null) {
+                $lines[] = [$pending];
+                $pending = null;
+            }
+            $wide ? $lines[] = [$row] : $pending = $row;
+        }
+        if ($pending !== null) {
+            $lines[] = [$pending];
+        }
+
+        return $card + ['columns' => 4, 'lines' => $lines];
+    }
+
     public static function label(string $key): string
     {
         $text = __("pdf.{$key}");

@@ -6,7 +6,8 @@
     @include('pdf.report.partials.cover')
 
     <div class="rpt-main">
-        {{-- Report sections are included here, in legacy order, between the cover and the closing page. --}}
+        {{-- Report sections are included here, in legacy order, between the cover and the closing page.
+             Keep this order in sync with PageBreaks::SECTIONS, which decides each section's leading page break. --}}
         @if ($certificate)
             @include('pdf.report.partials.certificate')
         @endif

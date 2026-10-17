@@ -16,38 +16,43 @@ final class LocationCards
     private const SHARE_LAND_TYPES = ['شقة', 'دور', 'وحدة سكنية'];
 
     /**
-     * @return array{title: string, rows: list<array{label: string, value: string}>}|null
+     * @return array{title: string, rows: list<array{label: string, value: string}>, columns: int, lines: list<list<array{label: string, value: string}>>}|null
      */
     public function basic(Property $property): ?array
     {
         $location = $property->location;
 
-        return Card::make(Card::label('basic_property_data'), [
+        return Card::paired(Card::make(Card::label('basic_property_data'), [
             [Card::label('neighborhood'), $this->geoName($location?->neighborhood)],
             [Card::label('city'), $this->geoName($location?->city)],
             [Card::label('sketch_no'), Card::text($location?->sketch_no)],
             [Card::label('piece_number'), Card::text($location?->piece_number)],
             [Card::label('part_no'), Card::text($location?->part_no)],
             [Card::label('street_name'), Card::text($location?->street)],
-        ]);
+        ]));
     }
 
     /**
-     * @return array{title: string, rows: list<array{label: string, value: string}>}|null
+     * @return array{title: string, rows: list<array{label: string, value: string}>, columns: int, lines: list<list<array{label: string, value: string}>>}|null
      */
     public function borders(Property $property): ?array
     {
         $border = $property->borders->first();
         $rows = [];
+        $wide = [Card::label('total_land_area')];
 
         foreach (['north', 'south', 'east', 'west'] as $side) {
+            $length = Card::positive($border?->{"{$side}_length"}, Card::label('meter'));
             $rows[] = [Card::label($side), Card::text($border?->{$side})];
-            $rows[] = [Card::label('length'), Card::positive($border?->{"{$side}_length"}, Card::label('meter'))];
+            $rows[] = [Card::label('length'), $length];
+            if ($length === null) {
+                $wide[] = Card::label($side);
+            }
         }
 
         $rows[] = [Card::label('total_land_area'), Card::positive($this->landArea($property), Card::label('square_meter_text'))];
 
-        return Card::make(Card::label('property_borders'), $rows);
+        return Card::paired(Card::make(Card::label('property_borders'), $rows), $wide);
     }
 
     private function landArea(Property $property): ?float

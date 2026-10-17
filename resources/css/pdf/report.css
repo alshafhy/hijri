@@ -119,6 +119,8 @@ table.rpt-card th { background-color: #F79C20; color: #ffffff; font-weight: bold
 table.rpt-card td { padding: 10px 14px; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
 table.rpt-card tr:nth-child(even) td { background-color: #f9f9f9; }
 td.rpt-card-label { width: 25%; background-color: #f5f5f5; font-weight: bold; }
+td.rpt-card-pair-label { width: 15%; background-color: #f5f5f5; font-weight: bold; }
+td.rpt-card-pair-value { width: 35%; }
 table.rpt-card table.rpt-summary-team { width: 100%; border-collapse: collapse; }
 table.rpt-summary-team td { padding: 4px 8px; border-bottom: none; background-color: transparent; }
 td.rpt-summary-team-label { width: 25%; font-weight: bold; }

@@ -6,6 +6,7 @@ use App\Enums\Valuation\ReportExportVariant;
 use App\Models\ValuationRequest;
 use App\Services\Valuation\ValuationReportDataBuilder;
 use App\Services\Valuation\ValuationReportPdfGenerator;
+use App\Support\Valuation\Report\PageBreaks;
 use App\Support\Valuation\Report\ReportLabels;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -319,7 +320,9 @@ it('only builds static pages for the full variants', function () {
  */
 function fullReportData(?ValuationRequest $request = null, array $overrides = []): array
 {
-    return $overrides + app(ValuationReportDataBuilder::class)->build($request ?? reportFixture(), ReportExportVariant::Full);
+    $data = $overrides + app(ValuationReportDataBuilder::class)->build($request ?? reportFixture(), ReportExportVariant::Full);
+
+    return ['breaks' => (new PageBreaks)->build($data)] + $data;
 }
 
 function basicDataRows(ValuationRequest $request): array
@@ -378,8 +381,9 @@ it('renders the basic data card and the property information cards', function ()
         ->and($cards)->toContain(__('pdf.property_borders'))
         ->and($cards)->toContain('25 '.__('pdf.meter'))
         ->and($cards)->toContain(__('pdf.description_finishes_and_construction'))
-        ->and($cards)->toContain(__('pdf.best_use_current').'</td><td>'.__('pdf.نعم'))
-        ->and($cards)->toContain(__('pdf.inspection_type').'</td><td>'.__('pdf.inspection_inside_outside'))
+        ->and($cards)->toContain(__('pdf.best_use_current').'</td>')
+        ->and($cards)->toContain(__('pdf.inspection_type').'</td>')
+        ->and($cards)->toContain('<td colspan="3">'.__('pdf.inspection_inside_outside').'</td>')
         ->and(substr_count($cards, '<table class="rpt-card'))->toBe(6);
 });
 
@@ -456,4 +460,37 @@ it('does not open the framework with a page break without a property', function 
 
     expect(ltrim($main))->not->toStartWith('<pagebreak')
         ->and($html)->not->toContain('rpt-basic-data');
+});
+
+it('prints two label/value pairs per line on the legacy 4-column cards', function () {
+    $html = renderFullReport();
+    $basic = htmlBetween($html, 'rpt-basic-data"', '</table>');
+    $borders = htmlBetween($html, __('pdf.property_borders'), '</table>');
+    $pair = fn (string $label, string $value): string => '<td class="rpt-card-pair-label">'.$label.'</td>'
+        .'<td class="rpt-card-pair-value">'.$value.'</td>';
+    $line = fn (string $html): string => (string) preg_replace('/>\s+</', '><', $html);
+
+    expect($html)->toContain('<table class="rpt-card rpt-card-paired rpt-basic-data">')
+        ->and($basic)->toContain('<th colspan="4">')
+        ->and($line($basic))->toContain($pair(__('pdf.request_number'), 'R-REPORT-1').$pair(__('pdf.date'), '1445/01/01'))
+        ->and($line($borders))->toContain($pair(__('pdf.north'), 'شارع عرض 20م').$pair(__('pdf.length'), '25 '.__('pdf.meter')))
+        ->and($line($borders))->toContain('<td class="rpt-card-pair-label">'.__('pdf.total_land_area').'</td><td colspan="3">500 '.__('pdf.square_meter_text').'</td>');
+});
+
+it('keeps one label/value pair per line on 2-column cards', function () {
+    $html = view('pdf.report.partials.card', ['title' => 'عنوان', 'rows' => [['label' => 'أ', 'value' => '1'], ['label' => 'ب', 'value' => '2']]])->render();
+
+    expect($html)->toContain('<table class="rpt-card">')
+        ->and($html)->toContain('<th colspan="2">عنوان</th>')
+        ->and(substr_count($html, '<td class="rpt-card-label">'))->toBe(2)
+        ->and($html)->not->toContain('rpt-card-pair');
+});
+
+it('does not open the scope with a blank page without certificate, static pages or summary', function () {
+    config(['report_branding.assets.static_pages.ar' => []]);
+    $html = view('pdf.report.full', fullReportData(overrides: ['summary' => null]))->render();
+    $main = substr(htmlBetween($html, 'class="rpt-main">', 'class="rpt-closing-page"'), strlen('class="rpt-main">'));
+
+    expect(ltrim($main))->toStartWith('<table class="rpt-card rpt-scope">')
+        ->and(preg_match('/<pagebreak[^>]*>\s*<pagebreak/', $html))->toBe(0);
 });

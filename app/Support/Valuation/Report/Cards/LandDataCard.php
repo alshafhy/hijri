@@ -26,24 +26,33 @@ final class LandDataCard
         'rooms' => 'the_rooms',
     ];
 
+    /** Rows printed across the whole card line in legacy `mainInfoTable` (besides the facade rows). */
+    private const WIDE_ROWS = [
+        'surrounding_facilities', 'flooring_typeco', 'description_contents',
+        'property_contents_number', 'property_components_description',
+    ];
+
     public function __construct(private readonly ReportLabels $labels = new ReportLabels) {}
 
     /**
-     * @return array{title: string, rows: list<array{label: string, value: string}>}|null
+     * @return array{title: string, rows: list<array{label: string, value: string}>, columns: int, lines: list<list<array{label: string, value: string}>>}|null
      */
     public function build(Property $property): ?array
     {
         $land = $property->lands->first();
 
-        return Card::make(Card::label('basic_land_data'), [
+        $facades = $this->facadeRows($property->facades->first());
+        $card = Card::make(Card::label('basic_land_data'), [
             ...$this->siteRows($property, $land),
             ...$this->codedRows($land),
             ...$this->buildingRows($property, $land),
-            ...$this->facadeRows($property->facades->first()),
+            ...$facades,
             [Card::label('flooring_typeco'), $this->flooring($property->flooring)],
             ...$this->contentRows($land),
             [Card::label('property_components_description'), Card::text($property->notes)],
         ]);
+
+        return Card::paired($card, [...array_column($facades, 0), ...array_map(Card::label(...), self::WIDE_ROWS)]);
     }
 
     /**

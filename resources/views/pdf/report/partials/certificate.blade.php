@@ -1,4 +1,4 @@
-@if ($breaks['certificate'] ?? true)
+@if ($breaks['certificate'] ?? false)
     <pagebreak />
 @endif
 <div class="rpt-certificate">

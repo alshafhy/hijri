@@ -16,7 +16,7 @@ final class BasicDataSection
     private const DASH = '—';
 
     /**
-     * @return array{title: string, rows: list<array{label: string, value: string}>}|null
+     * @return array{title: string, rows: list<array{label: string, value: string}>, columns: int, lines: list<list<array{label: string, value: string}>>}|null
      */
     public function build(ValuationRequest $request, ?Property $property): ?array
     {
@@ -37,7 +37,7 @@ final class BasicDataSection
             $rows[] = [Card::label('license_date'), Card::text($property->license_date) ?? self::DASH];
         }
 
-        return Card::make(Card::label('basic_evaluation_data'), $rows);
+        return Card::paired(Card::make(Card::label('basic_evaluation_data'), $rows));
     }
 
     private function instrumentDate(Property $property): string

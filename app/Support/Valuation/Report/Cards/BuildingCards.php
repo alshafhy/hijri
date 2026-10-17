@@ -37,14 +37,14 @@ final class BuildingCards
     private const SERVICES = ['electricity', 'water', 'sanitation', 'telephone', 'internet'];
 
     /**
-     * @return array{title: string, rows: list<array{label: string, value: string}>}|null
+     * @return array{title: string, rows: list<array{label: string, value: string}>, columns: int, lines: list<list<array{label: string, value: string}>>}|null
      */
     public function finishes(Property $property): ?array
     {
         $building = $property->building;
         $age = trim((string) $building?->build_age);
 
-        return Card::make(Card::label('description_finishes_and_construction'), [
+        return Card::paired(Card::make(Card::label('description_finishes_and_construction'), [
             [Card::label('architectural_design'), Card::text($building?->architectural ?: 'ممتاز')],
             [Card::label('insulation_quality'), Card::text($building?->quality_insulation ?: 'لا يوجد')],
             [Card::label('structural_frame'), Card::text($building?->structure_construction ?: 'خرساني')],
@@ -54,11 +54,11 @@ final class BuildingCards
             [Card::label('default_building_age'), Card::number($building->default_build_age ?? 0)],
             [Card::label('remaining_building_age'), Card::number($building->remaining_build_age ?? 0)],
             [Card::label('air_conditioning'), $this->acTypes($property->ac)],
-        ]);
+        ]), [Card::label('air_conditioning')]);
     }
 
     /**
-     * @return array{title: string, rows: list<array{label: string, value: string}>}|null
+     * @return array{title: string, rows: list<array{label: string, value: string}>, columns: int, lines: list<list<array{label: string, value: string}>>}|null
      */
     public function services(Property $property): ?array
     {
@@ -69,15 +69,15 @@ final class BuildingCards
             self::SERVICES,
         );
 
-        return Card::make(Card::label('services_available'), [
+        return Card::paired(Card::make(Card::label('services_available'), [
             ...$rows,
             [Card::label('electricity_counter'), $this->meter($land, 'electricity')],
             [Card::label('water_counter'), $this->meter($land, 'water')],
-        ]);
+        ]));
     }
 
     /**
-     * @return array{title: string, rows: list<array{label: string, value: string}>}|null
+     * @return array{title: string, rows: list<array{label: string, value: string}>, columns: int, lines: list<list<array{label: string, value: string}>>}|null
      */
     public function details(Property $property): ?array
     {
@@ -94,7 +94,7 @@ final class BuildingCards
             trim((string) $question?->inside_inspection) === 'نعم' ? 'inspection_inside_outside' : 'inspection_outside_only'
         )];
 
-        return Card::make(Card::label('Details related to the property'), $rows);
+        return Card::paired(Card::make(Card::label('Details related to the property'), $rows), [Card::label('inspection_type')]);
     }
 
     private function acTypes(?PropertyAc $ac): string
