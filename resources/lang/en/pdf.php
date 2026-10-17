@@ -484,7 +484,6 @@ return [
     'الدور الثانى' => 'Second Floor',
     'ملاحق' => 'Annexes',
     'مسابح' => 'Pools',
-    'حدائق' => 'Gardens',
     'موقف سيارات' => 'Car Parking',
     'الدور العلوي' => 'Upper Floor',
     'أسوار' => 'Fences',
