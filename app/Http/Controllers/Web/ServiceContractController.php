@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\Pdf\RenderDocumentPdfAction;
 use App\Actions\ServiceContract\CreateServiceContractAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ServiceContract\StoreServiceContractRequest;
@@ -12,7 +13,6 @@ use App\Models\ServiceContract;
 use App\Support\HijriDate;
 use App\Support\Valuation\ArabicAmountInWords;
 use App\Support\Valuation\ValuationFieldGrid;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -49,20 +49,22 @@ class ServiceContractController extends Controller
             ->with('download', route('dashboard.service-contracts.pdf', $contract));
     }
 
-    public function pdf(Request $request, ServiceContract $serviceContract, ArabicAmountInWords $words): Response
-    {
+    public function pdf(
+        Request $request,
+        ServiceContract $serviceContract,
+        ArabicAmountInWords $words,
+        RenderDocumentPdfAction $render,
+    ): Response {
         $serviceContract->loadMissing(['company', 'city', 'neighborhood']);
 
-        $pdf = Pdf::loadView('service_contracts.pdf', [
+        return $render->execute('service_contracts.pdf', [
             'contract' => $serviceContract,
             'company' => $serviceContract->company,
+            'firstParty' => $serviceContract->company?->name ?: config('app.name'),
+            'contractValue' => number_format((float) $serviceContract->contract_value, 2),
             'date' => HijriDate::fromGregorian($serviceContract->contract_date),
             'instrumentDate' => $serviceContract->instrument_date ? HijriDate::fromGregorian($serviceContract->instrument_date) : null,
             'valueInWords' => $words->convert((float) $serviceContract->contract_value),
-        ])->setPaper('a4')->setOption('defaultFont', 'DejaVu Sans');
-
-        $filename = 'contract-'.$serviceContract->number.'.pdf';
-
-        return $request->boolean('download') ? $pdf->download($filename) : $pdf->stream($filename);
+        ], 'contract-'.$serviceContract->number.'.pdf', $request->boolean('download'));
     }
 }

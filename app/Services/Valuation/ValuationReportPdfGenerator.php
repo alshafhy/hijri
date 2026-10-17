@@ -7,6 +7,7 @@ namespace App\Services\Valuation;
 use App\Contracts\ReportPdfRenderer;
 use App\Enums\Valuation\ReportExportVariant;
 use App\Models\ValuationRequest;
+use App\Support\Pdf\PdfStylesheet;
 use App\Support\Pdf\ReportRenderOptions;
 use Illuminate\Support\Facades\View;
 
@@ -16,6 +17,7 @@ final class ValuationReportPdfGenerator
         private readonly ValuationReportDataBuilder $dataBuilder = new ValuationReportDataBuilder,
         private readonly ReportPdfCacheService $cache = new ReportPdfCacheService,
         private readonly ?ReportPdfRenderer $renderer = null,
+        private readonly ?string $cssPath = null,
     ) {}
 
     /**
@@ -38,7 +40,7 @@ final class ValuationReportPdfGenerator
             'draft' => $variant->isDraft(),
             'watermark' => $variant->watermark(),
             'locale' => $variant->locale(),
-            'css' => md5_file($this->cssPath()),
+            'css' => md5($this->css()),
         ]);
         $filename = $variant->filename($data['reference'] ?? $request->id);
 
@@ -52,7 +54,7 @@ final class ValuationReportPdfGenerator
         return $renderer->render($html, new ReportRenderOptions(
             direction: $variant->direction(),
             watermark: $variant->watermark(),
-            css: (string) file_get_contents($this->cssPath()),
+            css: $this->css(),
             paper: strtoupper((string) config('report_pdf.paper', 'A4')),
             orientation: config('report_pdf.orientation', 'portrait') === 'landscape' ? 'L' : 'P',
         ));
@@ -95,9 +97,9 @@ final class ValuationReportPdfGenerator
         ];
     }
 
-    private function cssPath(): string
+    private function css(): string
     {
-        return resource_path('css/pdf/report.css');
+        return PdfStylesheet::read($this->cssPath ?? resource_path('css/pdf/report.css'));
     }
 
     private function writeTemp(int $requestId, string $key, string $bytes): string

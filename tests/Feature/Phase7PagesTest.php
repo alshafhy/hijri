@@ -66,11 +66,18 @@ it('creates numbered service contracts and renders the Hijri PDF', function () {
     $contract = ServiceContract::query()->where('number', 100)->firstOrFail();
     $response = $this->actingAs($this->manager)->get(route('dashboard.service-contracts.pdf', $contract));
     $response->assertOk();
-    expect($response->headers->get('content-type'))->toContain('pdf');
+    expect($response->headers->get('content-type'))->toContain('pdf')
+        ->and($response->headers->get('content-disposition'))->toBe('inline; filename=contract-100.pdf')
+        ->and($response->getContent())->toContain('DINNextLTArabic');
+
+    $download = $this->actingAs($this->manager)->get(route('dashboard.service-contracts.pdf', [$contract, 'download' => 1]));
+    expect($download->headers->get('content-disposition'))->toBe('attachment; filename=contract-100.pdf');
 
     $html = view('service_contracts.pdf', [
         'contract' => $contract->load('company', 'city', 'neighborhood'),
         'company' => $contract->company,
+        'firstParty' => $contract->company->name,
+        'contractValue' => '3,500.00',
         'date' => HijriDate::fromGregorian($contract->contract_date),
         'instrumentDate' => HijriDate::fromGregorian($contract->instrument_date),
         'valueInWords' => 'ثلاثة آلاف وخمسمائة',
@@ -113,5 +120,7 @@ it('shows the user manual and the contractor invoice', function () {
 
     $invoice = $this->actingAs($this->manager)->get(route('dashboard.contractors.invoice', $contractor));
     $invoice->assertOk();
-    expect($invoice->headers->get('content-type'))->toContain('pdf');
+    expect($invoice->headers->get('content-type'))->toContain('pdf')
+        ->and($invoice->headers->get('content-disposition'))->toBe('inline; filename=invoice-'.$contractor->id.'.pdf')
+        ->and($invoice->getContent())->toContain('DINNextLTArabic');
 });

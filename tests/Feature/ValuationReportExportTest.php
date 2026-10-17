@@ -132,8 +132,13 @@ it('queues and downloads each export variant with manual final amount', function
         ->and($html)->toContain('واجهة')
         ->and($html)->not->toContain('missing-for-pdf.jpg');
 
+    $watermarkAlpha = '/ca '.config('report_pdf.watermark_alpha');
     if ($variant === 'full-draft') {
-        expect($html)->toContain('مسودة');
+        expect($html)->toContain('مسودة')
+            ->and($download->getContent())->toContain($watermarkAlpha);
+    }
+    if ($variant === 'full') {
+        expect($download->getContent())->not->toContain($watermarkAlpha);
     }
 
     expect(Activity::query()->where('log_name', 'valuation_report')->count())->toBeGreaterThan(0);

@@ -3,24 +3,9 @@
 <head>
   <meta charset="utf-8">
   <title>{{ __('Valuation service contract') }} {{ $contract->number }}</title>
-  <style>
-    @page { margin: 28px 34px; }
-    body { font-family: DejaVu Sans, sans-serif; font-size: 11px; direction: rtl; text-align: right; line-height: 1.7; color: #1a1a1a; }
-    h1 { font-size: 18px; text-align: center; color: #1f3864; margin: 0 0 4px; }
-    h2 { font-size: 13px; color: #F79C20; margin: 14px 0 4px; }
-    .head { text-align: center; color: #555; margin-bottom: 14px; }
-    .party { border: 1px solid #e2e8f0; padding: 8px 10px; margin: 6px 0; background: #fcfcfc; }
-    ol, ul { margin: 2px 22px 2px 0; padding: 0; }
-    table.sign { width: 100%; margin-top: 30px; border-collapse: collapse; }
-    table.sign td { width: 50%; vertical-align: top; padding: 6px; border: 1px solid #d0d5dd; }
-    strong { color: #1f3864; }
-  </style>
 </head>
 <body>
-@php
-  $firstParty = $company?->name ?: config('app.name');
-  $value = number_format((float) $contract->contract_value, 2);
-@endphp
+<div class="doc-contract">
 
 <h1>عقد تقديم خدمات تقييم عقاري</h1>
 <div class="head">
@@ -82,7 +67,7 @@
 
 <h2>البند السابع: قيمة العقد وصرف المقابل المالي</h2>
 <p>
-  القيمة الإجمالية للعقد مبلغ قدره (<strong>{{ $value }} ريال — {{ $valueInWords }} ريال لا غير</strong>) شاملة جميع التكاليف والرسوم والضرائب بما فيها ضريبة القيمة المضافة،
+  القيمة الإجمالية للعقد مبلغ قدره (<strong>{{ $contractValue }} ريال — {{ $valueInWords }} ريال لا غير</strong>) شاملة جميع التكاليف والرسوم والضرائب بما فيها ضريبة القيمة المضافة،
   ويصرف الطرف الثاني (100%) من المبلغ. وفور الانتهاء من التقرير النهائي يودع الطرف الأول التقارير في الأنظمة الإلكترونية المعتمدة لدى الهيئة ويضع رمز الإيداع عليها ويسلمها للطرف الثاني.
 </p>
 
@@ -140,5 +125,6 @@
     </td>
   </tr>
 </table>
+</div>
 </body>
 </html>

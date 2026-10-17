@@ -10,6 +10,7 @@ use App\Actions\Contractor\CreatePartyContactAction;
 use App\Actions\Contractor\DeactivateContractorAction;
 use App\Actions\Contractor\DeactivatePartyContactAction;
 use App\Actions\Contractor\UpdateContractorAction;
+use App\Actions\Pdf\RenderDocumentPdfAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contractor\StoreContractorRequest;
 use App\Http\Requests\Contractor\StorePartyContactRequest;
@@ -18,7 +19,6 @@ use App\Models\Company;
 use App\Models\Contractor;
 use App\Models\PartyContact;
 use App\Support\Query\AppliesListSort;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -83,7 +83,7 @@ class ContractorController extends Controller
         return view('contractors.show', compact('contractor', 'contracts', 'contacts'));
     }
 
-    public function invoice(Contractor $contractor): Response
+    public function invoice(Contractor $contractor, RenderDocumentPdfAction $render): Response
     {
         $this->authorize('view', $contractor);
 
@@ -95,7 +95,7 @@ class ContractorController extends Controller
         $fees = (float) $contractor->fees;
         $paidCount = $contracts->filter->isPaid()->count();
 
-        return Pdf::loadView('contractors.invoice', [
+        return $render->execute('contractors.invoice', [
             'contractor' => $contractor,
             'company' => Company::query()->orderBy('id')->first(),
             'contracts' => $contracts,
@@ -106,7 +106,7 @@ class ContractorController extends Controller
                 'unpaid' => $fees * ($contracts->count() - $paidCount),
             ],
             'issuedAt' => now(),
-        ])->setPaper('a4')->setOption('defaultFont', 'DejaVu Sans')->stream('invoice-'.$contractor->id.'.pdf');
+        ], 'invoice-'.$contractor->id.'.pdf', false);
     }
 
     public function storeContact(

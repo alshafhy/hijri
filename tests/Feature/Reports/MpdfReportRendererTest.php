@@ -18,7 +18,7 @@ it('embeds the configured Arabic font and the watermark', function () {
     $bytes = app(ReportPdfRenderer::class)->render('<p>نص</p>', new ReportRenderOptions(direction: 'rtl', watermark: 'مسودة'));
 
     expect($bytes)->toContain('DINNextLTArabic')
-        ->and($bytes)->toContain('/ExtGState');
+        ->and($bytes)->toContain('/ca '.config('report_pdf.watermark_alpha'));
 });
 
 it('renders html larger than the default pcre backtrack limit', function () {
