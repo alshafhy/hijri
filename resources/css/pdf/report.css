@@ -50,6 +50,54 @@ table.report td.label {
 .final-box .amount { font-size: 16px; font-weight: bold; color: #1f3864; }
 .page-break { page-break-before: always; }
 .muted { color: #888; font-size: 10px; }
+
+/* Full report (resources/views/pdf/report) */
+@page main {
+    margin-top: 35mm;
+    margin-bottom: 15mm;
+    margin-left: 10mm;
+    margin-right: 10mm;
+    margin-header: 4mm;
+    margin-footer: 4mm;
+    header: html_page-header;
+    footer: html_page-footer;
+    background: url(images/report/page-bg.jpeg);
+}
+@page cover {
+    margin: 0;
+    margin-header: 0;
+    margin-footer: 0;
+    header: none;
+    footer: none;
+    background-image: url(images/report/cover.jpg);
+    background-image-resize: 6;
+}
+@page closing {
+    margin: 0;
+    margin-header: 0;
+    margin-footer: 0;
+    header: none;
+    footer: none;
+    background-image: url(images/report/closing.jpg);
+    background-image-resize: 6;
+}
+.rpt-main { page: main; }
+.rpt-cover-page { page: cover; padding: 62mm 18mm 0; }
+.rpt-closing-page { page: closing; }
+table.rpt-header { width: 100%; border-collapse: collapse; font-size: 11px; }
+table.rpt-header td { padding: 1px 4px; vertical-align: middle; }
+td.rpt-header-title { color: red; font-size: 18px; font-weight: bold; }
+td.rpt-header-logo { width: 28mm; text-align: left; }
+td.rpt-header-logo img { width: 26mm; height: 26mm; }
+hr.rpt-header-rule { margin: 2px 0 0; color: #A6A6A6; }
+table.rpt-footer { width: 100%; border-collapse: collapse; font-size: 6pt; color: #000000; }
+td.rpt-footer-text { text-align: center; }
+td.rpt-footer-page { width: 14mm; text-align: left; }
+table.rpt-cover { width: 100%; border-collapse: collapse; }
+table.rpt-cover td { padding: 7px; font-size: 20px; font-weight: bold; }
+td.rpt-cover-label { width: 30%; color: #F79C20; }
+td.rpt-cover-value { text-align: center; }
+td.rpt-cover-deposit { color: #C00000; }
 .section-note {
     background: #fcfcfc;
     border: 1px solid #e2e8f0;

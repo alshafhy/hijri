@@ -22,11 +22,16 @@ enum ReportExportVariant: string
     }
 
     /**
-     * Locale the report is rendered in; null keeps the current application locale.
+     * Locale the report is rendered in, independent of the UI locale it is exported from.
      */
-    public function locale(): ?string
+    public function locale(): string
     {
-        return $this === self::FullEnglish ? 'en' : null;
+        return $this === self::FullEnglish ? 'en' : 'ar';
+    }
+
+    public function isFull(): bool
+    {
+        return $this !== self::Enforcement;
     }
 
     public function direction(): string

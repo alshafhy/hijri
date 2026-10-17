@@ -26,7 +26,7 @@ final class ValuationReportPdfGenerator
     public function prepare(ValuationRequest $request, ReportExportVariant $variant): array
     {
         $previousLocale = app()->getLocale();
-        app()->setLocale($variant->locale() ?? $previousLocale);
+        app()->setLocale($variant->locale());
 
         try {
             $data = $this->dataBuilder->build($request, $variant);

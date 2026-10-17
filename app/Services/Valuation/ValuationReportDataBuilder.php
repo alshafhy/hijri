@@ -15,6 +15,7 @@ use App\Support\Valuation\Report\AttachmentImagesSection;
 use App\Support\Valuation\Report\BrandingSection;
 use App\Support\Valuation\Report\ComparablesSection;
 use App\Support\Valuation\Report\CostTableSection;
+use App\Support\Valuation\Report\CoverSection;
 use App\Support\Valuation\Report\CustomTableSection;
 use App\Support\Valuation\Report\PropertyInfoSection;
 use App\Support\Valuation\Report\SignaturesSection;
@@ -39,6 +40,7 @@ final class ValuationReportDataBuilder
         private readonly StandardsSection $standards = new StandardsSection,
         private readonly CustomTableSection $customTables = new CustomTableSection,
         private readonly AttachmentImagesSection $attachmentImages = new AttachmentImagesSection,
+        private readonly CoverSection $cover = new CoverSection,
     ) {}
 
     /**
@@ -146,16 +148,18 @@ final class ValuationReportDataBuilder
     }
 
     /**
-     * Section arrays consumed by the report layout; labels follow the current app locale.
+     * Section arrays consumed by the report layout; labels follow the current app locale,
+     * which the PDF generator sets to the variant's locale while building.
      *
      * @return array<string, mixed>
      */
     private function sections(ValuationRequest $request, ?Property $property, ReportExportVariant $variant): array
     {
-        $locale = $variant->locale() === 'en' ? 'en' : 'ar';
+        $locale = $variant->locale();
 
         return [
             'branding' => $request->company === null ? null : $this->branding->build($request->company),
+            'cover' => $this->cover->build($request, $property),
             'signatures' => $this->signatures->build($request),
             'cost' => $property === null ? null : $this->costTable->build($property, $locale),
             'comparables_section' => $property === null ? null : $this->comparables->build($property),
@@ -163,7 +167,7 @@ final class ValuationReportDataBuilder
             'standards' => $property === null ? [] : $this->standards->build($property),
             'custom_tables' => $this->customTables->build($request),
             'attachment_images' => $this->attachmentImages->build($request),
-            'static_pages' => $this->staticPages($locale),
+            'static_pages' => $variant->isFull() ? $this->staticPages($locale) : [],
             'show_signatures' => $variant->showsSignatures(),
             'hijri_issue_date' => HijriDate::fromGregorian(now())->numeric(),
         ];
