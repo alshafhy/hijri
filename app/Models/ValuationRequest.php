@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property-read Company|null $company
  * @property-read User|null $coordinator
  * @property-read User|null $evaluator
+ * @property-read User|null $subUser
  * @property-read Collection<int, RequestFeeShare> $feeShares
  * @property-read Collection<int, Contract> $contracts
  * @property-read Collection<int, Offer> $offers
@@ -147,6 +148,14 @@ class ValuationRequest extends Model
     public function evaluator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'evaluator_user_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function subUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sub_user_id');
     }
 
     /**
