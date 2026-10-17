@@ -41,6 +41,21 @@ it('drops rows that have neither area nor price', function () {
         ->and($table['rows'])->toHaveCount(3);
 });
 
+it('prints only rows configured in the valuation grid', function () {
+    $property = reportFixture()->property;
+    PropertyComponent::query()->create([
+        'property_id' => $property->id,
+        'component_key' => 'legacy_extra',
+        'area_value' => 40,
+        'price_value' => 900,
+    ]);
+
+    $table = (new CostTableSection)->build($property->refresh(), 'ar');
+
+    expect(array_column($table['rows'], 'title'))->not->toContain('legacy_extra')
+        ->and($table['rows'])->toHaveCount(3);
+});
+
 it('hides forced sale unless the value assumption is forced sale', function () {
     $property = reportFixture()->property;
     $property->update(['value_assumption' => 1]);

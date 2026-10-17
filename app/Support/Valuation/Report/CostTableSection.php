@@ -11,6 +11,7 @@ use App\Models\ValuationRequest;
 use App\Support\Valuation\ArabicAmountInWords;
 use App\Support\Valuation\EnglishAmountInWords;
 use App\Support\Valuation\ValuationBreakdown;
+use App\Support\Valuation\ValuationFieldGrid;
 
 /**
  * Cost approach table (grid rows, adjustments, final amount + words) for valuation reports.
@@ -69,15 +70,21 @@ final class CostTableSection
      */
     private function rows(Property $property): array
     {
-        return array_map(
+        $gridKeys = array_column(ValuationFieldGrid::rows((string) $property->property_kind, (string) $property->property_type), 'key');
+        $rows = array_filter(
+            ValuationBreakdown::forProperty($property)['rows'],
+            static fn (array $row): bool => in_array($row['key'], $gridKeys, true),
+        );
+
+        return array_values(array_map(
             static fn (array $row): array => [
                 'title' => $row['title'],
                 'area' => $row['area'],
                 'price' => $row['price'],
                 'total' => $row['total'],
             ],
-            ValuationBreakdown::forProperty($property)['rows'],
-        );
+            $rows,
+        ));
     }
 
     /**
