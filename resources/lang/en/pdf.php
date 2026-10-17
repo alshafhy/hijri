@@ -626,5 +626,9 @@ return [
     'standard_400' => 'Asset Standard 400: Real Property Interests',
     'standard_400_des' => 'These are additional requirements that apply to the valuation of real property interests, being the right to control and use the property. They may be an absolute freehold ownership right, a right of ownership for a specified period, or a right of use such as an easement, a right of way over the property, or use for a specific activity only.',
     'standard_410' => 'Standard 410: Development Property',
+    'inspection_type' => 'Inspection type',
+    'inspection_inside_outside' => 'Inspection of the property from inside and outside',
+    'inspection_outside_only' => 'Inspection of the property from outside',
+    'evaluation_date_hijri' => 'Valuation date (Hijri)',
     'standard_410_des' => 'The general standards apply, but for development property these additional standards also apply. These are interests that require redevelopment to achieve their highest and best use, whether development is complete or still in progress at the valuation date, and include buildings or undeveloped land, developed land intended for redevelopment, improvement of existing buildings, or land of higher value or density within a plan.',
 ];
