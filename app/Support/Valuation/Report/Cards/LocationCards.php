@@ -38,21 +38,45 @@ final class LocationCards
     public function borders(Property $property): ?array
     {
         $border = $property->borders->first();
-        $rows = [];
-        $wide = [Card::label('total_land_area')];
+        $lines = [];
 
         foreach (['north', 'south', 'east', 'west'] as $side) {
-            $length = Card::positive($border?->{"{$side}_length"}, Card::label('meter'));
-            $rows[] = [Card::label($side), Card::text($border?->{$side})];
-            $rows[] = [Card::label('length'), $length];
-            if ($length === null) {
-                $wide[] = Card::label($side);
+            $line = $this->borderLine($side, Card::text($border?->{$side}), Card::positive($border?->{"{$side}_length"}, Card::label('meter')));
+            if ($line !== []) {
+                $lines[] = $line;
             }
         }
 
-        $rows[] = [Card::label('total_land_area'), Card::positive($this->landArea($property), Card::label('square_meter_text'))];
+        $area = Card::positive($this->landArea($property), Card::label('square_meter_text'));
+        if ($area !== null) {
+            $lines[] = [['label' => Card::label('total_land_area'), 'value' => $area]];
+        }
 
-        return Card::paired(Card::make(Card::label('property_borders'), $rows), $wide);
+        return $lines === [] ? null : [
+            'title' => Card::label('property_borders'),
+            'rows' => array_merge(...$lines),
+            'columns' => 4,
+            'lines' => $lines,
+        ];
+    }
+
+    /**
+     * One printed line per side: the side name with its own length; a name-less side with a length prints a dash.
+     *
+     * @return list<array{label: string, value: string}>
+     */
+    private function borderLine(string $side, ?string $name, ?string $length): array
+    {
+        if ($name === null && $length === null) {
+            return [];
+        }
+
+        $line = [['label' => Card::label($side), 'value' => $name ?? '—']];
+        if ($length !== null) {
+            $line[] = ['label' => Card::label('length'), 'value' => $length];
+        }
+
+        return $line;
     }
 
     private function landArea(Property $property): ?float

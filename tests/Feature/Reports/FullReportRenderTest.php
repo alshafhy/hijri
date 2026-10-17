@@ -9,6 +9,7 @@ use App\Services\Valuation\ValuationReportPdfGenerator;
 use App\Support\Valuation\Report\PageBreaks;
 use App\Support\Valuation\Report\ReportLabels;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\View;
 
@@ -381,7 +382,8 @@ it('renders the basic data card and the property information cards', function ()
         ->and($cards)->toContain(__('pdf.property_borders'))
         ->and($cards)->toContain('25 '.__('pdf.meter'))
         ->and($cards)->toContain(__('pdf.description_finishes_and_construction'))
-        ->and($cards)->toContain(__('pdf.best_use_current').'</td>')
+        ->and((string) preg_replace('/>\s+</', '><', htmlBetween($cards, __('pdf.Details related to the property'), '</table>')))
+        ->toContain('<td class="rpt-card-pair-label">'.__('pdf.best_use_current').'</td><td class="rpt-card-pair-value">نعم</td>')
         ->and($cards)->toContain(__('pdf.inspection_type').'</td>')
         ->and($cards)->toContain('<td colspan="3">'.__('pdf.inspection_inside_outside').'</td>')
         ->and(substr_count($cards, '<table class="rpt-card'))->toBe(6);
@@ -493,4 +495,87 @@ it('does not open the scope with a blank page without certificate, static pages 
 
     expect(ltrim($main))->toStartWith('<table class="rpt-card rpt-scope">')
         ->and(preg_match('/<pagebreak[^>]*>\s*<pagebreak/', $html))->toBe(0);
+});
+
+it('pairs each border side with its own length when a side name is empty', function () {
+    $request = reportFixture();
+    $request->property?->borders()->update(['north' => ' ', 'north_length' => '25', 'south' => 'جار', 'south_length' => '30']);
+    $borders = htmlBetween(renderFullReport(request: $request->refresh()), __('pdf.property_borders'), '</table>');
+    $pair = fn (string $label, string $value): string => '<td class="rpt-card-pair-label">'.$label.'</td>'
+        .'<td class="rpt-card-pair-value">'.$value.'</td>';
+    $line = (string) preg_replace('/>\s+</', '><', $borders);
+
+    expect($line)->toContain($pair(__('pdf.north'), '—').$pair(__('pdf.length'), '25 '.__('pdf.meter')))
+        ->and($line)->toContain($pair(__('pdf.south'), 'جار').$pair(__('pdf.length'), '30 '.__('pdf.meter')))
+        ->and($line)->toContain($pair(__('pdf.east'), 'جار').$pair(__('pdf.length'), '20 '.__('pdf.meter')));
+});
+
+/**
+ * Renders the full report with OpenStreetMap tiles faked, deleting only the map cache files it created.
+ */
+function renderFullReportWithMapTiles(ValuationRequest $request): string
+{
+    $files = fn (): array => glob(storage_path('app/private/report-map-cache/*.png')) ?: [];
+    $before = $files();
+    $image = imagecreatetruecolor(256, 256);
+    ob_start();
+    imagepng($image);
+    $tile = (string) ob_get_clean();
+    Http::swap(new Factory);
+    Http::fake(['tile.openstreetmap.org/*' => Http::response($tile), '*' => Http::response('', 503)]);
+
+    try {
+        return renderFullReport(request: $request);
+    } finally {
+        array_map('unlink', array_diff($files(), $before));
+    }
+}
+
+it('renders the comparables, their map, the adjustments matrix and the settlement', function () {
+    $html = renderFullReportWithMapTiles(reportFixture());
+    $block = htmlBetween($html, 'class="rpt-market-approach"', 'class="rpt-closing-page"');
+    $comparables = (string) preg_replace('/>\s+</', '><', htmlBetween($block, 'rpt-comparables"', '</table>'));
+    $matrix = (string) preg_replace('/>\s+</', '><', htmlBetween($block, 'rpt-adjustments', '</table>'));
+    $settlement = (string) preg_replace('/>\s+</', '><', htmlBetween($block, 'rpt-settlement ', '</table>'));
+
+    expect($comparables)->toContain(__('pdf.comparative_real_estate'))
+        ->and($comparables)->toContain('<td class="rpt-data-label">'.__('pdf.comparative').' 1</td><td>أرض</td><td>شمالية</td><td>500</td><td>3,000.00</td><td>1,500,000.00</td>')
+        ->and(substr_count($comparables, '<td class="rpt-data-label">'.__('pdf.comparative').' '))->toBe(3)
+        ->and($comparables)->toContain('href="https://www.google.com/maps/@24.711,46.671,17z"')
+        ->and($comparables)->toContain('منصة السوق')
+        ->and($block)->toContain(__('pdf.comparison_map'))
+        ->and($block)->toContain('<img class="rpt-comparables-map-image" src="data:image/png;base64,')
+        ->and(substr_count($matrix, 'class="rpt-adjustments-comparator"'))->toBe(3)
+        ->and($matrix)->toContain(__('pdf.The third comparator'))
+        ->and($matrix)->not->toContain(__('pdf.The fourth comparator'))
+        ->and($matrix)->toContain('<td class="rpt-data-label">'.__('pdf.Total settlement percentages').'</td><td colspan="2">5%</td><td colspan="2">3%</td><td colspan="2">0%</td>')
+        ->and($matrix)->toContain('<td class="rpt-data-label">'.__('pdf.market conditions value').'</td><td></td><td>5%</td>')
+        ->and($settlement)->toContain('<td class="rpt-data-label">'.__('pdf.weight').'</td><td colspan="2">40%</td><td colspan="2">30%</td><td colspan="2">30%</td>')
+        ->and($settlement)->toContain('<td class="rpt-data-label">'.__('pdf.Price after adjustments').'</td><td colspan="2">3,087.00</td>')
+        ->and($settlement)->toContain('<tr class="rpt-highlight"><td class="rpt-data-label">'.__('pdf.meter price').'</td><td colspan="6">3,050.00</td></tr>')
+        ->and($settlement)->toContain('<tr class="rpt-highlight"><td class="rpt-data-label">'.__('pdf.meter price approximately').'</td><td colspan="6">3,000.00</td></tr>')
+        ->and(strpos($html, 'class="rpt-market-approach"'))->toBeGreaterThan((int) strpos($html, 'class="rpt-property-cards"'));
+});
+
+it('skips the whole comparables block when the comparisons are hidden or there are no comparables', function () {
+    $request = reportFixture();
+    $request->property?->total?->update(['hide_comparisons_info_table' => true]);
+    $hidden = renderFullReport(request: $request->refresh());
+    $request->property?->total?->update(['hide_comparisons_info_table' => false]);
+    $request->property?->comparables()->delete();
+    $empty = renderFullReport(request: $request->refresh());
+
+    expect($hidden)->not->toContain('rpt-market-approach')
+        ->and($hidden)->not->toContain(__('pdf.Settlements table'))
+        ->and($empty)->not->toContain('rpt-market-approach')
+        ->and(fullReportData($request)['market_approach'])->toBeNull();
+});
+
+it('opens the comparables block on a new page', function () {
+    $data = fullReportData();
+    $breaks = $data['breaks'];
+    $main = (string) preg_replace('/>\s+</', '><', view('pdf.report.full', $data)->render());
+
+    expect($breaks['market_approach'])->toBeTrue()
+        ->and($main)->toContain('<pagebreak /><div class="rpt-market-approach">');
 });

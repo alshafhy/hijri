@@ -15,6 +15,7 @@ use App\Support\Valuation\Report\AttachmentImagesSection;
 use App\Support\Valuation\Report\BasicDataSection;
 use App\Support\Valuation\Report\BrandingSection;
 use App\Support\Valuation\Report\CertificateSection;
+use App\Support\Valuation\Report\ComparablesPresenter;
 use App\Support\Valuation\Report\ComparablesSection;
 use App\Support\Valuation\Report\CostTableSection;
 use App\Support\Valuation\Report\CoverSection;
@@ -53,6 +54,7 @@ final class ValuationReportDataBuilder
         private readonly FrameworkSection $framework = new FrameworkSection,
         private readonly BasicDataSection $basicData = new BasicDataSection,
         private readonly PageBreaks $pageBreaks = new PageBreaks,
+        private readonly ComparablesPresenter $comparablesPresenter = new ComparablesPresenter,
     ) {}
 
     /**
@@ -176,6 +178,7 @@ final class ValuationReportDataBuilder
         $branding = $request->company === null ? null : $this->branding->build($request->company);
         $signatures = $this->signatures->build($request);
         $cover = $this->cover->build($request, $property);
+        $comparables = $property === null ? null : $this->comparables->build($property);
 
         return [
             'branding' => $branding,
@@ -188,7 +191,8 @@ final class ValuationReportDataBuilder
             'basic_data' => $this->basicData->build($request, $property),
             'signatures' => $signatures,
             'cost' => $property === null ? null : $this->costTable->build($property, $locale),
-            'comparables_section' => $property === null ? null : $this->comparables->build($property),
+            'comparables_section' => $comparables,
+            'market_approach' => $this->comparablesPresenter->build($comparables),
             'property_cards' => $property === null ? [] : $this->propertyInfo->build($property),
             'standards' => $property === null ? [] : $this->standards->build($property),
             'custom_tables' => $this->customTables->build($request),

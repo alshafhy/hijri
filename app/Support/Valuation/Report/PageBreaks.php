@@ -20,6 +20,7 @@ final class PageBreaks
         'basic_data' => true,
         'property_cards' => false,
         'location_maps' => true,
+        'market_approach' => true,
     ];
 
     /**

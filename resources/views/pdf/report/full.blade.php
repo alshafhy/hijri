@@ -35,6 +35,10 @@
         @if ($location_maps)
             @include('pdf.report.partials.location-maps')
         @endif
+
+        @if ($market_approach)
+            @include('pdf.report.partials.comparables')
+        @endif
     </div>
 
     @include('pdf.report.partials.closing')
