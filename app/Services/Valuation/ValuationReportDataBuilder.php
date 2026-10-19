@@ -17,13 +17,16 @@ use App\Support\Valuation\Report\BrandingSection;
 use App\Support\Valuation\Report\CertificateSection;
 use App\Support\Valuation\Report\ComparablesPresenter;
 use App\Support\Valuation\Report\ComparablesSection;
+use App\Support\Valuation\Report\CostTablePresenter;
 use App\Support\Valuation\Report\CostTableSection;
 use App\Support\Valuation\Report\CoverSection;
 use App\Support\Valuation\Report\CustomTableSection;
 use App\Support\Valuation\Report\FrameworkSection;
+use App\Support\Valuation\Report\NotesSection;
 use App\Support\Valuation\Report\PageBreaks;
 use App\Support\Valuation\Report\PropertyInfoSection;
 use App\Support\Valuation\Report\ScopeSection;
+use App\Support\Valuation\Report\SignaturesPresenter;
 use App\Support\Valuation\Report\SignaturesSection;
 use App\Support\Valuation\Report\StandardsSection;
 use App\Support\Valuation\Report\SummarySection;
@@ -32,6 +35,9 @@ use App\Support\Valuation\ValuationReportPictureHtml;
 
 /**
  * Assembles Blade data for valuation PDF variants from imported domain models.
+ *
+ * @phpstan-import-type Cost from CostTablePresenter as CostTableData
+ * @phpstan-import-type Signatures from SignaturesPresenter as SignaturesData
  */
 final class ValuationReportDataBuilder
 {
@@ -55,6 +61,9 @@ final class ValuationReportDataBuilder
         private readonly BasicDataSection $basicData = new BasicDataSection,
         private readonly PageBreaks $pageBreaks = new PageBreaks,
         private readonly ComparablesPresenter $comparablesPresenter = new ComparablesPresenter,
+        private readonly CostTablePresenter $costPresenter = new CostTablePresenter,
+        private readonly NotesSection $notes = new NotesSection,
+        private readonly SignaturesPresenter $signaturesPresenter = new SignaturesPresenter,
     ) {}
 
     /**
@@ -179,8 +188,9 @@ final class ValuationReportDataBuilder
         $signatures = $this->signatures->build($request);
         $cover = $this->cover->build($request, $property);
         $comparables = $property === null ? null : $this->comparables->build($property);
+        $cost = $property === null ? null : $this->costTable->build($property, $locale);
 
-        return [
+        return $this->valuationSections($request, $property, $cost, $signatures, $branding, $variant) + [
             'branding' => $branding,
             'page_footer' => $this->branding->footer($branding),
             'cover' => $cover,
@@ -190,7 +200,7 @@ final class ValuationReportDataBuilder
             'framework' => $this->framework->build($locale),
             'basic_data' => $this->basicData->build($request, $property),
             'signatures' => $signatures,
-            'cost' => $property === null ? null : $this->costTable->build($property, $locale),
+            'cost' => $cost,
             'comparables_section' => $comparables,
             'market_approach' => $this->comparablesPresenter->build($comparables),
             'property_cards' => $property === null ? [] : $this->propertyInfo->build($property),
@@ -200,6 +210,24 @@ final class ValuationReportDataBuilder
             'static_pages' => $variant->isFull() ? $this->staticPages($locale) : [],
             'show_signatures' => $variant->showsSignatures(),
             'hijri_issue_date' => HijriDate::fromGregorian(now())->numeric(),
+        ];
+    }
+
+    /**
+     * Cost table, final value, notes and signatures printed after the market approach.
+     *
+     * @param  CostTableData|null  $cost
+     * @param  SignaturesData  $signatures
+     * @param  array{stamp: ?string}|null  $branding
+     * @return array<string, mixed>
+     */
+    private function valuationSections(ValuationRequest $request, ?Property $property, ?array $cost, array $signatures, ?array $branding, ReportExportVariant $variant): array
+    {
+        return [
+            'cost_table' => $this->costPresenter->table($cost, (bool) $property?->total?->hide_evaluation_info_table),
+            'final_value' => $this->costPresenter->finalValue($cost),
+            'notes' => $this->notes->build($property),
+            'signature_block' => $this->signaturesPresenter->build($signatures, $branding['stamp'] ?? null, $request->ended_at, $variant->showsSignatures()),
         ];
     }
 

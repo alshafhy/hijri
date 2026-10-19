@@ -634,5 +634,7 @@ return [
     'inspection_outside_only' => 'Inspection of the property from outside',
     'evaluation_date_hijri' => 'Valuation date (Hijri)',
     'custom_table' => 'Custom table',
+    'field_name' => 'Field name',
+    'signatures' => 'Signatures',
     'standard_410_des' => 'The general standards apply, but for development property these additional standards also apply. These are interests that require redevelopment to achieve their highest and best use, whether development is complete or still in progress at the valuation date, and include buildings or undeveloped land, developed land intended for redevelopment, improvement of existing buildings, or land of higher value or density within a plan.',
 ];

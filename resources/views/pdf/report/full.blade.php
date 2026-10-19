@@ -39,6 +39,28 @@
         @if ($market_approach)
             @include('pdf.report.partials.comparables')
         @endif
+
+        @if ($cost_table)
+            @include('pdf.report.partials.cost-table')
+        @endif
+
+        @if ($custom_tables)
+            @include('pdf.report.partials.custom-tables')
+        @endif
+
+        @if ($final_value)
+            @include('pdf.report.partials.final-value')
+        @endif
+
+        @if ($notes)
+            @include('pdf.report.partials.notes')
+        @endif
+
+        @if ($signature_block)
+            @include('pdf.report.partials.signatures')
+        @endif
+
+        @include('pdf.report.partials.visit-confirmation')
     </div>
 
     @include('pdf.report.partials.closing')

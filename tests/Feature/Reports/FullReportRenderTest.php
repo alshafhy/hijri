@@ -11,7 +11,9 @@ use App\Support\Valuation\Report\PageBreaks;
 use App\Support\Valuation\Report\ReportLabels;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Factory;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 
 uses(RefreshDatabase::class);
@@ -534,7 +536,7 @@ function renderFullReportWithMapTiles(ValuationRequest $request): string
 
 it('renders the comparables, their map and the adjustments matrix with the meter price rows', function () {
     $html = renderFullReportWithMapTiles(reportFixture());
-    $block = htmlBetween($html, 'class="rpt-market-approach"', 'class="rpt-closing-page"');
+    $block = htmlBetween($html, 'class="rpt-market-approach"', '<table class="rpt-data-table rpt-cost-table"');
     $comparables = (string) preg_replace('/>\s+</', '><', htmlBetween($block, 'rpt-comparables"', '</table>'));
     $matrix = (string) preg_replace('/>\s+</', '><', htmlBetween($block, 'rpt-adjustments', '</table>'));
 
@@ -605,4 +607,150 @@ it('prints a comparable row only when the comparable has a type', function () {
     expect(substr_count($comparables, '<td class="rpt-data-label">'.__('pdf.comparative').' '))->toBe(2)
         ->and($comparables)->not->toContain('>'.__('pdf.comparative').' 2<')
         ->and($comparables)->toContain(__('pdf.comparative_coordinates').' 2');
+});
+
+function compactHtml(string $html): string
+{
+    return (string) preg_replace('/>\s+</', '><', $html);
+}
+
+/**
+ * @param  list<string>  $cells  label first, then the value cells
+ */
+function dataRow(array $cells): string
+{
+    $label = array_shift($cells);
+
+    return '<td class="rpt-data-label">'.$label.'</td><td>'.implode('</td><td>', $cells).'</td>';
+}
+
+it('renders the cost table with the grid titles, the legacy extra rows and the estimated cost', function () {
+    $data = fullReportData();
+    $cost = compactHtml(htmlBetween(view('pdf.report.full', $data)->render(), 'rpt-cost-table"', '</table>'));
+    $words = $data['cost']['final_in_words'];
+
+    expect($cost)->toContain(__('pdf.property_evaluation'))
+        ->and($cost)->toContain('<td class="rpt-cost-usage">'.__('pdf.usage').'</td><td>'.__('pdf.space').'</td><td>'.__('pdf.meter_price_riyals').'</td><td>'.__('pdf.total_price_riyals').'</td>')
+        ->and($cost)->toContain(dataRow(['مساحة الأرض', '500', '3,000.00', '1,500,000.00']))
+        ->and($cost)->toContain(dataRow(['الملحق الأرضي', '300', '1,500.00', '450,000.00']))
+        ->and($cost)->toContain(dataRow(['الملحق العلوي', '150', '1,200.00', '180,000.00']))
+        ->and($cost)->not->toContain('land_area')
+        ->and($cost)->toContain(dataRow([__('pdf.developer_earnings').' (+)', '-', '-', '63,000.00']))
+        ->and($cost)->toContain(dataRow([__('pdf.depreciation_amount').' (-)', '-', '-', '138,600.00']))
+        ->and($cost)->toContain(dataRow([__('pdf.forced_sale').' (15%) (-)', '-', '%15', '300,000.00']))
+        ->and($cost)->not->toContain(__('pdf.movables'))
+        ->and($words)->not->toBe('')
+        ->and($cost)->toContain('<td class="rpt-data-label">'.__('pdf.estimated_cost').'</td><td colspan="2">'.$words.'</td><td class="rpt-cost-amount">2,000,000.00</td>');
+});
+
+it('hides the zero cost rows and the forced sale outside the forced sale assumption like legacy', function () {
+    $request = reportFixture();
+    $request->property?->update(['value_assumption' => 1]);
+    $request->property?->total?->update(['profit_amount' => 0, 'depreciation_amount' => null, 'movables' => 2500]);
+    $cost = compactHtml(htmlBetween(renderFullReport(request: $request->refresh()), 'rpt-cost-table"', '</table>'));
+
+    expect($cost)->not->toContain(__('pdf.developer_earnings'))
+        ->and($cost)->not->toContain(__('pdf.depreciation_amount'))
+        ->and($cost)->not->toContain(__('pdf.forced_sale'))
+        ->and($cost)->toContain(dataRow([__('pdf.movables'), '2,500.00', '-', '2,500.00']));
+});
+
+it('renders the custom table with its title and every row padded to the widest row', function () {
+    $table = compactHtml(htmlBetween(renderFullReport(), 'rpt-custom-table"', '</table>'));
+
+    expect($table)->toContain('<th colspan="3">جدول الدخل</th>')
+        ->and($table)->toContain('<td class="rpt-custom-field">'.__('pdf.field_name').'</td><td>'.__('pdf.the value').'</td><td>'.__('pdf.the value').'</td>')
+        ->and($table)->toContain(dataRow(['الإيجار السنوي', '120000', '5%']))
+        ->and($table)->toContain(dataRow(['المصاريف', '10000', '']))
+        ->and(substr_count($table, '<td class="rpt-data-label">'))->toBe(2);
+});
+
+it('renders the final value with the amount and the value in words', function () {
+    $data = fullReportData();
+    $final = compactHtml(htmlBetween(view('pdf.report.full', $data)->render(), 'rpt-final-value"', '</table>'));
+    $words = $data['cost']['final_in_words'];
+
+    expect($final)->toContain('<th colspan="2">'.__('pdf.final_valuation_price').'</th>')
+        ->and($final)->toContain('<td class="rpt-final-amount">2,000,000.00 '.__('pdf.saudi_riyal').'</td><td>'.$words.' '.__('pdf.only').'</td>');
+});
+
+it('renders the coordinator and evaluator notes', function () {
+    $request = reportFixture();
+    $request->property?->update(['notes_real_estate' => ' ملاحظة المنسق ', 'notes_property' => 'ملاحظة المقيم']);
+    $notes = compactHtml(htmlBetween(renderFullReport(request: $request->refresh()), 'rpt-notes"', '</table>'));
+
+    expect($notes)->toContain(__('pdf.opinion_of_appraisal_company'))
+        ->and($notes)->toContain('<td class="rpt-data-label">'.__('pdf.moderator_notes').'</td><td class="rpt-notes-text">ملاحظة المنسق</td>')
+        ->and($notes)->toContain('<td class="rpt-data-label">'.__('pdf.evaluator_notes').'</td><td class="rpt-notes-text">ملاحظة المقيم</td>');
+});
+
+it('renders the four signature columns with the signatures, the company stamp and the accreditation date', function () {
+    Storage::fake('public');
+    $request = reportFixture();
+    $request->company?->update(['stamp_path' => UploadedFile::fake()->image('stamp.png', 100, 100)->store('company/stamp', 'public')]);
+    $request->update(['ended_at' => '2026-10-15 10:00:00']);
+    $html = renderFullReport(request: $request->refresh());
+    $block = compactHtml(htmlBetween($html, 'rpt-signatures"', '</table>'));
+
+    expect($block)->toContain('<th colspan="4">'.__('pdf.signatures').'</th>')
+        ->and($block)->toContain('<td>'.__('pdf.resident_name').'</td><td>'.__('pdf.data_validator').'</td><td>'.__('pdf.report_approved').'</td><td>'.__('pdf.company_stamp').'</td>')
+        ->and($block)->toContain('<div>مقيم الاختبار</div><div>'.__('pdf.membership_number_label').': - 1210000001</div><div>عقار - أساسي</div>')
+        ->and($block)->toContain('<div>منسق الاختبار</div><img')
+        ->and($block)->not->toContain('1210000002')
+        ->and($block)->toContain('<div>معتمد الاختبار</div><div>'.__('pdf.membership_number_label').': - 1210000003</div><div>زميل</div>')
+        ->and(substr_count($block, '<img class="rpt-signature-image" src="data:image/png;base64,'))->toBe(3)
+        ->and(substr_count($block, '<img class="rpt-stamp-image" src="data:image/png;base64,'))->toBe(1)
+        ->and($html)->toContain('<p class="rpt-accreditation-date">'.__('pdf.accreditation_date').': 2026/10/15</p>');
+});
+
+it('prints the name and membership without a broken image when a signature is missing', function () {
+    $request = reportFixture();
+    $request->evaluator?->update(['signature_path' => null]);
+    $block = compactHtml(htmlBetween(renderFullReport(request: $request->refresh()), 'rpt-signatures"', '</table>'));
+
+    expect($block)->toContain('<div>مقيم الاختبار</div><div>'.__('pdf.membership_number_label').': - 1210000001</div><div>عقار - أساسي</div></td>')
+        ->and(substr_count($block, '<img class="rpt-signature-image"'))->toBe(2)
+        ->and(substr_count($block, '<img'))->toBe(2)
+        ->and($block)->not->toContain('<p class="rpt-accreditation-date">');
+});
+
+it('leaves the signatures block out of the draft but keeps the visit confirmation', function () {
+    $html = renderFullReport(ReportExportVariant::FullDraft);
+
+    expect($html)->not->toContain('rpt-signatures')
+        ->and($html)->not->toContain(__('pdf.resident_name'))
+        ->and($html)->toContain('<p class="rpt-visit-confirmation">'.__('pdf.visit_confirmation').'</p>');
+});
+
+it('prints the valuation sections in legacy order after the market approach', function () {
+    $html = renderFullReport();
+    $positions = array_map(fn (string $marker): int => (int) strpos($html, $marker), [
+        'class="rpt-market-approach"', 'rpt-cost-table"', 'rpt-custom-table"', 'rpt-final-value"',
+        'rpt-notes"', 'rpt-signatures"', 'class="rpt-visit-confirmation"', 'class="rpt-closing-page"',
+    ]);
+    $sorted = $positions;
+    sort($sorted);
+
+    expect($positions)->each->toBeGreaterThan(0)
+        ->and($positions)->toBe($sorted);
+});
+
+it('lets the valuation sections flow after the market approach without blank pages', function () {
+    $data = fullReportData();
+    $html = view('pdf.report.full', $data)->render();
+
+    expect($data['breaks'])->toMatchArray([
+        'cost_table' => false, 'custom_tables' => false, 'final_value' => false, 'notes' => false, 'signature_block' => false,
+    ])->and(preg_match('/<pagebreak[^>]*>\s*<pagebreak/', $html))->toBe(0);
+});
+
+it('skips the cost table, the final value and the notes without a property', function () {
+    $request = reportFixture();
+    $request->property?->delete();
+    $html = renderFullReport(request: $request->refresh());
+
+    expect($html)->not->toContain('rpt-cost-table')
+        ->and($html)->not->toContain('rpt-final-value')
+        ->and($html)->not->toContain('rpt-notes"')
+        ->and($html)->toContain('rpt-signatures"');
 });

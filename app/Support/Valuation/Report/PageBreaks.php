@@ -10,17 +10,31 @@ namespace App\Support\Valuation\Report;
  */
 final class PageBreaks
 {
-    /** Sections in print order => whether the section starts on a new page (false = flows after the previous one). */
-    private const SECTIONS = [
-        'certificate' => true,
-        'static_pages' => true,
-        'summary' => true,
-        'scope' => true,
-        'framework' => true,
-        'basic_data' => true,
-        'property_cards' => false,
-        'location_maps' => true,
-        'market_approach' => true,
+    /** Starts on a new page. */
+    private const string NEW_PAGE = 'new_page';
+
+    /** Flows after the previous section; starts a new page when that section is absent. */
+    private const string AFTER_PREVIOUS = 'after_previous';
+
+    /** Flows after whatever was printed before it. */
+    private const string FLOW = 'flow';
+
+    /** Sections in print order => how the section starts. */
+    private const array SECTIONS = [
+        'certificate' => self::NEW_PAGE,
+        'static_pages' => self::NEW_PAGE,
+        'summary' => self::NEW_PAGE,
+        'scope' => self::NEW_PAGE,
+        'framework' => self::NEW_PAGE,
+        'basic_data' => self::NEW_PAGE,
+        'property_cards' => self::AFTER_PREVIOUS,
+        'location_maps' => self::NEW_PAGE,
+        'market_approach' => self::NEW_PAGE,
+        'cost_table' => self::FLOW,
+        'custom_tables' => self::FLOW,
+        'final_value' => self::FLOW,
+        'notes' => self::FLOW,
+        'signature_block' => self::FLOW,
     ];
 
     /**
@@ -33,8 +47,12 @@ final class PageBreaks
         $printedBefore = false;
         $previousPrinted = false;
 
-        foreach (self::SECTIONS as $key => $startsPage) {
-            $breaks[$key] = $printedBefore && ($startsPage || ! $previousPrinted);
+        foreach (self::SECTIONS as $key => $start) {
+            $breaks[$key] = $printedBefore && match ($start) {
+                self::NEW_PAGE => true,
+                self::AFTER_PREVIOUS => ! $previousPrinted,
+                self::FLOW => false,
+            };
             $previousPrinted = ($data[$key] ?? null) !== null && ($data[$key] ?? null) !== [];
             $printedBefore = $printedBefore || $previousPrinted;
         }
