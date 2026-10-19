@@ -10,7 +10,7 @@ use App\Support\Valuation\Report\Cards\Card;
  * Legacy cost table (evaluationInfoTable) and final valuation price block built from the CostTableSection data,
  * with every cell formatted for printing.
  *
- * @phpstan-type Cost array{rows: list<array{title: string, area: ?float, price: ?float, total: ?float}>, profit: ?float, depreciation: ?float, forced_sale: ?array{percentage: int, amount: float}, movables: ?float, final_amount: ?float, final_in_words: string, manual: bool}
+ * @phpstan-type Cost array{rows: list<array{title: string, area: ?float, price: ?float, total: ?float}>, show_land_rows: bool, profit: ?float, depreciation: ?float, forced_sale: ?array{percentage: int, amount: float}, movables: ?float, final_amount: ?float, final_in_words: string, manual: bool}
  * @phpstan-type Row array{label: string, area: string, price: string, total: string}
  */
 final class CostTablePresenter

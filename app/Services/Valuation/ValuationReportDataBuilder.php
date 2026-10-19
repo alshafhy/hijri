@@ -93,6 +93,8 @@ final class ValuationReportDataBuilder
             'customTableRows',
             'attachments',
             'subUser',
+            'contracts.contractor',
+            'partnerContracts.partner',
         ]);
 
         $property = $request->property;
@@ -197,7 +199,7 @@ final class ValuationReportDataBuilder
             'page_footer' => $this->branding->footer($branding),
             'cover' => $cover,
             'certificate' => $this->certificate->build($request, $property, $branding, $signatures['evaluator']),
-            'summary' => $this->summary->build($request, $property, $branding['name'] ?? '', $signatures),
+            'summary' => $this->summary->build($request, $property, $branding['name'] ?? '', $signatures, $locale),
             'scope' => $this->scope->build($property, $cover),
             'framework' => $this->framework->build($locale),
             'basic_data' => $this->basicData->build($request, $property),

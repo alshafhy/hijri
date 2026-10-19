@@ -65,6 +65,59 @@ it('hides forced sale unless the value assumption is forced sale', function () {
     expect($table['forced_sale'])->toBeNull();
 });
 
+it('switches the cost rows to the english layout for the english report', function () {
+    $property = reportFixture()->property;
+
+    $en = (new CostTableSection)->build($property, 'en');
+
+    expect(array_column($en['rows'], 'title'))->toBe(['total_land_area', 'الملحق الأرضي', 'الملحق العلوي'])
+        ->and($en['show_land_rows'])->toBeTrue();
+
+    PropertyComponent::query()->create([
+        'property_id' => $property->id,
+        'component_key' => 'share_land',
+        'area_value' => 100,
+        'price_value' => 2000,
+    ]);
+    PropertyComponent::query()->create([
+        'property_id' => $property->id,
+        'component_key' => 'flat_area',
+        'area_value' => 80,
+        'price_value' => 1500,
+    ]);
+
+    $en = (new CostTableSection)->build($property->refresh(), 'en');
+
+    expect(array_column($en['rows'], 'title'))->toBe([
+        'total_land_area', 'الملحق الأرضي', 'الملحق العلوي', 'share_land', 'flat_area',
+    ]);
+});
+
+it('keeps the arabic rows and drops the english-only rows for the arabic report', function () {
+    $property = reportFixture()->property;
+    $property->update(['property_type' => 'شقة']);
+    PropertyComponent::query()->create([
+        'property_id' => $property->id,
+        'component_key' => 'share_land',
+        'area_value' => 100,
+        'price_value' => 2000,
+    ]);
+    PropertyComponent::query()->create([
+        'property_id' => $property->id,
+        'component_key' => 'flat_area',
+        'area_value' => 80,
+        'price_value' => 1500,
+    ]);
+    $property = $property->refresh();
+
+    expect(array_column((new CostTableSection)->build($property, 'ar')['rows'], 'title'))
+        ->toBe(['نصيبها من الأرض', 'مساحة الشقة'])
+        ->and((new CostTableSection)->build($property, 'ar')['show_land_rows'])->toBeFalse();
+
+    expect(array_column((new CostTableSection)->build($property, 'en')['rows'], 'title'))
+        ->toBe(['total_land_area', 'share_land', 'flat_area']);
+});
+
 it('flags the manual override and falls back to the calculated total', function () {
     $property = reportFixture()->property;
     $section = new CostTableSection;
