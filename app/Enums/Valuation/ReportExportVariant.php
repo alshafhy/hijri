@@ -43,7 +43,7 @@ enum ReportExportVariant: string
     {
         return match ($this) {
             self::Enforcement => 'pdf.valuation.enforcement',
-            self::Full, self::FullDraft, self::FullEnglish => 'pdf.valuation.full',
+            self::Full, self::FullDraft, self::FullEnglish => 'pdf.report.full',
         };
     }
 

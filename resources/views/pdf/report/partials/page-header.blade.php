@@ -23,7 +23,7 @@
         <tr>
             <td>
                 <strong>{{ __('pdf.report_creation_date') }}</strong>: {{ $issue_date }},
-                <strong>{{ __('pdf.report_type') }}</strong>: {{ __('pdf.التقرير الكامل') }},
+                <strong>{{ __('pdf.report_type') }}</strong>: {{ $report_title }},
                 <strong>{{ __('pdf.report_reference_number') }}</strong>: {{ $reference }}
             </td>
         </tr>

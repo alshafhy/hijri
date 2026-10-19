@@ -35,6 +35,8 @@ final class PageBreaks
         'final_value' => self::FLOW,
         'notes' => self::FLOW,
         'signature_block' => self::FLOW,
+        'attachment_images' => self::NEW_PAGE,
+        'report_images' => self::NEW_PAGE,
     ];
 
     /**

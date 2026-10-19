@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Enums\Valuation\ReportExportVariant;
+use App\Models\Property;
+use App\Models\PropertyPicture;
 use App\Models\ValuationRequest;
 use App\Services\Valuation\ValuationReportDataBuilder;
 use App\Services\Valuation\ValuationReportPdfGenerator;
@@ -14,7 +16,6 @@ use Illuminate\Http\Client\Factory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\View;
 
 uses(RefreshDatabase::class);
 
@@ -108,7 +109,6 @@ it('builds the cover data from the request and property', function () {
 });
 
 it('renders arabic labels for arabic variants regardless of the app locale', function () {
-    View::prependLocation(__DIR__.'/views');
     $arabicTitle = trans('pdf.real_estate_appraisal', [], 'ar');
     app()->setLocale('en');
 
@@ -434,6 +434,7 @@ it('computes the page breaks from the sections that precede each one', function 
     expect($breaks)->toMatchArray([
         'certificate' => false, 'static_pages' => false, 'summary' => false, 'scope' => true,
         'framework' => true, 'basic_data' => true, 'property_cards' => false, 'location_maps' => true,
+        'attachment_images' => true, 'report_images' => true,
     ])->and($withCertificate['certificate'])->toBeFalse()
         ->and($withCertificate['summary'])->toBeTrue();
 });
@@ -726,13 +727,97 @@ it('prints the valuation sections in legacy order after the market approach', fu
     $html = renderFullReport();
     $positions = array_map(fn (string $marker): int => (int) strpos($html, $marker), [
         'class="rpt-market-approach"', 'rpt-cost-table"', 'rpt-custom-table"', 'rpt-final-value"',
-        'rpt-notes"', 'rpt-signatures"', 'class="rpt-visit-confirmation"', 'class="rpt-closing-page"',
+        'rpt-notes"', 'rpt-signatures"', 'class="rpt-visit-confirmation"', 'class="rpt-attachment-page"',
+        'class="rpt-photos"', 'class="rpt-license-page"', 'class="rpt-closing-page"',
     ]);
     $sorted = $positions;
     sort($sorted);
 
     expect($positions)->each->toBeGreaterThan(0)
         ->and($positions)->toBe($sorted);
+});
+
+function reportFixturePictures(Property $property, array $descriptions): void
+{
+    foreach ($descriptions as $order => $description) {
+        $filename = 'picture-'.$order.'.jpg';
+        PropertyPicture::query()->create([
+            'property_id' => $property->id,
+            'filename' => $filename,
+            'description' => $description,
+            'sort_order' => $order,
+            'relative_path' => UploadedFile::fake()->image($filename, 80, 60)->store('property-pictures', 'local'),
+            'file_exists' => true,
+        ]);
+    }
+}
+
+it('renders every image attachment on its own page with the watermark logo', function () {
+    $html = renderFullReport();
+
+    expect(substr_count($html, 'class="rpt-attachment-page"'))->toBe(1)
+        ->and(substr_count($html, 'class="rpt-attachment-image"'))->toBe(1)
+        ->and(substr_count($html, 'class="rpt-attachment-overlay"'))->toBe(1)
+        ->and($html)->toContain('<img class="rpt-attachment-image" src="data:image/jpeg;base64,')
+        ->and($html)->toContain('<img class="rpt-attachment-overlay" src="data:image/png;base64,');
+});
+
+it('embeds the licence page after the property photos', function () {
+    $html = renderFullReport();
+
+    expect($html)->toContain('<div class="rpt-license-page">')
+        ->and($html)->toContain('<img class="rpt-license-image" src="data:image/jpeg;base64,')
+        ->and((int) strpos($html, 'class="rpt-license-page"'))->toBeGreaterThan((int) strpos($html, 'class="rpt-photos"'))
+        ->and((int) strpos($html, 'class="rpt-license-page"'))->toBeLessThan((int) strpos($html, 'class="rpt-closing-page"'));
+});
+
+it('prints the no-image message when the property has no pictures', function () {
+    $photos = compactHtml(htmlBetween(renderFullReport(), 'class="rpt-photos"', '</table>'));
+
+    expect($photos)->toContain('<th colspan="2">'.__('pdf.pictures_of_property').'</th>')
+        ->and($photos)->toContain(__('pdf.no_image_uploaded'));
+});
+
+it('renders the property photos two per row with captions', function () {
+    $request = reportFixture();
+    reportFixturePictures($request->property, ['الواجهة', 'لا يوجد', 'None', null]);
+
+    $photos = compactHtml(htmlBetween(renderFullReport(request: $request->refresh()), 'class="rpt-photos"', '</table>'));
+
+    expect(substr_count($photos, '<img class="rpt-photo-image"'))->toBe(4)
+        ->and(substr_count($photos, '<td class="rpt-photo-cell"'))->toBe(4)
+        ->and(substr_count($photos, '<tr>'))->toBe(3)
+        ->and($photos)->toContain(__('pdf.image_description').': الواجهة')
+        ->and($photos)->toContain(__('pdf.image_description').': picture-3.jpg')
+        ->and($photos)->not->toContain(__('pdf.image_description').': لا يوجد')
+        ->and($photos)->not->toContain(__('pdf.image_description').': None')
+        ->and($photos)->not->toContain(__('pdf.no_image_uploaded'));
+});
+
+it('keeps a missing property picture as a note without a broken image', function () {
+    $request = reportFixture();
+    $property = $request->property;
+    PropertyPicture::query()->create([
+        'property_id' => $property?->id,
+        'filename' => 'missing-for-pdf.jpg',
+        'description' => 'واجهة',
+        'sort_order' => 0,
+        'relative_path' => null,
+        'file_exists' => false,
+    ]);
+    $photos = compactHtml(htmlBetween(renderFullReport(request: $request->refresh()), 'class="rpt-photos"', '</table>'));
+
+    expect($photos)->toContain(__('Image unavailable').': واجهة')
+        ->and($photos)->not->toContain(__('pdf.no_image_uploaded'))
+        ->and($photos)->not->toContain('rpt-photo-image')
+        ->and($photos)->not->toContain('missing-for-pdf.jpg');
+});
+
+it('renders the full variants from the new report view', function () {
+    expect(ReportExportVariant::Full->bladeView())->toBe('pdf.report.full')
+        ->and(ReportExportVariant::FullDraft->bladeView())->toBe('pdf.report.full')
+        ->and(ReportExportVariant::FullEnglish->bladeView())->toBe('pdf.report.full')
+        ->and(ReportExportVariant::Enforcement->bladeView())->toBe('pdf.valuation.enforcement');
 });
 
 it('lets the valuation sections flow after the market approach without blank pages', function () {

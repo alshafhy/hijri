@@ -61,6 +61,18 @@
         @endif
 
         @include('pdf.report.partials.visit-confirmation')
+
+        @if ($attachment_images)
+            @include('pdf.report.partials.attachment-pages')
+        @endif
+
+        @if ($property)
+            @include('pdf.report.partials.photos')
+        @endif
+
+        @if ($license_image)
+            @include('pdf.report.partials.license')
+        @endif
     </div>
 
     @include('pdf.report.partials.closing')

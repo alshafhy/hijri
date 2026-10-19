@@ -114,7 +114,7 @@ it('renders and caches static location maps for the PDF report', function () {
     app(ValuationReportDataBuilder::class)->build($request, ReportExportVariant::Full);
     expect(Http::recorded()->count())->toBe($requests);
 
-    $html = view('pdf.valuation.full', $data)->render();
+    $html = view('pdf.report.full', $data)->render();
     expect($html)->toContain(__('Property location'));
 
     $cleanup();

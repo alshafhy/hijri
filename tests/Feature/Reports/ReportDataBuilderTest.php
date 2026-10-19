@@ -30,6 +30,8 @@ it('adds the report section keys for the full report', function () {
         ->and(array_column($data['attachment_images'], 'label'))->toBe(['صورة للعقار'])
         ->and($data['static_pages'])->toHaveCount(2)
         ->and($data['static_pages'][0])->toStartWith('data:image/png;base64,')
+        ->and($data['license_image'])->toStartWith('data:image/jpeg;base64,')
+        ->and($data['overlay_logo'])->toStartWith('data:image/png;base64,')
         ->and($data['show_signatures'])->toBeTrue()
         ->and($data['hijri_issue_date'])->toBe(HijriDate::fromGregorian(now())->numeric());
 });
@@ -46,6 +48,16 @@ it('only the draft variant hides signatures', function () {
     $hidden = array_filter(ReportExportVariant::cases(), fn (ReportExportVariant $v): bool => ! $v->showsSignatures());
 
     expect(array_values($hidden))->toBe([ReportExportVariant::FullDraft]);
+});
+
+it('embeds the licence and watermark images only for the full variants', function () {
+    $builder = new ValuationReportDataBuilder;
+    $request = reportFixture();
+
+    expect($builder->build($request, ReportExportVariant::FullDraft)['license_image'])->toStartWith('data:image/jpeg;base64,')
+        ->and($builder->build($request, ReportExportVariant::FullDraft)['overlay_logo'])->toStartWith('data:image/png;base64,')
+        ->and($builder->build($request, ReportExportVariant::Enforcement)['license_image'])->toBeNull()
+        ->and($builder->build($request, ReportExportVariant::Enforcement)['overlay_logo'])->toBeNull();
 });
 
 it('uses the english static pages for the english report', function () {

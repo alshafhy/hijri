@@ -157,9 +157,9 @@ it('renders the English report left-to-right with English labels and amount in w
         ->prepare($request, ReportExportVariant::FullEnglish)['html'];
 
     expect($html)->toContain('dir="ltr"')
-        ->and($html)->toContain('Executive summary')
+        ->and($html)->toContain(trans('pdf.executive_summary', [], 'en'))
         ->and($html)->toContain('One million two hundred fifty thousand')
-        ->and($html)->not->toContain('الملخص التنفيذي')
+        ->and($html)->not->toContain(trans('pdf.executive_summary', [], 'ar'))
         ->and(app()->getLocale())->toBe('ar');
 
     expect(ReportExportVariant::FullEnglish->filename(920001))->toBe('Valuation report 920001.pdf');

@@ -156,6 +156,8 @@ final class ValuationReportDataBuilder
             'watermark' => $variant->watermark(),
             'pictures_html' => $picturesHtml,
             'report_images' => $reportImages,
+            'license_image' => $variant->isFull() ? ReportImage::fromPath(public_path((string) config('report_branding.assets.license'))) : null,
+            'overlay_logo' => $variant->isFull() ? ReportImage::fromPath(public_path((string) config('report_branding.assets.overlay_logo'))) : null,
             'hide_comparisons' => (bool) ($totals['property_total']?->hide_comparisons_info_table),
             'hide_evaluation' => (bool) ($totals['property_total']?->hide_evaluation_info_table),
             'city_name' => $english

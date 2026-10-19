@@ -171,3 +171,15 @@ img.rpt-signature-image { width: 120px; height: 80px; margin-top: 10px; }
 img.rpt-stamp-image { width: 100px; height: 100px; }
 p.rpt-accreditation-date { text-align: center; margin: 0 0 10px; font-size: 11px; }
 p.rpt-visit-confirmation { text-align: center; text-decoration: underline; margin-top: 25px; font-size: 12px; }
+div.rpt-attachment-page { position: relative; text-align: center; page-break-inside: avoid; }
+img.rpt-attachment-image { max-height: 24cm; max-width: 25cm; border: 2px solid #FFA500; }
+img.rpt-attachment-overlay { position: absolute; width: 10%; left: 78%; bottom: 6mm; opacity: 0.7; }
+table.rpt-photos tr { page-break-inside: avoid; }
+td.rpt-photo-cell { position: relative; width: 50%; text-align: center; vertical-align: top; padding: 8px 4px; }
+img.rpt-photo-image { width: 85mm; height: 85mm; border: 2px solid #FFA500; margin-top: 10px; }
+img.rpt-photo-overlay { position: absolute; width: 10%; left: 42%; bottom: 10mm; opacity: 0.7; }
+p.rpt-photo-caption { margin: 6px 0 0; font-size: 11px; }
+td.rpt-photos-empty { text-align: center; font-weight: bold; color: #C00000; padding: 24px 8px; font-size: 14px; }
+td.rpt-photo-missing { text-align: center; font-weight: bold; color: #C00000; padding: 8px; }
+div.rpt-license-page { padding-top: 10%; }
+img.rpt-license-image { width: 100%; }
