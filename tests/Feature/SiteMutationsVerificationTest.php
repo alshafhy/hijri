@@ -118,6 +118,12 @@ it('creates updates activates and deactivates partners contractors and offers', 
         ->assertRedirect();
     expect($partner->fresh()->isActive())->toBeTrue();
 
+    $this->actingAs($manager)
+        ->get(route('dashboard.partners.index'))
+        ->assertOk()
+        ->assertSee('تعطيل', false)
+        ->assertDontSee('إلغاء', false);
+
     $contact = PartyContact::query()->create([
         'legacy_id' => 770001,
         'partner_id' => $partner->id,

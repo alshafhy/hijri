@@ -2,6 +2,14 @@
 
 @section('title', __('Create valuation'))
 
+@section('vendor-style')
+  @include('valuation_requests.partials.hijri-picker-style')
+@endsection
+
+@section('vendor-script')
+  @include('valuation_requests.partials.hijri-picker-script')
+@endsection
+
 @section('content')
 @php
   $clientType = (int) old('client_type', \App\Actions\Valuation\CreateValuationRequestAction::CLIENT_CONTRACTOR);
@@ -14,7 +22,11 @@
     <div class="card-header">
       <h4 class="card-title">{{ __('Create valuation') }}</h4>
     </div>
-    <form method="post" action="{{ route('dashboard.valuation-requests.store') }}" enctype="multipart/form-data" data-wizard>
+    <form method="post" action="{{ route('dashboard.valuation-requests.store') }}" enctype="multipart/form-data" data-wizard
+          data-offers-url="{{ route('dashboard.valuation-lookups.partner-offers', ['partner' => '__ID__']) }}"
+          data-estates-url="{{ route('dashboard.valuation-lookups.offer-estates', ['offer' => '__ID__']) }}"
+          data-offer-placeholder="{{ __('Price offer') }}"
+          data-estate-placeholder="{{ __('Estate') }}">
       @csrf
       <div class="card-body">
         <div class="progress mb-1" style="height: 6px;"><div class="progress-bar" data-wizard-progress style="width: 33%"></div></div>
@@ -103,46 +115,5 @@
 @endsection
 
 @push('page-script')
-  <script>
-    (function () {
-      var offersUrl = @json(route('dashboard.valuation-lookups.partner-offers', ['partner' => '__ID__']));
-      var estatesUrl = @json(route('dashboard.valuation-lookups.offer-estates', ['offer' => '__ID__']));
-      var partner = document.getElementById('partner_id');
-      var offer = document.getElementById('offer_id');
-      var estate = document.getElementById('offer_estate_id');
-
-      function toggleClient() {
-        var type = document.querySelector('input[name="client_type"]:checked').value;
-        document.querySelectorAll('[data-client]').forEach(function (box) {
-          var active = box.dataset.client === type;
-          box.style.display = active ? '' : 'none';
-          var main = box.querySelector('select');
-          main.required = active;
-          if (!active) { main.value = ''; }
-        });
-        if (type !== '2') { reset(offer, @json(__('Price offer'))); reset(estate, @json(__('Estate'))); }
-      }
-      function reset(select, placeholder) { select.innerHTML = '<option value="">' + placeholder + '</option>'; }
-      function fill(select, url, placeholder) {
-        reset(select, placeholder);
-        fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }).then(function (rows) {
-          rows.forEach(function (row) {
-            var opt = document.createElement('option');
-            opt.value = row.id; opt.textContent = row.name;
-            select.appendChild(opt);
-          });
-        });
-      }
-      document.querySelectorAll('input[name="client_type"]').forEach(function (r) { r.addEventListener('change', toggleClient); });
-      partner.addEventListener('change', function () {
-        reset(estate, @json(__('Estate')));
-        if (partner.value) { fill(offer, offersUrl.replace('__ID__', partner.value), @json(__('Price offer'))); } else { reset(offer, @json(__('Price offer'))); }
-      });
-      offer.addEventListener('change', function () {
-        if (offer.value) { fill(estate, estatesUrl.replace('__ID__', offer.value), @json(__('Estate'))); } else { reset(estate, @json(__('Estate'))); }
-      });
-      toggleClient();
-      if (partner.value) { partner.dispatchEvent(new Event('change')); }
-    })();
-  </script>
+  <script src="{{ asset('js/scripts/pages/valuation-create-lookups.js') }}"></script>
 @endpush

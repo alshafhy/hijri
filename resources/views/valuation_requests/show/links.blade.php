@@ -2,7 +2,7 @@
   <div class="card mb-2">
     <div class="card-header"><h5 class="card-title mb-0">{{ __('Client and contracts') }}</h5></div>
     <div class="table-responsive">
-      <table class="table table-sm align-middle mb-0">
+      <table class="table table-sm table-bordered align-middle mb-0">
         <thead class="table-light"><tr><th>{{ __('Type') }}</th><th>{{ __('Client') }}</th><th>{{ __('Details') }}</th><th>{{ __('State') }}</th><th></th></tr></thead>
         <tbody>
           @foreach ($request->contracts as $contract)

@@ -5,13 +5,23 @@
 @section('content')
 <section>
   <div class="card mb-2">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-1">
-      <h4 class="card-title mb-0">{{ __('Financial board') }}</h4>
-      <form method="GET" class="d-flex gap-1 align-items-center">
-        <label class="form-label mb-0">{{ __('Month') }}</label>
-        <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm">
-        <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('Filter') }}</button>
-      </form>
+    <div class="card-header">
+      <div class="row g-1 align-items-end">
+        <div class="col-12 col-md">
+          <h4 class="card-title mb-0">{{ __('Financial board') }}</h4>
+        </div>
+        <div class="col-12 col-md-auto">
+          <form method="GET" class="row g-1 align-items-end flex-nowrap">
+            <div class="col-auto">
+              <label class="form-label" for="financial-month">{{ __('Month') }}</label>
+              <input type="month" id="financial-month" name="month" value="{{ $month }}" class="form-control" dir="ltr" data-native autocomplete="off">
+            </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-outline-primary text-nowrap">{{ __('Filter') }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
     <div class="card-body">
       <div class="row g-2">

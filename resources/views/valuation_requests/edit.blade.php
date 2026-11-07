@@ -2,6 +2,14 @@
 
 @section('title', __('Edit initial data') . ' #' . $request->reference)
 
+@section('vendor-style')
+  @include('valuation_requests.partials.hijri-picker-style')
+@endsection
+
+@section('vendor-script')
+  @include('valuation_requests.partials.hijri-picker-script')
+@endsection
+
 @section('content')
 @php
   $p = $request->property;

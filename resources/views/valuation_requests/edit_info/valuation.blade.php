@@ -74,7 +74,7 @@
   </div>
   <div class="col-md-3">
     <label class="form-label">{{ __('Evaluation date (Hijri)') }}</label>
-    <input type="text" name="evaluation_date_hijri" class="form-control" maxlength="64" placeholder="1447/01/01" value="{{ old('evaluation_date_hijri', $property->evaluation_date_hijri) }}">
+    <input type="text" name="evaluation_date_hijri" class="form-control hijri-datepicker" maxlength="64" autocomplete="off" placeholder="1447/01/01" value="{{ old('evaluation_date_hijri', $property->evaluation_date_hijri) }}">
   </div>
 </div>
 

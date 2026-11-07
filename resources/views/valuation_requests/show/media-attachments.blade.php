@@ -11,7 +11,7 @@
     <div class="card-body text-muted">{{ __('No attachments uploaded yet.') }}</div>
   @else
     <div class="table-responsive">
-      <table class="table table-sm align-middle mb-0">
+      <table class="table table-sm table-bordered align-middle mb-0">
         <thead class="table-light"><tr><th>#</th><th>{{ __('File') }}</th><th>{{ __('Type') }}</th><th>{{ __('Uploaded at') }}</th><th></th></tr></thead>
         <tbody>
           @foreach ($request->attachments as $attachment)

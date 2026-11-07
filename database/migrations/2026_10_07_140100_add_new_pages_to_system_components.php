@@ -15,7 +15,7 @@ return new class extends Migration
     public static function items(): array
     {
         return [
-            ['_parent_key' => 'commercial', 'comp_name' => 'service_contracts', 'comp_ar_label' => 'عقود تقديم الخدمة', 'route_name' => 'dashboard.service-contracts.index', 'prefix' => 'service-contracts', 'icon_name' => 'file-signature', 'icon_class' => 'bi bi-file-earmark-text', 'sort_order' => 6, 'permission_name' => 'company.edit'],
+            ['_parent_key' => 'commercial', 'comp_name' => 'service_contracts', 'comp_ar_label' => 'عقود تقديم الخدمة', 'route_name' => 'dashboard.service-contracts.index', 'prefix' => 'service-contracts', 'icon_name' => 'edit-3', 'icon_class' => 'bi bi-file-earmark-text', 'sort_order' => 6, 'permission_name' => 'company.edit'],
             ['_parent_key' => 'user_management', 'comp_name' => 'support_requests', 'comp_ar_label' => 'طلبات الدعم', 'route_name' => 'dashboard.support-requests.index', 'prefix' => 'support-requests', 'icon_name' => 'life-buoy', 'icon_class' => 'bi bi-life-preserver', 'sort_order' => 3, 'permission_name' => 'user.view'],
             ['_parent_key' => 'user_management', 'comp_name' => 'contact_messages', 'comp_ar_label' => 'رسائل التواصل', 'route_name' => 'dashboard.contact-messages.index', 'prefix' => 'contact-messages', 'icon_name' => 'mail', 'icon_class' => 'bi bi-envelope', 'sort_order' => 4, 'permission_name' => 'user.view'],
             ['_parent_key' => 'settings', 'comp_name' => 'user_manual', 'comp_ar_label' => 'دليل المستخدم', 'route_name' => 'dashboard.manual', 'prefix' => 'manual', 'icon_name' => 'book', 'icon_class' => 'bi bi-book', 'sort_order' => 4, 'permission_name' => 'dashboard.view'],

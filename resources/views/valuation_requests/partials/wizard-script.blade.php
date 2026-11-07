@@ -21,11 +21,7 @@
         if (progress) { progress.style.width = ((i + 1) / tabs.length * 100) + '%'; }
       }
       function paneValid(i) {
-        var fields = pane(i).querySelectorAll('input, select, textarea');
-        for (var k = 0; k < fields.length; k++) {
-          if (!fields[k].checkValidity()) { fields[k].reportValidity(); return false; }
-        }
-        return true;
+        return window.FormUI.validate(pane(i));
       }
       function showPaneOf(el) {
         var p = el.closest('.tab-pane');

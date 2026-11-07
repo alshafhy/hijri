@@ -1,0 +1,103 @@
+# Laravel Development Standards & Best Practices
+You are an expert Laravel developer. You must strictly adhere to the following 59 rules when generating, refactoring, or reviewing any code in this project. Do NOT deviate from these rules under any circumstances.
+
+## 1. Authentication, Sessions & API Tokens
+1. **Token Expiration:** Any newly generated API token MUST expire in exactly 30 days.
+2. **Token Storage:** Store tokens in a dedicated, separate database table.
+3. **Token Cleanup:** Create a scheduled Command to automatically delete expired tokens (> 30 days).
+4. **Session Independence:** One login = one independent token. Login, refresh, and web logout must never revoke other sessions. "Log out everywhere" is an explicit, separate action.
+5. **Token Refreshing:** Refresh = rotate ONLY the current token (create new, move dependent rows, delete old) inside a DB transaction.
+6. **Token Creation:** Create all tokens through one helper that sets `expires_at`; keep `sanctum.expiration` aligned and schedule `sanctum:prune-expired`.
+7. **Session Cascading:** Rows that belong to a session (e.g., device tokens) must have a FK to `personal_access_tokens` with `cascadeOnDelete`, so every revocation path cleans them automatically.
+8. **Expiration Impact:** Enabling/shortening token expiration immediately invalidates existing old tokens: always call this out as a deployment impact.
+
+## 2. Database, Migrations & Backups
+9. **Daily Backup:** Create a scheduled Command to generate a daily SQL dump backup in the evening.
+10. **Backup Retention:** Create a scheduled Command to delete backups older than 7 days.
+11. **Git Ignore:** NEVER commit SQL dumps. Ensure `*.sql` and backup directories are in `.gitignore`.
+12. **Migration Verification:** Every migration must be verified on real MySQL (disposable Docker container, never the real DB): run up, down, and up again at least twice in a row.
+13. **MySQL DDL Safety:** MySQL DDL is not transactional: a failed down() leaves the table half-altered. Guard index/FK changes with `Schema::hasIndex()` / `Schema::hasColumn()`.
+14. **Composite Indexes & FKs:** Adding a composite index that starts with an FK column can make MySQL silently drop the FK's implicit index. down() must add a replacement index before dropping the composite one.
+15. **Data Loss Testing:** If a migration deletes or transforms data, test it with seeded rows covering valid, orphaned, and NULL cases, and state the data loss in the summary.
+16. **FK Type Changes:** Changing a column type to add a FK: clean orphan rows first, then change(), then add the FK — in separate `Schema::table()` calls.
+
+## 3. Data Integrity, Ownership & Structure
+17. **Phone Country Code:** Always use a separate DB column for `phone_code`.
+18. **Phone Format:** Phone numbers MUST start with `5` or `05` and be exactly 9 or 10 digits long.
+19. **Relations:** Bind all data and relations to the User ID (`user_id`), NEVER to the phone number.
+20. **Soft Deletes:** Always use `SoftDeletes` in database migrations and models.
+21. **Indexing:** Add Database Indexing to columns frequently used in WHERE clauses or filtering.
+22. **Single Writer (Ownership):** One table = one writer. All writes go through a single Action; controllers, services, and profile updates call it instead of their own `updateOrCreate`.
+23. **Source of Truth:** When introducing a new source of truth, remove old fallbacks and dual-writes in the same change. A silent fallback to stale data is a bug, not a safety net.
+24. **Method Signatures:** Before deleting or changing a method signature, grep all callers (app, routes, tests, console commands) and update them in the same change.
+
+## 4. Security & Authorization
+25. **IDOR Prevention:** Always use Laravel Policies to authorize actions and prevent IDOR vulnerabilities.
+26. **API Rate Limiting:** Always apply Rate Limiting to API routes.
+27. **OTP Rate Limiting:** Implement a specific, strict Rate Limiter for OTP sending to prevent spam.
+28. **Seeders:** Store all dummy login credentials for Seeders in the `.env` file, not hardcoded in the code.
+29. **Audit Logs:** Always implement an Audit Log mechanism to track data changes.
+30. **Client-Supplied Identifiers:** Any identifier coming from the request (device_id, external ids, tokens) must be scoped to the authenticated user in every query that UPDATES or DELETES. Add a test proving user B cannot affect user A's rows.
+
+## 5. Architecture & Configuration
+31. **N+1 Queries:** Strictly avoid N+1 query problems. Always use `with()` for eager loading.
+32. **Pagination:** Always use pagination for Web and API endpoints returning lists of data.
+33. **Constants (Config):** NEVER hardcode values. Use `config` files for static data (currencies, payment gateways, etc.).
+34. **Helpers:** Create and utilize custom `Helpers` files for frequently used functions.
+35. **Error Logging:** NEVER swallow exceptions/errors. Always log them appropriately using `Log::error`.
+36. **Timezone:** Always configure the application's default timezone to `'Asia/Riyadh'` in `config/app.php`.
+
+## 6. Validation & Controllers
+37. **Form Requests:** Always use Form Requests for validation. Keep Controllers strictly for business logic.
+38. **Unique Validation on Updates:** When validating updates, ALWAYS ignore the current model's ID in `unique` validation rules to prevent false validation failures (e.g., use `Rule::unique('table')->ignore($model->id)`).
+
+## 7. Jobs, Queues & Push Notifications
+39. **Job Cache Lock:** Always use `Cache::lock` before dispatching a Job to prevent duplicate jobs for the same user simultaneously.
+40. **Job TTL:** Set an expiration/TTL for time-sensitive Jobs (e.g., OTP for 90s). If the Job is picked up after TTL, drop it immediately.
+41. **Push Token Storage:** Device tokens live in `user_device_tokens` only. Never write to or read from `users.fcm_token`.
+42. **Push Eligibility:** Send pushes only to devices whose Sanctum session is still valid (`UserDeviceToken::active()`).
+
+## 8. Localization & Frontend
+43. **Translations:** Fully support Arabic (ar) and English (en), including RTL/LTR layouts.
+44. **Validation Messages:** Translate all Form Request validation error messages into supported languages.
+45. **Currency Display:** Display currency as `(ر.س)` for Arabic and `(SAR)` for English. Rely on the path `/home/moustafa/identity` to fetch these settings.
+46. **Vite:** Use Vite as the default frontend build tool for new setups.
+47. **Asset Separation:** Separate JS/CSS into external `.js` and `.css` files. NO inline scripts or styles in Blade/HTML.
+48. **Required Fields UI:** Always add a red asterisk (`*`) next to required inputs in the UI.
+
+## 9. Media
+49. **Image Compression:** Automatically compress uploaded images and convert them to `WebP` format.
+
+## 10. Financial Transactions (Payment Gateways)
+50. **Payment Security:** When implementing Payment Gateways, you MUST include: Disable submit button on click, Backend Lock, Idempotency Key, Rate Limiting/Throttling, Webhooks for confirmation, Data Integrity checks (amount verification), Audit Trail, Timeout management, and 3D Secure handling.
+51. **Database Transactions:** ALWAYS use `DB::beginTransaction()`, `DB::commit()`, and `DB::rollBack()`.
+52. **Lock For Update:** ALWAYS pair DB Transactions with `lockForUpdate()` when reading/modifying sensitive financial or critical data to prevent race conditions.
+
+## 11. Testing & Verification
+53. **Regression Checks:** Before claiming "no regressions", run the same test scope on the base commit (use a temporary `git worktree`) and diff the failing-test lists. Report pre-existing failures separately; never hide or "fix" them silently.
+54. **Test Logging Errors:** If logging fails with permission errors in tests, run with `LOG_CHANNEL=null` instead of changing file permissions.
+55. **TDD Flow:** Write the failing test first, confirm it fails for the right reason, then fix.
+56. **Test Execution Isolation:** Never run tests in the same parallel batch as the edit they verify.
+
+## 12. Git, Workspace Safety & AI Delegation
+57. **Branch Awareness:** Before editing, run `git branch --show-current` and note it. Re-check before running tests and before the final summary. If the branch or HEAD changed mid-task, STOP and ask the user which branch to continue on.
+58. **No Unauthorized Git Actions:** Never commit, push, or switch branches unless explicitly asked.
+59. **Subagent Delegation:** Do not trust a subagent's result without checking it. If it stalls or returns nothing, do the work yourself and say so.
+## 13. Filament Admin Panel
+60. **Panel Configuration:** Configure each panel (path, auth guard, locale, RTL, brand) in its `PanelProvider` only. Never hardcode panel settings inside Resources or Pages. The timezone stays `'Asia/Riyadh'` from `config/app.php`.
+61. **Panel Access:** The `User` model must implement `FilamentUser` and enforce `canAccessPanel()` using roles/permissions. Never rely on a hidden login URL.
+62. **Resource Policies:** Every Resource has a Policy covering view, create, update, delete, restore, and force delete. Hiding a button with `->visible()` or `->hidden()` is UI only and never counts as authorization (see rule 25).
+63. **Single Writer:** Resources, Pages, and Actions contain no business logic. Hook custom create/update/delete into the existing Action classes (`handleRecordCreation()`, `handleRecordUpdate()`, or `->using()`), so the admin panel, API, and web all share one writer (see rule 22). No Repository pattern.
+64. **Validation:** Use Filament's schema validation (`->required()`, `->rules()`, `Rule::unique()->ignoreRecord()` or `->unique(ignoreRecord: true)`). This replaces FormRequests inside Filament only; never call `$request->validate()`. Reuse shared Rule classes (e.g. the phone rule) rather than duplicating regex, and translate every custom message (see rules 18, 38, 44).
+65. **N+1 Queries:** Override `getEloquentQuery()` with `with()` for every relation shown in tables, infolists, or global search. Test table pages for query count.
+66. **Pagination:** Every table is paginated. Never use `->paginated(false)` on unbounded data. Set sensible `->paginated([10, 25, 50])` and `->defaultPaginationPageOption()`.
+67. **Soft Deletes:** Resources for soft-deleted models include `TrashedFilter` plus Restore and Force Delete actions, all gated by the Policy.
+68. **Localization:** All labels, navigation groups, placeholders, and notifications use translation keys (ar/en). Verify RTL and LTR rendering in the panel.
+69. **Config & Currency:** Currency, status lists, and gateways come from `config` or Enums, never hardcoded in Resources. Display `(ر.س)` or `(SAR)` per rule 45.
+70. **Custom Views & Assets:** Custom Blade views, widgets, and render hooks contain no `@php`, inline `<script>`, inline `<style>`, or `style=` attributes. Use a Vite-based Filament theme (`make:filament-theme`) and register extra assets through `FilamentAsset`.
+71. **Destructive & Financial Actions:** Delete and bulk actions use `->requiresConfirmation()` and are Policy-authorized. Any action touching financial or critical data runs inside the Action with `DB::beginTransaction()` and `lockForUpdate()` (see rules 51-52).
+72. **File Uploads:** `FileUpload` fields set an explicit disk, max size, and accepted MIME types. Images are compressed and converted to WebP (see rule 49). Sensitive files go on a private disk.
+73. **Audit Trail:** Every admin change is written to the audit log (see rule 29), through the shared Action or a model observer, so it is captured regardless of entry point.
+74. **Sensitive Fields:** Never display tokens, hashes, or secrets in tables or infolists. Password fields use `->password()` with `->dehydrated(fn ($state) => filled($state))`, so a blank value never overwrites the existing hash.
+75. **Admin Seeding:** The default admin user's credentials come from `.env` (see rule 28). Never create an admin inside a migration.
+76. **Testing & Deploy:** Write Livewire tests (TDD, rule 55) for each Resource's list/create/edit pages and actions. Include a test proving that an unauthorized user and another user's record get 403 (see rule 30). On deploy, run `php artisan filament:optimize` and `php artisan icons:cache` inside the Docker container.

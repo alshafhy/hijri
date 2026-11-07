@@ -197,5 +197,7 @@ return [
         'financial_due_type_id' => 'نوع المستخلص',
         'electricity_department_id' => 'القسم التابع لشركة الكهرباء',
         'due_date' => 'تاريخ المستخلص',
+        'customer_name' => 'اسم العميل',
+        'owner_name' => 'اسم المالك',
     ],
 ];

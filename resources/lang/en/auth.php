@@ -27,6 +27,15 @@ return [
     'old_password' => 'Old Password',
     'new_password' => 'New Password',
     'confirm_new_password' => 'Confirm New Password',
+    'app' => [
+        'create' => 'Add new',
+        'export' => 'Export',
+        'print' => 'Print',
+        'reset' => 'Reset',
+        'reload' => 'Refresh list',
+        'export_csv' => 'Export CSV',
+        'export_pdf' => 'Export PDF',
+    ],
 
     'login_required' => 'Username or email is required.',
 ];

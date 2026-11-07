@@ -9,12 +9,12 @@
 <h5 class="mb-1">{{ __('Basic data') }}</h5>
 <div class="row g-1 mb-2">
   <div class="col-md-3">
-    <label class="form-label">{{ __('Customer') }}</label>
-    <input type="text" name="customer_name" class="form-control" maxlength="128" value="{{ old('customer_name', $property->customer_name) }}">
+    <label class="form-label">{{ __('Customer name') }}</label>
+    <input type="text" name="customer_name" class="form-control" maxlength="128" placeholder="{{ __('Enter customer name') }}" value="{{ old('customer_name', $property->customer_name) }}">
   </div>
   <div class="col-md-3">
-    <label class="form-label">{{ __('Owner') }}</label>
-    <input type="text" name="owner_name" class="form-control" maxlength="128" value="{{ old('owner_name', $property->owner_name) }}">
+    <label class="form-label">{{ __('Owner name') }}</label>
+    <input type="text" name="owner_name" class="form-control" maxlength="128" placeholder="{{ __('Enter owner name') }}" value="{{ old('owner_name', $property->owner_name) }}">
   </div>
   <div class="col-md-3">
     <label class="form-label">{{ __('Customer (English)') }}</label>

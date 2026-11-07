@@ -2,6 +2,14 @@
 
 @section('title', __('Evaluator edit') . ' #' . $request->reference)
 
+@section('vendor-style')
+  @include('valuation_requests.partials.hijri-picker-style')
+@endsection
+
+@section('vendor-script')
+  @include('valuation_requests.partials.hijri-picker-script')
+@endsection
+
 @section('content')
 @php
   $csv = static fn ($value): array => array_values(array_filter(array_map('trim', explode(',', (string) $value)), static fn ($v) => $v !== ''));

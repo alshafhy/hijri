@@ -10,12 +10,12 @@
     <input type="text" name="number" id="number" class="form-control" maxlength="250" value="{{ $number }}">
   </div>
   <div class="col-md-4">
-    <label class="form-label" for="customer_name">{{ __('Customer') }} <span class="text-danger">*</span></label>
-    <input type="text" name="customer_name" id="customer_name" class="form-control" maxlength="128" required value="{{ $val('customer_name') }}">
+    <label class="form-label" for="customer_name">{{ __('Customer name') }} <span class="text-danger">*</span></label>
+    <input type="text" name="customer_name" id="customer_name" class="form-control" maxlength="128" required placeholder="{{ __('Enter customer name') }}" value="{{ $val('customer_name') }}">
   </div>
   <div class="col-md-4">
-    <label class="form-label" for="owner_name">{{ __('Owner') }} <span class="text-danger">*</span></label>
-    <input type="text" name="owner_name" id="owner_name" class="form-control" maxlength="128" required value="{{ $val('owner_name') }}">
+    <label class="form-label" for="owner_name">{{ __('Owner name') }} <span class="text-danger">*</span></label>
+    <input type="text" name="owner_name" id="owner_name" class="form-control" maxlength="128" required placeholder="{{ __('Enter owner name') }}" value="{{ $val('owner_name') }}">
   </div>
   <div class="col-md-4">
     <label class="form-label" for="instrument_no">{{ __('Instrument number') }} <span class="text-danger">*</span></label>
@@ -23,7 +23,7 @@
   </div>
   <div class="col-md-4">
     <label class="form-label" for="instrument_date">{{ __('Instrument date (Hijri)') }}</label>
-    <input type="text" name="instrument_date" id="instrument_date" class="form-control" maxlength="64" placeholder="1446/05/20" data-exclusive-with="instrument_gregorian_date" value="{{ $val('instrument_date') }}">
+    <input type="text" name="instrument_date" id="instrument_date" class="form-control hijri-datepicker" maxlength="64" autocomplete="off" placeholder="1446/05/20" data-exclusive-with="instrument_gregorian_date" value="{{ $val('instrument_date') }}">
   </div>
   <div class="col-md-4">
     <label class="form-label" for="instrument_gregorian_date">{{ __('Instrument date (Gregorian)') }}</label>
@@ -54,11 +54,11 @@
     <input type="date" name="commissioning_date" id="commissioning_date" class="form-control" value="{{ $val('commissioning_date') }}">
   </div>
   <div class="col-md-4">
-    <label class="form-label" for="retail_no">{{ __('Commercial register number') }}</label>
-    <input type="number" min="0" name="retail_no" id="retail_no" class="form-control" value="{{ $val('retail_no') }}">
+    <label class="form-label" for="retail_no">{{ __('Subdivision minutes number') }}</label>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" name="retail_no" id="retail_no" class="form-control" value="{{ $val('retail_no') }}">
   </div>
   <div class="col-md-12">
-    <label class="form-label" for="undergo_reasons">{{ __('Reasons for valuation') }}</label>
-    <input type="text" name="undergo_reasons" id="undergo_reasons" class="form-control" maxlength="255" value="{{ $val('undergo_reasons') }}">
+    <label class="form-label" for="undergo_reasons">{{ __('Reasons for subjection') }}</label>
+    <input type="text" name="undergo_reasons" id="undergo_reasons" class="form-control" maxlength="255" placeholder="{{ __('Reasons for subjection') }}" title="{{ __('Reasons the property is subject to vacant land fees') }}" value="{{ $val('undergo_reasons') }}">
   </div>
 </div>

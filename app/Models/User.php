@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Models\Activity;
@@ -29,6 +30,7 @@ class User extends Authenticatable
     use HasApiTokens;
     use HasFactory;
     use HasRoles;
+    use Impersonate;
     use LogsActivity;
     use Notifiable;
     use SoftDeletes;
@@ -111,6 +113,16 @@ class User extends Authenticatable
     public function isStaffMember(): bool
     {
         return $this->hasAnyRole(['coordinator', 'evaluator']);
+    }
+
+    public function canImpersonate(): bool
+    {
+        return $this->hasAnyRole(['super-admin', 'admin']);
+    }
+
+    public function canBeImpersonated(): bool
+    {
+        return ! $this->hasRole('super-admin');
     }
 
     public function branch(): BelongsTo

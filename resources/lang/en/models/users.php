@@ -8,5 +8,6 @@ return [
         'name' => 'Name',
         'email' => 'Email',
         'username' => 'Username',
+        'branch_name' => 'Branch',
     ],
 ];

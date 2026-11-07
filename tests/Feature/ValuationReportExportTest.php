@@ -175,6 +175,41 @@ it('spells amounts in English', function (int $amount, string $words) {
     [800_000, 'Eight hundred thousand'],
 ]);
 
+it('keeps export status generating while the report job is still queued', function () {
+    config([
+        'queue.default' => 'database',
+        'report_pdf.queue' => true,
+        'report_pdf.enabled' => true,
+    ]);
+
+    \Illuminate\Support\Facades\File::deleteDirectory(storage_path('app/private/report-pdf-cache'));
+
+    expect(config('queue.default'))->toBe('database');
+
+    [$manager, $request] = makeExportFixtures();
+
+    $payload = $this->actingAs($manager)
+        ->getJson(route('dashboard.valuation-requests.exports.queue', [$request, 'full']))
+        ->assertOk()
+        ->assertJsonPath('ready', false)
+        ->assertJsonPath('generating', true)
+        ->assertJsonPath('queued', true)
+        ->json();
+
+    app(\App\Services\Valuation\ReportPdfCacheService::class)
+        ->clearGenerating($request->id, $payload['key']);
+
+    $this->actingAs($manager)
+        ->getJson(route('dashboard.valuation-requests.exports.status', [
+            'valuationRequest' => $request,
+            'variant' => 'full',
+            'key' => $payload['key'],
+        ]))
+        ->assertOk()
+        ->assertJsonPath('ready', false)
+        ->assertJsonPath('generating', true);
+});
+
 it('forbids export without permission', function () {
     Permission::findOrCreate('valuation_request.view', 'web');
     $user = User::factory()->create(['status' => UserStatus::Active]);

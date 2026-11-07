@@ -57,6 +57,14 @@ class SystemComponent extends AppBaseModel
         return $user->hasPermissionTo($this->permission_name);
     }
 
+    public function label(?string $locale = null): string
+    {
+        $key = 'menu.'.$this->comp_name;
+        $translated = __($key, [], $locale);
+
+        return $translated === $key ? (string) $this->comp_ar_label : $translated;
+    }
+
     public function getRouteUrl(): string
     {
         if (empty($this->route_name)) {

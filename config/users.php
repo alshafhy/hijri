@@ -20,4 +20,22 @@ return [
         'email' => env('ADMIN_EMAIL', 'admin@example.com'),
         'password' => env('ADMIN_PASSWORD', 'password'),
     ],
+    'demo' => [
+        'password' => env('DEMO_PASSWORD', 'password'),
+        'manager' => [
+            'name' => env('DEMO_MANAGER_NAME', 'مدير التقييم'),
+            'username' => env('DEMO_MANAGER_USERNAME', 'manager'),
+            'email' => env('DEMO_MANAGER_EMAIL', 'manager@example.com'),
+        ],
+        'coordinator' => [
+            'name' => env('DEMO_COORDINATOR_NAME', 'منسق الاختبار'),
+            'username' => env('DEMO_COORDINATOR_USERNAME', 'coordinator'),
+            'email' => env('DEMO_COORDINATOR_EMAIL', 'coordinator@example.com'),
+        ],
+        'evaluator' => [
+            'name' => env('DEMO_EVALUATOR_NAME', 'مقيم الاختبار'),
+            'username' => env('DEMO_EVALUATOR_USERNAME', 'evaluator'),
+            'email' => env('DEMO_EVALUATOR_EMAIL', 'evaluator@example.com'),
+        ],
+    ],
 ];

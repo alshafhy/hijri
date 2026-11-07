@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="{{ asset('vendors/css/jasny/jasny-bootstrap.min.css')}}">
 
 @yield('vendor-style')
+@stack('vendor-style')
 <!-- END: Vendor CSS-->
 
 <!-- BEGIN: Theme CSS-->
@@ -47,6 +48,10 @@
   <link rel="stylesheet" href="{{ asset('css/base/plugins/forms/pickers/form-pickadate.css') }}">
 @endif
 
+{{-- Select2 / flatpickr / JS validation (see js/core/form-ui.js) --}}
+<link rel="stylesheet" href="{{ asset('css/form-ui.css') }}">
+<link rel="stylesheet" href="{{ asset('css/tables.css') }}">
+
 {{-- Page Styles --}}
 @yield('page-style')
 
@@ -63,3 +68,6 @@
 @else
   <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
 @endif
+
+{{-- Darker text, real font weights and visible field borders (light mode) --}}
+<link rel="stylesheet" href="{{ asset('css/readability.css') }}" />

@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             PermissionsSeeder::class,
             SystemComponentsSeeder::class,
             DemoUserSeeder::class,
+            DemoDataSeeder::class,
             SystemReleasesSeeder::class,
         ]);
     }

@@ -15,8 +15,8 @@
 @include('valuation_requests.show.fields', ['title' => __('Initial information'), 'fields' => [
     __('Reference') => $request->reference,
     __('Transaction number') => $request->number,
-    __('Customer') => $property->customer_name,
-    __('Owner') => $property->owner_name,
+    __('Customer name') => $property->customer_name,
+    __('Owner name') => $property->owner_name,
     __('Instrument number') => $property->instrument_no,
     __('Instrument date') => $property->instrument_date ?: $date($property->instrument_gregorian_date),
     __('As per the deed') => $yesNo($property->according_instrument),
@@ -24,8 +24,8 @@
     __('License date') => $date($property->license_date),
     __('Issued by') => $property->issued_by,
     __('Commissioning date') => $date($property->commissioning_date),
-    __('Commercial register number') => $property->retail_no,
-    __('Reasons for valuation') => $property->undergo_reasons,
+    __('Subdivision minutes number') => $property->retail_no,
+    __('Reasons for subjection') => $property->undergo_reasons,
     __('Coordinator') => $request->coordinator?->name,
     __('Evaluator') => $request->evaluator?->name,
 ]])
@@ -81,7 +81,7 @@
       <div class="card mb-2">
         <div class="card-header"><h5 class="card-title mb-0">{{ __('Borders and lengths') }}</h5></div>
         <div class="table-responsive">
-          <table class="table table-sm mb-0">
+          <table class="table table-sm table-bordered mb-0">
             <thead class="table-light"><tr><th>{{ __('Side') }}</th><th>{{ __('Border') }}</th><th>{{ __('Length (m)') }}</th></tr></thead>
             <tbody>
               @foreach (['north' => __('North'), 'south' => __('South'), 'east' => __('East'), 'west' => __('West')] as $side => $label)
@@ -152,7 +152,7 @@
   <div class="card mb-2">
     <div class="card-header"><h5 class="card-title mb-0">{{ __('General notes') }}</h5></div>
     <div class="table-responsive">
-      <table class="table table-sm mb-0">
+      <table class="table table-sm table-bordered mb-0">
         <tbody>
           @if ($isBuilding)
             @foreach ($opt['building_questions'] as $field => $label)

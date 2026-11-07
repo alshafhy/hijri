@@ -45,6 +45,10 @@ Route::post('client-log', [ClientLogController::class, 'store'])->name('client-l
 
 Auth::routes();
 
+Route::middleware('throttle:10,1')->group(function (): void {
+    Route::impersonate();
+});
+
 Route::middleware(['guest', 'throttle:10,1'])->group(function (): void {
     Route::get('invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
     Route::post('invitations/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');

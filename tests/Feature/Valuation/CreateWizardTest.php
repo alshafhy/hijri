@@ -85,13 +85,34 @@ function wizardPayload(array $overrides = []): array
 }
 
 it('renders the create wizard', function () {
-    $this->actingAs($this->coordinator)
+    $response = $this->actingAs($this->coordinator)
         ->get(route('dashboard.valuation-requests.create'))
-        ->assertOk()
+        ->assertOk();
+
+    $response
         ->assertSee('data-wizard', false)
         ->assertSee('name="client_type"', false)
         ->assertSee('borders[north_length]', false)
-        ->assertSee('create-map', false);
+        ->assertSee('create-map', false)
+        ->assertSee('اسم العميل', false)
+        ->assertSee('اسم المالك', false)
+        ->assertSee('اكتب اسم العميل', false)
+        ->assertSee('اكتب اسم المالك', false)
+        ->assertSee('hijri-datepicker', false)
+        ->assertSee('js/scripts/pages/hijri-picker.js', false)
+        ->assertSee('js/scripts/pages/valuation-create-lookups.js', false)
+        ->assertSee('data-offers-url', false)
+        ->assertSee('jquery.calendars.ummalqura', false)
+        ->assertSee('محضر التجزئة', false)
+        ->assertSee('أسباب الخضوع', false)
+        ->assertSee('أسباب خضوع العقار للأراضي البيضاء', false);
+
+    expect($response->getContent())
+        ->not->toContain('رقم السجل التجاري')
+        ->and($response->getContent())->not->toContain('أسباب التقييم')
+        ->and($response->getContent())->toContain('id="retail_no"')
+        ->and($response->getContent())->not->toContain('type="number" min="0" name="retail_no"')
+        ->and($response->getContent())->not->toContain('placeholder="محضر التجزئة"');
 });
 
 it('creates a request linked to a partner estate with borders, areas, attachments and company shares', function () {

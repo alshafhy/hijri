@@ -27,7 +27,7 @@
             __('Transaction number') => $request->number ?: '—',
             __('Subject') => $subject,
             __('Client') => $clientName ?? '—',
-            __('Owner') => $property?->owner_name ?? '—',
+            __('Owner name') => $property?->owner_name ?? '—',
             __('Created at') => $date($request->started_at ?? $request->created_at),
             __('Attachments') => $request->attachments->count(),
             __('Photos') => $property?->pictures->count() ?? 0,
