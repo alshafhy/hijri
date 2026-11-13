@@ -42,7 +42,7 @@
             </svg> --}}
             {{-- <img src="{{ asset('/images/logo/small_logo.png') }}" /> --}}
           </span>
-          <h3 class="brand-text"> لوحة تحكم</h3>
+          <h3 class="brand-text">{{ __('layout.dashboard') }}</h3>
         </a>
       </li>
       <li class="nav-item nav-toggle">

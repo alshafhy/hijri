@@ -35,5 +35,15 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'api_key' => env('GOOGLE_API_KEY'),
     ],
+    'telegram' => [
+        'notify' => [
+            'token' => env('TELEGRAM_BOT_TOKEN'),
+            'chat_id' => env('TELEGRAM_CHAT_ID'),
+        ],
+        'log' => [
+            'token' => env('TELEGRAM_BOT_TOKEN_LOG'),
+            'chat_id' => env('TELEGRAM_CHAT_ID_LOG'),
+        ],
+    ],
 
 ];

@@ -10,6 +10,7 @@ use App\Models\PropertyTotal;
 use App\Models\User;
 use App\Models\ValuationRequest;
 use App\Services\Valuation\ValuationReportPdfGenerator;
+use App\Support\Valuation\EnglishAmountInWords;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Permission;
@@ -119,6 +120,10 @@ it('queues and downloads each export variant with manual final amount', function
     expect($download->headers->get('content-type'))->toContain('pdf');
     expect(strlen($download->getContent()))->toBeGreaterThan(500);
 
+    if ($variant !== 'full-en') {
+        expect($download->getContent())->toContain('DINNextLTArabic');
+    }
+
     $html = app(ValuationReportPdfGenerator::class)
         ->prepare($request, ReportExportVariant::from($variant))['html'];
 
@@ -127,8 +132,13 @@ it('queues and downloads each export variant with manual final amount', function
         ->and($html)->toContain('واجهة')
         ->and($html)->not->toContain('missing-for-pdf.jpg');
 
+    $watermarkAlpha = '/ca '.config('report_pdf.watermark_alpha');
     if ($variant === 'full-draft') {
-        expect($html)->toContain('مسودة');
+        expect($html)->toContain('مسودة')
+            ->and($download->getContent())->toContain($watermarkAlpha);
+    }
+    if ($variant === 'full') {
+        expect($download->getContent())->not->toContain($watermarkAlpha);
     }
 
     expect(Activity::query()->where('log_name', 'valuation_report')->count())->toBeGreaterThan(0);
@@ -136,7 +146,69 @@ it('queues and downloads each export variant with manual final amount', function
     'enforcement',
     'full',
     'full-draft',
+    'full-en',
 ]);
+
+it('renders the English report left-to-right with English labels and amount in words', function () {
+    [, $request] = makeExportFixtures();
+    app()->setLocale('ar');
+
+    $html = app(ValuationReportPdfGenerator::class)
+        ->prepare($request, ReportExportVariant::FullEnglish)['html'];
+
+    expect($html)->toContain('dir="ltr"')
+        ->and($html)->toContain(trans('pdf.executive_summary', [], 'en'))
+        ->and($html)->toContain('One million two hundred fifty thousand')
+        ->and($html)->not->toContain(trans('pdf.executive_summary', [], 'ar'))
+        ->and(app()->getLocale())->toBe('ar');
+
+    expect(ReportExportVariant::FullEnglish->filename(920001))->toBe('Valuation report 920001.pdf');
+});
+
+it('spells amounts in English', function (int $amount, string $words) {
+    expect((new EnglishAmountInWords)->convert($amount))->toBe($words);
+})->with([
+    [0, 'Zero'],
+    [15, 'Fifteen'],
+    [101, 'One hundred one'],
+    [2_045_090, 'Two million forty-five thousand ninety'],
+    [800_000, 'Eight hundred thousand'],
+]);
+
+it('keeps export status generating while the report job is still queued', function () {
+    config([
+        'queue.default' => 'database',
+        'report_pdf.queue' => true,
+        'report_pdf.enabled' => true,
+    ]);
+
+    \Illuminate\Support\Facades\File::deleteDirectory(storage_path('app/private/report-pdf-cache'));
+
+    expect(config('queue.default'))->toBe('database');
+
+    [$manager, $request] = makeExportFixtures();
+
+    $payload = $this->actingAs($manager)
+        ->getJson(route('dashboard.valuation-requests.exports.queue', [$request, 'full']))
+        ->assertOk()
+        ->assertJsonPath('ready', false)
+        ->assertJsonPath('generating', true)
+        ->assertJsonPath('queued', true)
+        ->json();
+
+    app(\App\Services\Valuation\ReportPdfCacheService::class)
+        ->clearGenerating($request->id, $payload['key']);
+
+    $this->actingAs($manager)
+        ->getJson(route('dashboard.valuation-requests.exports.status', [
+            'valuationRequest' => $request,
+            'variant' => 'full',
+            'key' => $payload['key'],
+        ]))
+        ->assertOk()
+        ->assertJsonPath('ready', false)
+        ->assertJsonPath('generating', true);
+});
 
 it('forbids export without permission', function () {
     Permission::findOrCreate('valuation_request.view', 'web');

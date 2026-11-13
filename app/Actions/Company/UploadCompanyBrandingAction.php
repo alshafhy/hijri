@@ -16,6 +16,7 @@ final class UploadCompanyBrandingAction
             'logo' => 'main_logo_path',
             'signature' => 'signature_path',
             'stamp' => 'stamp_path',
+            'report_logo' => 'report_logo_path',
             default => throw new \InvalidArgumentException('Invalid branding type.'),
         };
 

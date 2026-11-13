@@ -15,10 +15,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Offer\StoreOfferEstateRequest;
 use App\Http\Requests\Offer\StoreOfferRequest;
 use App\Http\Requests\Offer\UpdateOfferRequest;
+use App\Models\GeoCity;
+use App\Models\GeoNeighborhood;
 use App\Models\Offer;
 use App\Models\OfferEstate;
 use App\Models\Partner;
 use App\Support\Query\AppliesListSort;
+use App\Support\Valuation\ValuationFieldGrid;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -84,7 +87,16 @@ class OfferController extends Controller
             'estates' => fn ($q) => $q->orderBy('id'),
         ]);
 
-        return view('offers.show', compact('offer'));
+        $kinds = ValuationFieldGrid::kinds();
+        $cities = GeoCity::query()->orderBy('name_ar')->get(['id', 'name_ar']);
+        $neighborhoodsByCity = GeoNeighborhood::query()
+            ->orderBy('name_ar')
+            ->get(['city_id', 'name_ar'])
+            ->groupBy('city_id')
+            ->map(fn ($rows) => $rows->pluck('name_ar')->unique()->values()->all())
+            ->all();
+
+        return view('offers.show', compact('offer', 'kinds', 'cities', 'neighborhoodsByCity'));
     }
 
     public function storeEstate(

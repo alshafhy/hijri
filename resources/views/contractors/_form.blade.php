@@ -31,19 +31,18 @@
     @error('date_to')<div class="invalid-feedback">{{ $message }}</div>@enderror
   </div>
   <div class="col-md-3">
-    <label class="form-label">{{ __('Coordinates X') }}</label>
-    <input type="text" name="x_axis" value="{{ old('x_axis', $contractor->x_axis) }}" class="form-control @error('x_axis') is-invalid @enderror">
-    @error('x_axis')<div class="invalid-feedback">{{ $message }}</div>@enderror
-  </div>
-  <div class="col-md-3">
-    <label class="form-label">{{ __('Coordinates Y') }}</label>
-    <input type="text" name="y_axis" value="{{ old('y_axis', $contractor->y_axis) }}" class="form-control @error('y_axis') is-invalid @enderror">
-    @error('y_axis')<div class="invalid-feedback">{{ $message }}</div>@enderror
-  </div>
-  <div class="col-md-3">
     <label class="form-label">{{ __('Template') }}</label>
     <input type="number" name="template_id" value="{{ old('template_id', $contractor->template_id) }}" class="form-control @error('template_id') is-invalid @enderror" min="0">
     @error('template_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+  </div>
+  <div class="col-12">
+    <label class="form-label">{{ __('Location') }}</label>
+    @include('valuation_requests.partials.map-picker', [
+        'mapId' => 'contractor-map', 'latName' => 'x_axis', 'lngName' => 'y_axis',
+        'lat' => old('x_axis', $contractor->x_axis), 'lng' => old('y_axis', $contractor->y_axis),
+    ])
+    @error('x_axis')<div class="text-danger small">{{ $message }}</div>@enderror
+    @error('y_axis')<div class="text-danger small">{{ $message }}</div>@enderror
   </div>
   @endisset
 </div>

@@ -18,6 +18,8 @@ final class UpdateCompanyProfileAction
             'address' => $data['address'] ?? null,
             'company_membership_number' => $data['company_membership_number'] ?? null,
             'company_reg_number' => $data['company_reg_number'] ?? null,
+            'membership_date' => $data['membership_date'] ?? null,
+            'accreditation_end_date' => $data['accreditation_end_date'] ?? null,
         ])->save();
 
         activity('Company')

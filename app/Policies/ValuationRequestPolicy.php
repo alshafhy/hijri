@@ -71,7 +71,8 @@ class ValuationRequestPolicy
             return false;
         }
 
-        return $user->can('valuation_request.approve_final');
+        return $user->can('valuation_request.approve_final')
+            || ($user->can_approve_final_request && $user->isStaffMember());
     }
 
     public function unapprove(User $user, ValuationRequest $request): bool
@@ -187,6 +188,12 @@ class ValuationRequestPolicy
     public function downloadAttachments(User $user, ValuationRequest $request): bool
     {
         return $this->view($user, $request);
+    }
+
+    public function editInitialData(User $user, ValuationRequest $request): bool
+    {
+        return $this->update($user, $request)
+            && $user->hasAnyRole(['super-admin', 'admin', 'manager', 'coordinator']);
     }
 
     public function deleteAttachment(User $user, ValuationRequest $request): bool

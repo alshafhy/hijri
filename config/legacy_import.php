@@ -20,4 +20,10 @@ return [
         static fn (string $path): string => rtrim(trim($path), '/'),
         explode(',', (string) env('LEGACY_PICTURE_PATHS', ''))
     ))),
+
+    // Roots that contain the legacy `attachments/{idRequest}/{file}` tree (old app's public/).
+    'attachment_search_paths' => array_values(array_filter(array_map(
+        static fn (string $path): string => rtrim(trim($path), '/'),
+        explode(',', (string) env('LEGACY_ATTACHMENT_PATHS', ''))
+    ))),
 ];

@@ -11,5 +11,7 @@ return [
     'not_found' => 'لم يتم ايجاد البيانات',
     'filesUploaded' => 'تم رفع الملفات بنجاح',
     'filesNotUploaded' => 'لم يتم رفع ملف أو أكثر بنجاح',
+    'select' => 'اختر',
+    'none' => 'لا يوجد',
 
 ];

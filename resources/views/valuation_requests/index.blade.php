@@ -11,29 +11,28 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
   @endif
 
-  <div class="card mb-2">
+  <div class="card">
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-1">
       <h4 class="card-title mb-0">{{ __('Valuation requests') }}</h4>
       <div class="d-flex flex-wrap gap-1">
-        <form method="get" action="{{ route('dashboard.valuation-requests.quick-search') }}" class="d-flex gap-1">
-          <input type="text" name="q" class="form-control form-control-sm" placeholder="{{ __('Quick search by reference/number') }}" value="{{ request('q') }}">
-          <button class="btn btn-sm btn-outline-primary" type="submit">{{ __('Search') }}</button>
-        </form>
         @can('create', App\Models\ValuationRequest::class)
-          <a href="{{ route('dashboard.valuation-requests.create') }}" class="btn btn-sm btn-primary">{{ __('Create valuation') }}</a>
+          <a href="{{ route('dashboard.valuation-requests.create') }}" class="btn btn-primary rounded">{{ __('Create valuation') }}</a>
         @endcan
         @can('advancedSearch', App\Models\ValuationRequest::class)
-          <a href="{{ route('dashboard.valuation-requests.advanced-search') }}" class="btn btn-sm btn-outline-secondary">{{ __('Advanced search') }}</a>
+          <a href="{{ route('dashboard.valuation-requests.advanced-search') }}" class="btn btn-outline-primary rounded">{{ __('Advanced search') }}</a>
+        @endcan
+        @can('valuation_request.view')
+          <a href="{{ route('dashboard.valuation-requests.map') }}" class="btn btn-outline-primary rounded">{{ __('Valuations map') }}</a>
         @endcan
       </div>
     </div>
-    <div class="card-body">
+    <div class="card-body border-top">
       <form method="get" class="row g-1 align-items-end">
         <input type="hidden" name="sort" value="{{ $sort ?? request('sort', 'id') }}">
         <input type="hidden" name="dir" value="{{ $dir ?? request('dir', 'desc') }}">
         <div class="col-md-3">
           <label class="form-label">{{ __('Search') }}</label>
-          <input type="text" name="q" class="form-control" value="{{ $filters['q'] ?? '' }}">
+          <input type="text" name="q" class="form-control" value="{{ $filters['q'] ?? '' }}" placeholder="{{ __('Reference') }} / {{ __('Number') }} / {{ __('Customer') }}">
         </div>
         <div class="col-md-2">
           <label class="form-label">{{ __('State') }}</label>
@@ -71,7 +70,7 @@
           </select>
         </div>
         <div class="col-md-1">
-          <button class="btn btn-primary w-100" type="submit">{{ __('Filter') }}</button>
+          <button class="btn btn-primary w-100 rounded" type="submit">{{ __('Filter') }}</button>
         </div>
       </form>
     </div>
@@ -79,7 +78,7 @@
 
   <div class="card">
     <div class="table-responsive">
-      <table class="table table-striped">
+      <table class="table table-hover">
         <thead>
           <tr>
             <th>@include('components.sortable-th', ['column' => 'id', 'label' => '#'])</th>
@@ -97,19 +96,19 @@
               <td>{{ $item->id }}</td>
               <td>{{ $item->reference }}</td>
               <td>{{ $item->number }}</td>
-              <td>{{ $item->stateLabel() }}</td>
+              <td><span class="badge rounded-pill bg-light-primary">{{ $item->stateLabel() }}</span></td>
               <td>{{ $item->property?->customer_name }}</td>
               <td>
                 @if ($item->uploaded_on_qima)
-                  <span class="badge bg-success">{{ __('Uploaded to Qima') }}</span>
+                  <span class="badge rounded-pill bg-light-success">{{ __('Uploaded to Qima') }}</span>
                 @else
-                  <span class="badge bg-secondary">—</span>
+                  <span class="text-muted">—</span>
                 @endif
               </td>
               <td class="text-nowrap">
-                <a href="{{ route('dashboard.valuation-requests.show', $item) }}" class="btn btn-sm btn-primary">{{ __('View') }}</a>
-                @can('update', $item)
-                  <a href="{{ route('dashboard.valuation-requests.edit', $item) }}" class="btn btn-sm btn-outline-secondary">{{ __('Edit') }}</a>
+                <x-valuation.details-button :request="$item" />
+                @can('editInitialData', $item)
+                  <a href="{{ route('dashboard.valuation-requests.edit', $item) }}" class="btn btn-sm btn-outline-primary rounded">{{ __('Edit') }}</a>
                 @endcan
               </td>
             </tr>

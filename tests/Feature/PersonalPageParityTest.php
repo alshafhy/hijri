@@ -29,7 +29,7 @@ beforeEach(function () {
     app()->setLocale('ar');
 });
 
-it('renders the personal page with legacy sections', function () {
+it('renders the dashboard with statistics and charts only', function () {
     $manager = User::factory()->create(['status' => UserStatus::Active]);
     $manager->assignRole('manager');
 
@@ -45,15 +45,16 @@ it('renders the personal page with legacy sections', function () {
         ->getContent();
 
     expect($html)
-        ->toContain('الصفحة الشخصية')
-        ->toContain('بحث سريع برقم التقييم')
+        ->toContain('لوحة التحكم')
         ->toContain('عدد التقييمات المعتمدة')
-        ->toContain('تقييم جديد')
-        ->toContain('لوحة التقييمات')
-        ->toContain('لوحة المستخدمين')
-        ->toContain('لوحة الأحداث')
-        ->toContain('أحدث التقييمات')
-        ->toContain('أحدث الأحداث')
-        ->toContain('اسم العميل')
+        ->toContain('dashboard-monthly-chart')
+        ->toContain('dashboard-status-chart')
+        ->and($html)->not->toContain('تقييم جديد')
+        ->and($html)->not->toContain('لوحة التقييمات')
+        ->and($html)->not->toContain('لوحة المستخدمين')
+        ->and($html)->not->toContain('لوحة الأحداث')
+        ->and($html)->not->toContain('أحدث التقييمات')
+        ->and($html)->not->toContain('أحدث الأحداث')
+        ->and($html)->not->toContain('اسم العميل')
         ->and($html)->not->toContain('>underEvaluative<');
 });

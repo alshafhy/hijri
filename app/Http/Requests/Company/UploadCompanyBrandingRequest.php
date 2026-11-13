@@ -20,7 +20,7 @@ class UploadCompanyBrandingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', Rule::in(['logo', 'signature', 'stamp'])],
+            'type' => ['required', Rule::in(['logo', 'signature', 'stamp', 'report_logo'])],
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }

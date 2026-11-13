@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\User\BuildStaffProfileAction;
 use App\Actions\User\ChangePasswordAction;
 use App\Actions\User\CreateUserAction;
 use App\Actions\User\DeleteUserAction;
+use App\Actions\User\InviteStaffMemberAction;
 use App\Actions\User\UpdateUserAction;
 use App\DataTables\UserDataTable;
 use App\DTOs\User\ChangePasswordData;
@@ -20,6 +22,7 @@ use App\Models\Branch;
 use App\Models\User;
 use App\Overrides\Spatie\Role;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Laracasts\Flash\Flash;
 
@@ -29,7 +32,10 @@ class UserController extends AppBaseController
     {
         $this->authorize('viewAny', User::class);
 
-        return $userDataTable->render('users.index');
+        return $userDataTable->render('users.index', [
+            'staffCount' => InviteStaffMemberAction::staffCount(),
+            'staffLimit' => (int) config('users.staff_limit'),
+        ]);
     }
 
     public function create(): View
@@ -50,11 +56,14 @@ class UserController extends AppBaseController
         return redirect(route('dashboard.users.index'));
     }
 
-    public function show(User $user): View|RedirectResponse
+    public function show(Request $request, User $user, BuildStaffProfileAction $action): View|RedirectResponse
     {
         $this->authorize('view', $user);
 
-        return view('users.show')->with('user', $user);
+        return view('users.show', [
+            'user' => $user,
+            'profile' => $action->execute($user, max(1, (int) $request->query('dues_page', 1))),
+        ]);
     }
 
     public function edit(User $user): View|RedirectResponse

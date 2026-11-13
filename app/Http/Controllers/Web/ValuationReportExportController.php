@@ -51,9 +51,13 @@ class ValuationReportExportController extends Controller
         $this->authorize('exportPdf', $valuationRequest);
         $this->resolveVariant($variant);
 
+        $failure = $cache->failure($valuationRequest->id, $key);
+
         return response()->json([
             'ready' => (bool) $cache->get($valuationRequest->id, $key),
             'generating' => $cache->isGenerating($valuationRequest->id, $key),
+            'failed' => $failure !== null,
+            'error' => $failure,
         ]);
     }
 

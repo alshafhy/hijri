@@ -53,13 +53,14 @@ final class GenerateValuationReportPdfJob implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
-        app(ReportPdfCacheService::class)->clearGenerating($this->valuationRequestId, $this->cacheKey);
+        $message = $exception?->getMessage() ?: 'valuation report pdf generation failed';
+        app(ReportPdfCacheService::class)->markFailed($this->valuationRequestId, $this->cacheKey, $message);
 
         Log::error('valuation report pdf generation failed', [
             'valuation_request_id' => $this->valuationRequestId,
             'variant' => $this->variant,
             'user_id' => $this->userId,
-            'error' => $exception?->getMessage(),
+            'error' => $message,
         ]);
     }
 }

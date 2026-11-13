@@ -10,15 +10,18 @@ use App\Actions\Contractor\CreatePartyContactAction;
 use App\Actions\Contractor\DeactivateContractorAction;
 use App\Actions\Contractor\DeactivatePartyContactAction;
 use App\Actions\Contractor\UpdateContractorAction;
+use App\Actions\Pdf\RenderDocumentPdfAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contractor\StoreContractorRequest;
 use App\Http\Requests\Contractor\StorePartyContactRequest;
 use App\Http\Requests\Contractor\UpdateContractorRequest;
+use App\Models\Company;
 use App\Models\Contractor;
 use App\Models\PartyContact;
 use App\Support\Query\AppliesListSort;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Laracasts\Flash\Flash;
 
@@ -69,7 +72,7 @@ class ContractorController extends Controller
         $this->authorize('view', $contractor);
 
         $contracts = $contractor->contracts()
-            ->with(['valuationRequest:id,number,reference,state'])
+            ->with(['valuationRequest' => fn ($query) => $query->with('property.location.city', 'property.location.neighborhood')])
             ->latest('id')
             ->paginate(25);
 
@@ -78,6 +81,32 @@ class ContractorController extends Controller
             ->paginate(10, ['*'], 'contacts_page');
 
         return view('contractors.show', compact('contractor', 'contracts', 'contacts'));
+    }
+
+    public function invoice(Contractor $contractor, RenderDocumentPdfAction $render): Response
+    {
+        $this->authorize('view', $contractor);
+
+        $contracts = $contractor->contracts()
+            ->with(['valuationRequest' => fn ($query) => $query->with('property.location.city', 'property.location.neighborhood')])
+            ->oldest('id')
+            ->get();
+
+        $fees = (float) $contractor->fees;
+        $paidCount = $contracts->filter->isPaid()->count();
+
+        return $render->execute('contractors.invoice', [
+            'contractor' => $contractor,
+            'company' => Company::query()->orderBy('id')->first(),
+            'contracts' => $contracts,
+            'fees' => $fees,
+            'totals' => [
+                'all' => $fees * $contracts->count(),
+                'paid' => $fees * $paidCount,
+                'unpaid' => $fees * ($contracts->count() - $paidCount),
+            ],
+            'issuedAt' => now(),
+        ], 'invoice-'.$contractor->id.'.pdf', false);
     }
 
     public function storeContact(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\Valuation\BuildDashboardChartsAction;
 use App\Actions\Valuation\GetApprovedValuationsCountAction;
 use App\Actions\Valuation\GetAverageTurnaroundHoursAction;
 use App\Actions\Valuation\GetTotalValuedAreaAction;
@@ -17,7 +18,6 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use Spatie\Activitylog\Models\Activity;
 
 class HomeController extends Controller
 {
@@ -25,6 +25,7 @@ class HomeController extends Controller
         GetApprovedValuationsCountAction $approvedCount,
         GetTotalValuedAreaAction $valuedArea,
         GetAverageTurnaroundHoursAction $turnaround,
+        BuildDashboardChartsAction $charts,
     ): Renderable {
         $user = Auth::user();
         abort_unless($user !== null && $user->can('dashboard.view'), 403);
@@ -57,39 +58,9 @@ class HomeController extends Controller
                 ->count();
         }
 
-        $latestValuations = $this->latestValuationsQuery($user)
-            ->with(['property.location.city', 'property.location.neighborhood'])
-            ->orderByDesc('reference')
-            ->orderByDesc('id')
-            ->limit(10)
-            ->get();
-
-        $recentUsers = null;
-        if ($user->can('viewAny', User::class)) {
-            $recentUsers = User::query()
-                ->with('roles')
-                ->whereKeyNot($user->id)
-                ->latest('id')
-                ->limit(5)
-                ->get();
-        }
-
-        $recentLogs = null;
-        if ($user->can('viewLogs', ValuationRequest::class)) {
-            $recentLogs = Activity::query()
-                ->where('log_name', 'valuation')
-                ->with(['causer', 'subject'])
-                ->latest('id')
-                ->limit(10)
-                ->get();
-        }
-
         return view('home', [
             'widgets' => $widgets,
-            'roles' => $user->getRoleNames(),
-            'latestValuations' => $latestValuations,
-            'recentUsers' => $recentUsers,
-            'recentLogs' => $recentLogs,
+            'charts' => $charts->execute($this->latestValuationsQuery($user)),
         ]);
     }
 

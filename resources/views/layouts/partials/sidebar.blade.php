@@ -23,7 +23,7 @@
                           <span class="flex-grow-1"></span>
 
                           {{-- Label --}}
-                          <span class="nav-label mx-2">{{ $item->comp_ar_label }}</span>
+                          <span class="nav-label mx-2">{{ $item->label() }}</span>
 
                           {{-- Icon: always on the END (right in RTL) --}}
                           <i class="bi {{ $item->icon_class }} nav-icon flex-shrink-0"></i>
@@ -37,7 +37,7 @@
                                     <a class="nav-link d-flex align-items-center {{ $child->isCurrentRoute() ? 'active' : '' }}"
                                        href="{{ $child->getRouteUrl() }}">
                                       <span class="flex-grow-1"></span>
-                                      <span class="nav-label mx-2">{{ $child->comp_ar_label }}</span>
+                                      <span class="nav-label mx-2">{{ $child->label() }}</span>
                                       <i class="bi {{ $child->icon_class }} nav-icon flex-shrink-0"
                                          style="font-size:0.85rem;"></i>
                                     </a>
@@ -50,7 +50,7 @@
                         <a class="nav-link d-flex align-items-center {{ $item->isCurrentRoute() ? 'active' : '' }}"
                            href="{{ $item->getRouteUrl() }}">
                           <span class="flex-grow-1"></span>
-                          <span class="nav-label mx-2">{{ $item->comp_ar_label }}</span>
+                          <span class="nav-label mx-2">{{ $item->label() }}</span>
                           <i class="bi {{ $item->icon_class }} nav-icon flex-shrink-0"></i>
                         </a>
                     </li>

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\Valuation\ReportExportVariant;
+use App\Http\Controllers\ClientLogController;
 use App\Http\Controllers\Web\CompanyController;
 use App\Http\Controllers\Web\ContractController;
 use App\Http\Controllers\Web\ContractorController;
@@ -9,14 +11,23 @@ use App\Http\Controllers\Web\FinancialController;
 use App\Http\Controllers\Web\GeoCityController;
 use App\Http\Controllers\Web\GeoNeighborhoodController;
 use App\Http\Controllers\Web\HomeController;
+use App\Http\Controllers\Web\InvitationController;
+use App\Http\Controllers\Web\LandingController;
 use App\Http\Controllers\Web\LanguageController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OfferController;
 use App\Http\Controllers\Web\PartnerController;
+use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\PropertyPictureController;
 use App\Http\Controllers\Web\RoleController;
+use App\Http\Controllers\Web\ServiceContractController;
+use App\Http\Controllers\Web\StaffController;
+use App\Http\Controllers\Web\SupportRequestController;
+use App\Http\Controllers\Web\SystemReleaseController;
 use App\Http\Controllers\Web\UserController;
+use App\Http\Controllers\Web\ValuationAttachmentController;
+use App\Http\Controllers\Web\ValuationLookupController;
 use App\Http\Controllers\Web\ValuationReportExportController;
 use App\Http\Controllers\Web\ValuationRequestController;
 use Illuminate\Support\Facades\Auth;
@@ -28,9 +39,20 @@ Route::get('locale/{locale}', [LocaleController::class, 'switch'])
 
 Route::get('/underMaintenance', [HomeController::class, 'underMaintenance'])->name('mm');
 Route::get('/pageComingSoon', [HomeController::class, 'pageComingSoon'])->name('pageComingSoon');
-Route::get('/', [HomeController::class, 'pageComingSoon'])->name('home-page');
+Route::get('/', [LandingController::class, 'index'])->name('home-page');
+Route::post('contact', [LandingController::class, 'contact'])->name('landing.contact')->middleware('throttle:5,1');
+Route::post('client-log', [ClientLogController::class, 'store'])->name('client-log.store')->middleware('throttle:120,1');
 
 Auth::routes();
+
+Route::middleware('throttle:10,1')->group(function (): void {
+    Route::impersonate();
+});
+
+Route::middleware(['guest', 'throttle:10,1'])->group(function (): void {
+    Route::get('invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+    Route::post('invitations/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
+});
 
 Route::middleware('auth')->group(function (): void {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
@@ -49,6 +71,39 @@ Route::middleware('auth')->group(function (): void {
             ->name('users.change-password');
         Route::match(['put', 'post'], 'users/change-password', [UserController::class, 'updatePassword'])
             ->name('users.update-password');
+
+        Route::view('manual', 'pages.manual')->name('manual');
+        Route::get('releases', [SystemReleaseController::class, 'index'])->name('releases');
+
+        Route::middleware('permission:company.edit')->group(function (): void {
+            Route::get('service-contracts', [ServiceContractController::class, 'index'])->name('service-contracts.index');
+            Route::get('service-contracts/create', [ServiceContractController::class, 'create'])->name('service-contracts.create');
+            Route::post('service-contracts', [ServiceContractController::class, 'store'])->name('service-contracts.store');
+            Route::get('service-contracts/{serviceContract}/pdf', [ServiceContractController::class, 'pdf'])->name('service-contracts.pdf');
+        });
+
+        Route::middleware('permission:user.view')->group(function (): void {
+            Route::get('contact-messages', [LandingController::class, 'messages'])->name('contact-messages.index');
+            Route::put('contact-messages/{contactMessage}/read', [LandingController::class, 'markRead'])->name('contact-messages.read');
+        });
+
+        Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::post('profile/images/{type}', [ProfileController::class, 'uploadImage'])->name('profile.images.upload')->where('type', 'signature|avatar');
+        Route::get('profile/images/{user}/{type}', [ProfileController::class, 'image'])->name('profile.images.show')->where('type', 'signature|avatar');
+        Route::post('profile/support', [ProfileController::class, 'support'])->name('profile.support')->middleware('throttle:10,1');
+
+        Route::middleware('permission:user.view')->group(function (): void {
+            Route::post('users/invite', [StaffController::class, 'invite'])->name('users.invite')->middleware('permission:user.create');
+            Route::middleware('permission:user.edit')->group(function (): void {
+                Route::post('users/{user}/invitation', [StaffController::class, 'resendInvitation'])->name('users.invitation.resend');
+                Route::put('users/{user}/status', [StaffController::class, 'updateStatus'])->name('users.status');
+                Route::put('users/{user}/final-approval', [StaffController::class, 'updateFinalApproval'])->name('users.final-approval');
+                Route::put('users/{user}/membership', [StaffController::class, 'updateMembership'])->name('users.membership');
+                Route::put('support-requests/{supportRequest}', [SupportRequestController::class, 'update'])->name('support-requests.update');
+            });
+            Route::get('support-requests', [SupportRequestController::class, 'index'])->name('support-requests.index');
+        });
 
         Route::resource('users', UserController::class)
             ->middleware('permission:user.view');
@@ -86,6 +141,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('valuation-requests/qima-pending', [ValuationRequestController::class, 'qimaPending'])
             ->name('valuation-requests.qima-pending')
             ->middleware('permission:valuation_request.qima_upload');
+        Route::get('valuation-requests/map', [ValuationRequestController::class, 'map'])
+            ->name('valuation-requests.map')
+            ->middleware('permission:valuation_request.view');
         Route::get('valuation-requests/activity-logs', [ValuationRequestController::class, 'activityLogs'])
             ->name('valuation-requests.activity-logs')
             ->middleware('permission:valuation_request.view_logs');
@@ -162,16 +220,31 @@ Route::middleware('auth')->group(function (): void {
 
         Route::get('valuation-requests/{valuationRequest}/exports/{variant}', [ValuationReportExportController::class, 'queue'])
             ->name('valuation-requests.exports.queue')
-            ->whereIn('variant', ['enforcement', 'full', 'full-draft'])
+            ->whereIn('variant', ReportExportVariant::values())
             ->middleware('permission:valuation_request.export_pdf');
         Route::get('valuation-requests/{valuationRequest}/exports/{variant}/{key}/status', [ValuationReportExportController::class, 'status'])
             ->name('valuation-requests.exports.status')
-            ->whereIn('variant', ['enforcement', 'full', 'full-draft'])
+            ->whereIn('variant', ReportExportVariant::values())
             ->middleware('permission:valuation_request.export_pdf');
         Route::get('valuation-requests/{valuationRequest}/exports/{variant}/{key}/download', [ValuationReportExportController::class, 'download'])
             ->name('valuation-requests.exports.download')
-            ->whereIn('variant', ['enforcement', 'full', 'full-draft'])
+            ->whereIn('variant', ReportExportVariant::values())
             ->middleware('permission:valuation_request.export_pdf');
+
+        Route::get('valuation-requests/{valuationRequest}/attachments/{attachment}', [ValuationAttachmentController::class, 'download'])
+            ->name('valuation-requests.attachments.download')
+            ->middleware('permission:valuation_request.view');
+        Route::delete('valuation-requests/{valuationRequest}/attachments/{attachment}', [ValuationAttachmentController::class, 'destroy'])
+            ->name('valuation-requests.attachments.destroy')
+            ->middleware('permission:valuation_request.edit');
+
+        Route::prefix('valuation-lookups')->name('valuation-lookups.')->middleware('permission:valuation_request.view')->group(function (): void {
+            Route::get('cities/{geoCity}/neighborhoods', [ValuationLookupController::class, 'neighborhoods'])->name('neighborhoods');
+            Route::get('property-types/{kind}', [ValuationLookupController::class, 'propertyTypes'])->name('property-types');
+            Route::get('grid/{kind}/{type}', [ValuationLookupController::class, 'gridRows'])->name('grid');
+            Route::get('partners/{partner}/offers', [ValuationLookupController::class, 'partnerOffers'])->name('partner-offers');
+            Route::get('offers/{offer}/estates', [ValuationLookupController::class, 'offerEstates'])->name('offer-estates');
+        });
 
         Route::get('property-pictures/{propertyPicture}/file', [PropertyPictureController::class, 'file'])
             ->name('property-pictures.file')
@@ -198,6 +271,7 @@ Route::middleware('auth')->group(function (): void {
             Route::get('contractors/create', [ContractorController::class, 'create'])->name('contractors.create')->middleware('permission:contractor.create');
             Route::post('contractors', [ContractorController::class, 'store'])->name('contractors.store')->middleware('permission:contractor.create');
             Route::get('contractors/{contractor}', [ContractorController::class, 'show'])->name('contractors.show');
+            Route::get('contractors/{contractor}/invoice', [ContractorController::class, 'invoice'])->name('contractors.invoice');
             Route::get('contractors/{contractor}/edit', [ContractorController::class, 'edit'])->name('contractors.edit')->middleware('permission:contractor.edit');
             Route::put('contractors/{contractor}', [ContractorController::class, 'update'])->name('contractors.update')->middleware('permission:contractor.edit');
             Route::delete('contractors/{contractor}', [ContractorController::class, 'destroy'])->name('contractors.destroy')->middleware('permission:contractor.delete');
@@ -258,6 +332,7 @@ Route::middleware('auth')->group(function (): void {
             Route::get('companies/{company}/edit', [CompanyController::class, 'edit'])->name('companies.edit');
             Route::put('companies/{company}/profile', [CompanyController::class, 'updateProfile'])->name('companies.profile')->middleware('permission:company.edit');
             Route::put('companies/{company}/shares', [CompanyController::class, 'updateShares'])->name('companies.shares')->middleware('permission:company.edit');
+            Route::put('companies/{company}/sla', [CompanyController::class, 'updateSla'])->name('companies.sla')->middleware('permission:company.edit');
             Route::post('companies/{company}/branding', [CompanyController::class, 'uploadBranding'])->name('companies.branding')->middleware('permission:company.edit');
         });
     });

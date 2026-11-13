@@ -41,7 +41,7 @@
                         <option value=""></option>
                         @foreach ($sysScreens as $sysScreen)
                             <option value="{{ $sysScreen->id }}">
-                                {{ $sysScreen->comp_ar_label ?: $sysScreen->comp_name }}
+                                {{ $sysScreen->label() }}
                             </option>
                         @endforeach
                     </select>

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Valuation;
 
+use App\Contracts\ReportPdfRenderer;
 use App\Enums\Valuation\ReportExportVariant;
 use App\Models\ValuationRequest;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\Pdf\PdfStylesheet;
+use App\Support\Pdf\ReportRenderOptions;
 use Illuminate\Support\Facades\View;
 
 final class ValuationReportPdfGenerator
@@ -14,6 +16,8 @@ final class ValuationReportPdfGenerator
     public function __construct(
         private readonly ValuationReportDataBuilder $dataBuilder = new ValuationReportDataBuilder,
         private readonly ReportPdfCacheService $cache = new ReportPdfCacheService,
+        private readonly ?ReportPdfRenderer $renderer = null,
+        private readonly ?string $cssPath = null,
     ) {}
 
     /**
@@ -21,27 +25,39 @@ final class ValuationReportPdfGenerator
      */
     public function prepare(ValuationRequest $request, ReportExportVariant $variant): array
     {
-        $data = $this->dataBuilder->build($request, $variant);
-        $html = View::make($variant->bladeView(), $data)->render();
+        $previousLocale = app()->getLocale();
+        app()->setLocale($variant->locale());
+
+        try {
+            $data = $this->dataBuilder->build($request, $variant);
+            $html = View::make($variant->bladeView(), $data)->render();
+        } finally {
+            app()->setLocale($previousLocale);
+        }
+
         $key = $this->cache->key($html, [
             'variant' => $variant->value,
             'draft' => $variant->isDraft(),
             'watermark' => $variant->watermark(),
+            'locale' => $variant->locale(),
+            'css' => md5($this->css()),
         ]);
         $filename = $variant->filename($data['reference'] ?? $request->id);
 
         return compact('html', 'key', 'filename', 'data');
     }
 
-    public function renderBytes(string $html): string
+    public function renderBytes(string $html, ReportExportVariant $variant): string
     {
-        $pdf = Pdf::loadHTML($html)
-            ->setPaper(config('report_pdf.paper', 'a4'), config('report_pdf.orientation', 'portrait'))
-            ->setOption('isRemoteEnabled', true)
-            ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('defaultFont', 'DejaVu Sans');
+        $renderer = $this->renderer ?? app(ReportPdfRenderer::class);
 
-        return $pdf->output();
+        return $renderer->render($html, new ReportRenderOptions(
+            direction: $variant->direction(),
+            watermark: $variant->watermark(),
+            css: $this->css(),
+            paper: strtoupper((string) config('report_pdf.paper', 'A4')),
+            orientation: config('report_pdf.orientation', 'portrait') === 'landscape' ? 'L' : 'P',
+        ));
     }
 
     /**
@@ -69,7 +85,7 @@ final class ValuationReportPdfGenerator
             ];
         }
 
-        $bytes = $this->renderBytes($prepared['html']);
+        $bytes = $this->renderBytes($prepared['html'], $variant);
         $path = $this->cache->put($request->id, $key, $bytes, $prepared['filename'])
             ?? $this->writeTemp($request->id, $key, $bytes);
 
@@ -79,6 +95,11 @@ final class ValuationReportPdfGenerator
             'key' => $key,
             'bytes' => $bytes,
         ];
+    }
+
+    private function css(): string
+    {
+        return PdfStylesheet::read($this->cssPath ?? resource_path('css/pdf/report.css'));
     }
 
     private function writeTemp(int $requestId, string $key, string $bytes): string

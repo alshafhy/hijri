@@ -41,6 +41,16 @@
             <input type="text" name="company_reg_number" value="{{ old('company_reg_number', $company->company_reg_number) }}" class="form-control @error('company_reg_number') is-invalid @enderror">
             @error('company_reg_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
+          <div class="col-md-6">
+            <label class="form-label" for="membership_date">{{ __('Membership date') }}</label>
+            <input type="date" name="membership_date" id="membership_date" value="{{ old('membership_date', $company->membership_date?->format('Y-m-d')) }}" class="form-control @error('membership_date') is-invalid @enderror">
+            @error('membership_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="accreditation_end_date">{{ __('Accreditation end date') }}</label>
+            <input type="date" name="accreditation_end_date" id="accreditation_end_date" value="{{ old('accreditation_end_date', $company->accreditation_end_date?->format('Y-m-d')) }}" class="form-control @error('accreditation_end_date') is-invalid @enderror">
+            @error('accreditation_end_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+          </div>
         </div>
         <div class="card-footer">
           <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
@@ -85,22 +95,36 @@
       </form>
     </div>
 
+    <div class="card mb-2">
+      <div class="card-header"><h4 class="card-title">{{ __('Turnaround time (SLA)') }}</h4></div>
+      <form method="POST" action="{{ route('dashboard.companies.sla', $company) }}">
+        @csrf
+        @method('PUT')
+        <div class="card-body row g-2">
+          <p class="text-muted mb-0">{{ __('The details button turns red once a valuation stays longer than these hours in its stage.') }}</p>
+          @foreach (['request_sla_hours' => __('New request time (hours)'), 'evaluation_sla_hours' => __('Under evaluation time (hours)')] as $field => $label)
+            <div class="col-md-6">
+              <label class="form-label" for="{{ $field }}">{{ $label }}</label>
+              <input type="number" name="{{ $field }}" id="{{ $field }}" min="1" max="8760" value="{{ old($field, $company->{$field}) }}" class="form-control @error($field) is-invalid @enderror" required>
+              @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+          @endforeach
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
+        </div>
+      </form>
+    </div>
+
     <div class="card">
       <div class="card-header"><h4 class="card-title">{{ __('Branding') }}</h4></div>
       <div class="card-body">
         <div class="row g-3">
-          @foreach (['logo' => __('Logo'), 'signature' => __('Signature'), 'stamp' => __('Stamp')] as $type => $label)
-            <div class="col-md-4">
+          @foreach (['logo' => __('Logo'), 'report_logo' => __('Report logo'), 'signature' => __('Signature'), 'stamp' => __('Stamp')] as $type => $label)
+            <div class="col-md-3">
               <h6>{{ $label }}</h6>
-              @php
-                $path = match($type) {
-                  'logo' => $company->main_logo_path,
-                  'signature' => $company->signature_path,
-                  'stamp' => $company->stamp_path,
-                };
-              @endphp
-              @if ($path)
-                <p class="small text-muted">{{ $path }}</p>
+              @if ($brandingPreviews[$type] ?? null)
+                <img src="{{ $brandingPreviews[$type] }}" alt="{{ $label }}" class="img-fluid img-thumbnail mb-1">
               @endif
               <form method="POST" action="{{ route('dashboard.companies.branding', $company) }}" enctype="multipart/form-data">
                 @csrf

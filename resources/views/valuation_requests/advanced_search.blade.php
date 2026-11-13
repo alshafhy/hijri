@@ -114,7 +114,7 @@
                 <td>{{ $item->stateLabel() }}</td>
                 <td>{{ $item->property?->customer_name }}</td>
                 <td>
-                  <a href="{{ route('dashboard.valuation-requests.show', $item) }}" class="btn btn-sm btn-primary">{{ __('View') }}</a>
+                  <x-valuation.details-button :request="$item" />
                 </td>
               </tr>
             @empty

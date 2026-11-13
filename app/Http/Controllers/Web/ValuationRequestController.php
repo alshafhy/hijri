@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Actions\Valuation\ApproveValuationRequestAction;
+use App\Actions\Valuation\BuildValuationMapAction;
 use App\Actions\Valuation\CancelValuationRequestAction;
 use App\Actions\Valuation\ChangeCoordinatorAction;
 use App\Actions\Valuation\ChangeEvaluatorAction;
@@ -43,12 +44,19 @@ use App\Http\Requests\Valuation\UpdateCoordinatorValuationRequest;
 use App\Http\Requests\Valuation\UpdateEvaluatorDataRequest;
 use App\Http\Requests\Valuation\UpdateFeeSharesRequest;
 use App\Models\Company;
+use App\Models\Contractor;
 use App\Models\GeoCity;
+use App\Models\GeoNeighborhood;
+use App\Models\Partner;
 use App\Models\PropertyPicture;
 use App\Models\User;
 use App\Models\ValuationRequest;
+use App\Support\Valuation\ValuationBreakdown;
+use App\Support\Valuation\ValuationFieldGrid;
+use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use InvalidArgumentException;
@@ -71,7 +79,7 @@ class ValuationRequestController extends Controller
         return view('valuation_requests.index', [
             'requests' => $requests,
             'filters' => $filters,
-            'evaluators' => $this->usersForRole('evaluator'),
+            'evaluators' => $this->usersForRole('evaluator')->union($this->usersForRole('manager'))->sort(),
             'coordinators' => $this->usersForRole('coordinator'),
             'sort' => $filters['sort'] ?? 'id',
             'dir' => $filters['dir'] ?? 'desc',
@@ -82,7 +90,18 @@ class ValuationRequestController extends Controller
     {
         $this->authorize('create', ValuationRequest::class);
 
-        return view('valuation_requests.create', $this->formLookups());
+        $company = Company::query()->orderBy('id')->first();
+
+        return view('valuation_requests.create', array_merge($this->formLookups(), [
+            'contractors' => Contractor::query()->where('state', Contractor::STATE_ACTIVE)->orderBy('name')->pluck('name', 'id'),
+            'partners' => Partner::query()->where('state', Partner::STATE_ACTIVE)->orderBy('name')->pluck('name', 'id'),
+            'kinds' => ValuationFieldGrid::kinds(),
+            'defaultShares' => [
+                'coordinator' => (int) ($company?->default_coordinator_share ?? 0),
+                'evaluator' => (int) ($company?->default_evaluator_share ?? 0),
+                'manager' => (int) ($company?->default_manager_share ?? 0),
+            ],
+        ]));
     }
 
     public function store(
@@ -109,28 +128,73 @@ class ValuationRequestController extends Controller
             'property.comparables',
             'property.adjustments',
             'property.total',
+            'property.lands',
+            'property.facades',
+            'property.services',
+            'property.borders',
+            'property.building',
+            'property.question',
+            'property.ac',
+            'property.flooring',
+            'attachments',
+            'customTableRows',
             'feeShares',
             'contracts.contractor',
+            'partnerContracts.partner',
+            'partnerContracts.offerEstate.offer',
             'offers.partner',
             'coordinator',
             'evaluator',
         ]);
+        $property = $valuationRequest->property;
 
         return view('valuation_requests.show', [
             'request' => $valuationRequest,
+            'property' => $property,
             'finalAmount' => $resolveAmount->execute($valuationRequest),
-            'evaluators' => $this->usersForRole('evaluator'),
+            'breakdown' => $property !== null ? ValuationBreakdown::forProperty($property) : null,
+            'isBuilding' => $property !== null && ValuationFieldGrid::isBuilding((string) $property->property_kind),
+            'kinds' => ValuationFieldGrid::kinds(),
+            'timeline' => $this->timeline($valuationRequest),
+            'evaluators' => $this->usersForRole('evaluator')->union($this->usersForRole('manager'))->sort(),
             'coordinators' => $this->usersForRole('coordinator'),
         ]);
     }
 
+    /**
+     * @return list<array{label: string, at: Carbon|null, duration: string|null}>
+     */
+    private function timeline(ValuationRequest $request): array
+    {
+        $steps = [
+            ['label' => __('Started at'), 'at' => $request->started_at],
+            ['label' => __('Under evaluation'), 'at' => $request->under_evaluation_at],
+            ['label' => __('Evaluation completed'), 'at' => $request->evaluated_at],
+            ['label' => __('Final approval'), 'at' => $request->ended_at],
+        ];
+
+        $previous = null;
+        foreach ($steps as $i => $step) {
+            $steps[$i]['duration'] = $previous !== null && $step['at'] !== null
+                ? $previous->diffForHumans($step['at'], ['syntax' => CarbonInterface::DIFF_ABSOLUTE, 'parts' => 2])
+                : null;
+            $previous = $step['at'] ?? $previous;
+        }
+
+        return $steps;
+    }
+
     public function edit(ValuationRequest $valuationRequest): View
     {
-        $this->authorize('update', $valuationRequest);
-        $valuationRequest->load(['property', 'feeShares']);
+        $this->authorize('editInitialData', $valuationRequest);
+        $valuationRequest->load(['property.location', 'property.borders', 'attachments', 'feeShares']);
+        $cityId = $valuationRequest->property?->location?->city_id;
 
         return view('valuation_requests.edit', array_merge($this->formLookups(), [
             'request' => $valuationRequest,
+            'neighborhoods' => $cityId
+                ? GeoNeighborhood::query()->where('city_id', $cityId)->orderBy('name_ar')->pluck('name_ar', 'id')
+                : collect(),
         ]));
     }
 
@@ -149,14 +213,26 @@ class ValuationRequestController extends Controller
     public function editInfo(ValuationRequest $valuationRequest): View
     {
         $this->authorize('update', $valuationRequest);
-        $valuationRequest->load(['property.location', 'property.components', 'property.total']);
+        $valuationRequest->load([
+            'property.location', 'property.components', 'property.total', 'property.lands', 'property.facades',
+            'property.services', 'property.flooring', 'property.building', 'property.ac', 'property.question',
+            'property.comparables', 'property.adjustments', 'property.pictures', 'attachments', 'customTableRows',
+        ]);
+        $property = $valuationRequest->property;
+        abort_if($property === null, 404);
 
-        $components = $valuationRequest->property?->components?->keyBy('component_key') ?? collect();
+        $cityId = $property->location?->city_id;
 
         return view('valuation_requests.edit_info', [
             'request' => $valuationRequest,
-            'components' => $components,
+            'property' => $property,
+            'components' => $property->components->keyBy('component_key'),
+            'gridRows' => ValuationFieldGrid::rows($property->property_kind, $property->property_type),
+            'isBuilding' => ValuationFieldGrid::isBuilding($property->property_kind),
             'cities' => GeoCity::query()->orderBy('name_ar')->pluck('name_ar', 'id'),
+            'neighborhoods' => $cityId
+                ? GeoNeighborhood::query()->where('city_id', $cityId)->orderBy('name_ar')->pluck('name_ar', 'id')
+                : collect(),
         ]);
     }
 
@@ -379,6 +455,16 @@ class ValuationRequestController extends Controller
         ]);
     }
 
+    public function map(Request $httpRequest, BuildValuationMapAction $action): View
+    {
+        $cityId = $httpRequest->integer('city') ?: null;
+
+        return view('valuation_requests.map', array_merge(
+            $action->execute($httpRequest->user(), $cityId),
+            ['cityId' => $cityId],
+        ));
+    }
+
     public function qimaPending(ListQimaNotUploadedAction $action): View
     {
         $this->authorize('viewAny', ValuationRequest::class);
@@ -479,11 +565,19 @@ class ValuationRequestController extends Controller
     ): RedirectResponse {
         $this->authorize('uploadOfficialReport', $valuationRequest);
 
-        $httpRequest->validate([
+        $validated = $httpRequest->validate([
             'official_report' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:20480'],
+            'report_number' => ['nullable', 'string', 'max:250'],
+            'deposit_number' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $action->execute($httpRequest->user(), $valuationRequest, $httpRequest->file('official_report'));
+        $action->execute(
+            $httpRequest->user(),
+            $valuationRequest,
+            $httpRequest->file('official_report'),
+            $validated['report_number'] ?? null,
+            $validated['deposit_number'] ?? null,
+        );
 
         return back()->with('success', __('Official report uploaded and request locked.'));
     }
@@ -494,7 +588,7 @@ class ValuationRequestController extends Controller
     private function formLookups(): array
     {
         return [
-            'evaluators' => $this->usersForRole('evaluator'),
+            'evaluators' => $this->usersForRole('evaluator')->union($this->usersForRole('manager'))->sort(),
             'coordinators' => $this->usersForRole('coordinator'),
             'companies' => Company::query()->orderBy('name')->pluck('name', 'id'),
             'cities' => GeoCity::query()->orderBy('name_ar')->pluck('name_ar', 'id'),

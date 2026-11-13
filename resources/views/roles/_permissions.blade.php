@@ -11,7 +11,7 @@
                 @foreach ($nodes ?? [] as $node)
                     <tr>
                         <td>
-                            {{ $node->comp_ar_label ?: $node->comp_name }}
+                            {{ $node->label() }}
                             @if ($node->route_name)
                                 <small class="text-muted">({{ $node->route_name }})</small>
                             @endif

@@ -7,6 +7,7 @@ use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\CheckPassChange;
 use App\Http\Middleware\SetLocale;
 use App\Support\Api\ApiResponse;
+use App\Support\Telegram\ExceptionReporter;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -49,6 +50,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->report(function (Throwable $e): void {
+            app(ExceptionReporter::class)->report($e);
+        });
+
         $exceptions->render(function (Throwable $e, Request $request) {
             if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;

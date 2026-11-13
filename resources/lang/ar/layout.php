@@ -39,4 +39,8 @@ return [
 
     'switch_to_english' => 'English',
     'switch_to_arabic' => 'العربية',
+
+    'language_direction' => 'اللغة والاتجاه',
+    'choose_language' => 'اختر اللغة',
+    'current_direction' => 'الاتجاه الحالي',
 ];

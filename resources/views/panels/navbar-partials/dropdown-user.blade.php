@@ -10,32 +10,34 @@
         @endif
       </span>
       <span class="user-status">
-        {{-- {{__("Admin")}} --}}
-        {{ session('current_department_name') ?? ''}}
+        @if (Auth::user()?->can_approve_final_request)
+          <span class="badge bg-light-info" id="final-approval-badge">{{ __('Delegated for final approval') }}</span>
+        @else
+          {{ session('current_department_name') ?? ''}}
+        @endif
       </span>
     </div>
     <span class="avatar">
-      {{-- <img class="round"
-        src="{{ Auth::user() ? Auth::user()->profile_photo_url : asset('images/portrait/small/avatar-s-11.jpg') }}"
-        alt="avatar" height="40" width="40"> --}}
-      <img class="round" src="{{  asset('images/portrait/small/avatar-2.png') }}" alt="avatar" height="40" width="40">
+      @if (Auth::user()?->avatar_path)
+        <img class="round" src="{{ route('dashboard.profile.images.show', [Auth::user(), 'avatar']) }}" alt="avatar" height="40" width="40">
+      @else
+        <img class="round" src="{{  asset('images/portrait/small/avatar-2.png') }}" alt="avatar" height="40" width="40">
+      @endif
       <span class="avatar-status-online"></span>
     </span>
   </a>
   <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user">
     <h6 class="dropdown-header">{{__("Manage Profile")}}</h6>
     <div class="dropdown-divider"></div>
+    @if (Auth::check())
+      <a class="dropdown-item" href="{{ route('dashboard.profile.edit') }}">
+        <i class="me-50" data-feather="user"></i> {{ __('My profile') }}
+      </a>
+    @endif
     <a class="dropdown-item"
-      href="{{ Route::has('change-password') ? route('change-password') : 'javascript:void(0)' }}">
-      <i class="me-50" data-feather="user"></i> {{__("change-password")}}
+      href="{{ Route::has('dashboard.users.change-password') ? route('dashboard.users.change-password') : 'javascript:void(0)' }}">
+      <i class="me-50" data-feather="lock"></i> {{__("change-password")}}
     </a>
-    {{-- <a class="dropdown-item"
-      href="{{ Route::has('profile.show') ? route('profile.show') : 'javascript:void(0)' }}">
-      <i class="me-50" data-feather="user"></i> {{__("Profile")}}
-    </a> --}}
-    {{-- <a class="dropdown-item" href="#">
-      <i class="me-50" data-feather="settings"></i> {{__("Settings")}}
-    </a> --}}
     @if (Route::has('systemReleasesShow'))
       <a class="dropdown-item" href="{{ route('systemReleasesShow') }}">
         <i class="me-50" data-feather="settings"></i> {{__("system-releases")}}

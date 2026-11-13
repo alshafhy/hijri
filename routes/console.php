@@ -12,3 +12,7 @@ Artisan::command('inspire', function (): void {
 
 Schedule::command('queue:prune-batches --hours=48')->daily();
 Schedule::command('queue:prune-failed --hours=168')->weekly();
+Schedule::command('db:dump')->dailyAt('20:00')->withoutOverlapping()->onSuccess(function (): void {
+    Artisan::call('db:delete', ['--keep' => 7]);
+});
+Schedule::command('report:prune-pdf-cache --days=30')->dailyAt('03:30');

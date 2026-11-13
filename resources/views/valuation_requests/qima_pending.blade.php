@@ -33,7 +33,7 @@
               <td>{{ $item->stateLabel() }}</td>
               <td>{{ $item->property?->customer_name }}</td>
               <td class="text-nowrap">
-                <a href="{{ route('dashboard.valuation-requests.show', $item) }}" class="btn btn-sm btn-primary">{{ __('View') }}</a>
+                <x-valuation.details-button :request="$item" />
                 @can('toggleQimaStatus', $item)
                   <form method="post" action="{{ route('dashboard.valuation-requests.qima-toggle', $item) }}" class="d-inline">
                     @csrf

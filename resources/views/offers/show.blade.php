@@ -38,35 +38,77 @@
   <div class="card">
     <div class="card-header"><h4 class="card-title mb-0">{{ __('Estate lines') }}</h4></div>
     @can('update', $offer)
+      @php
+        $selectedKind = old('estate_kind');
+        $selectedType = old('estate_type');
+        $selectedCityId = old('city_id');
+        if ($selectedCityId === null && filled($offer->city)) {
+            $selectedCityId = optional($cities->first(fn ($city) => trim((string) $city->name_ar) === trim((string) $offer->city)))->id;
+        }
+        $selectedNeighborhood = old('neighborhood');
+      @endphp
       <div class="card-body border-bottom">
-        <form method="POST" action="{{ route('dashboard.offers.estates.store', $offer) }}" class="row g-1 align-items-end">
+        <form method="POST" action="{{ route('dashboard.offers.estates.store', $offer) }}" class="row g-2 align-items-end"
+              data-estate-kinds='@json($kinds)'
+              data-neighborhoods-by-city='@json($neighborhoodsByCity, JSON_UNESCAPED_UNICODE)'
+              data-select-placeholder="{{ __('Select') }}">
           @csrf
-          <div class="col-md-2">
-            <label class="form-label">{{ __('Kind') }}</label>
-            <input name="estate_kind" class="form-control" value="{{ old('estate_kind') }}">
+          <div class="col-md-4">
+            <label class="form-label" for="estate_kind">{{ __('Property kind') }} <span class="text-danger">*</span></label>
+            <select name="estate_kind" id="estate_kind" class="form-select @error('estate_kind') is-invalid @enderror" required>
+              <option value="">{{ __('Select') }}</option>
+              @foreach (array_keys($kinds) as $kind)
+                <option value="{{ $kind }}" @selected($selectedKind === $kind)>{{ $kind }}</option>
+              @endforeach
+            </select>
+            @error('estate_kind')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
-          <div class="col-md-2">
-            <label class="form-label">{{ __('Type') }}</label>
-            <input name="estate_type" class="form-control" value="{{ old('estate_type') }}" required>
+          <div class="col-md-4">
+            <label class="form-label" for="estate_type">{{ __('Property type') }} <span class="text-danger">*</span></label>
+            <select name="estate_type" id="estate_type" class="form-select @error('estate_type') is-invalid @enderror" required data-selected="{{ $selectedType }}">
+              <option value="">{{ __('Select') }}</option>
+              @foreach ($kinds[$selectedKind] ?? [] as $type)
+                <option value="{{ $type }}" @selected($selectedType === $type)>{{ $type }}</option>
+              @endforeach
+            </select>
+            @error('estate_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
-          <div class="col-md-2">
-            <label class="form-label">{{ __('Instrument no') }}</label>
-            <input name="instrument_no" class="form-control" value="{{ old('instrument_no') }}">
+          <div class="col-md-4">
+            <label class="form-label" for="instrument_no">{{ __('Instrument no') }}</label>
+            <input id="instrument_no" name="instrument_no" class="form-control @error('instrument_no') is-invalid @enderror" value="{{ old('instrument_no') }}">
+            @error('instrument_no')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
-          <div class="col-md-1">
-            <label class="form-label">{{ __('Area') }}</label>
-            <input type="number" min="0" name="area" class="form-control" value="{{ old('area') }}">
+          <div class="col-md-4">
+            <label class="form-label" for="estate_area">{{ __('Area') }}</label>
+            <input id="estate_area" type="number" min="0" name="area" class="form-control @error('area') is-invalid @enderror" value="{{ old('area') }}">
+            @error('area')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
-          <div class="col-md-2">
-            <label class="form-label">{{ __('Neighborhood') }}</label>
-            <input name="neighborhood" class="form-control" value="{{ old('neighborhood') }}">
+          <div class="col-md-4">
+            <label class="form-label" for="estate_city">{{ __('City') }}</label>
+            <select id="estate_city" name="city_id" class="form-select">
+              <option value="">{{ __('Select') }}</option>
+              @foreach ($cities as $city)
+                <option value="{{ $city->id }}" @selected((string) $selectedCityId === (string) $city->id)>{{ $city->name_ar }}</option>
+              @endforeach
+            </select>
           </div>
-          <div class="col-md-1">
-            <label class="form-label">{{ __('Fees') }}</label>
-            <input type="number" min="0" name="fees" class="form-control" value="{{ old('fees') }}">
+          <div class="col-md-4">
+            <label class="form-label" for="neighborhood">{{ __('Neighborhood') }}</label>
+            <select id="neighborhood" name="neighborhood" class="form-select @error('neighborhood') is-invalid @enderror" data-selected="{{ $selectedNeighborhood }}">
+              <option value="">{{ __('Select') }}</option>
+              @foreach ($neighborhoodsByCity[$selectedCityId] ?? [] as $neighborhoodName)
+                <option value="{{ $neighborhoodName }}" @selected($selectedNeighborhood === $neighborhoodName)>{{ $neighborhoodName }}</option>
+              @endforeach
+            </select>
+            @error('neighborhood')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
-          <div class="col-md-2">
-            <button class="btn btn-primary w-100" type="submit">{{ __('Add estate line') }}</button>
+          <div class="col-md-4">
+            <label class="form-label" for="estate_fees">{{ __('Amount') }}</label>
+            <input id="estate_fees" type="number" min="0" name="fees" class="form-control @error('fees') is-invalid @enderror" value="{{ old('fees') }}">
+            @error('fees')<div class="invalid-feedback">{{ $message }}</div>@enderror
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary" type="submit">{{ __('Add estate line') }}</button>
           </div>
         </form>
       </div>
@@ -76,12 +118,12 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>{{ __('Kind') }}</th>
-            <th>{{ __('Type') }}</th>
+            <th>{{ __('Property kind') }}</th>
+            <th>{{ __('Property type') }}</th>
             <th>{{ __('Instrument no') }}</th>
             <th>{{ __('Area') }}</th>
             <th>{{ __('Neighborhood') }}</th>
-            <th>{{ __('Fees') }}</th>
+            <th>{{ __('Amount') }}</th>
             <th>{{ __('Payment') }}</th>
             <th>{{ __('Status') }}</th>
             <th>{{ __('Actions') }}</th>
@@ -127,3 +169,7 @@
   </div>
 </section>
 @endsection
+
+@push('page-script')
+  <script src="{{ asset('js/scripts/pages/offer-estate-form.js') }}"></script>
+@endpush

@@ -33,3 +33,7 @@
 .card-transaction .transaction-item:not(:last-child) {
   margin-bottom: 1.5rem;
 }
+
+.dashboard-chart {
+  min-height: 280px;
+}

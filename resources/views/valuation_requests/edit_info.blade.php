@@ -1,121 +1,151 @@
 @extends('layouts/contentLayoutMaster')
 
-@section('title', __('Evaluator edit') . ' #' . $request->id)
+@section('title', __('Evaluator edit') . ' #' . $request->reference)
+
+@section('vendor-style')
+  @include('valuation_requests.partials.hijri-picker-style')
+@endsection
+
+@section('vendor-script')
+  @include('valuation_requests.partials.hijri-picker-script')
+@endsection
 
 @section('content')
 @php
-  $loc = $request->property?->location;
-  $componentKeys = [
-    'land_area', 'share_land', 'flat_area', 'basement', 'floor_g', 'floor_a', 'floor_u',
-    'annexe', 'fence', 'parking', 'land_garden', 'pool', 'ground', 'upper', 'shop',
-    'apartment', 'office', 'exhibition',
+  $csv = static fn ($value): array => array_values(array_filter(array_map('trim', explode(',', (string) $value)), static fn ($v) => $v !== ''));
+  $land = $property->lands->first();
+  $facade = $property->facades->first();
+  $service = $property->services->first();
+  $tabs = [
+      'location' => __('Location'),
+      'information' => __('Property information'),
+      'components' => __('Property components'),
+      'specs' => __('Property specifications'),
+      'photos' => __('Photos'),
+      'valuation' => __('Valuation'),
+      'comparables' => __('Comparables'),
+      'standard' => __('Other information'),
+      'attachments' => __('Attachments'),
   ];
+  if (! $isBuilding) {
+      unset($tabs['specs']);
+  }
+  $sections = ['land', 'facades', 'services', 'question', 'components', 'totals', 'comparables', 'custom_table'];
+  if ($isBuilding) {
+      array_push($sections, 'flooring', 'building', 'ac');
+  }
 @endphp
 <section>
+  @include('valuation_requests.partials.flash')
+
   <div class="card">
-    <div class="card-header">
-      <h4 class="card-title">{{ __('Evaluator edit') }} #{{ $request->id }}</h4>
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-1">
+      <div>
+        <h4 class="card-title mb-25">{{ __('Evaluator edit') }} — {{ __('Reference') }} {{ $request->reference }}</h4>
+        <small class="text-muted">{{ $property->property_kind }} / {{ $property->property_type }} — {{ $property->customer_name }}</small>
+      </div>
+      <a href="{{ route('dashboard.valuation-requests.show', $request) }}" class="btn btn-outline-secondary btn-sm">{{ __('Back') }}</a>
     </div>
-    <form method="post" action="{{ route('dashboard.valuation-requests.update-info', $request) }}">
+
+    <form method="post" action="{{ route('dashboard.valuation-requests.update-info', $request) }}" enctype="multipart/form-data" id="evaluator-form">
       @csrf
       @method('PUT')
+      @foreach ($sections as $section)
+        <input type="hidden" name="sections[]" value="{{ $section }}">
+      @endforeach
+
       <div class="card-body">
-        <div class="row g-1">
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Customer') }}</label>
-            <input type="text" name="customer_name" class="form-control" value="{{ old('customer_name', $request->property?->customer_name) }}">
+        <ul class="nav nav-tabs flex-wrap" role="tablist">
+          @foreach ($tabs as $key => $label)
+            <li class="nav-item">
+              <button type="button" class="nav-link @if ($loop->first) active @endif" data-bs-toggle="tab" data-bs-target="#tab-{{ $key }}" role="tab">
+                {{ $loop->iteration }}. {{ $label }}
+              </button>
+            </li>
+          @endforeach
+        </ul>
+
+        <div class="tab-content pt-1">
+          <div class="tab-pane fade show active" id="tab-location" role="tabpanel">
+            @include('valuation_requests.edit_info.location')
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Owner') }}</label>
-            <input type="text" name="owner_name" class="form-control" value="{{ old('owner_name', $request->property?->owner_name) }}">
+          <div class="tab-pane fade" id="tab-information" role="tabpanel">
+            @include('valuation_requests.edit_info.information')
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Instrument number') }}</label>
-            <input type="text" name="instrument_no" class="form-control" value="{{ old('instrument_no', $request->property?->instrument_no) }}">
+          <div class="tab-pane fade" id="tab-components" role="tabpanel">
+            <label class="form-label" for="notes">{{ __('Property components description') }}</label>
+            <textarea name="notes" id="notes" class="form-control" rows="8">{{ old('notes', $property->notes) }}</textarea>
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Property kind') }}</label>
-            <input type="text" name="property_kind" class="form-control" value="{{ old('property_kind', $request->property?->property_kind) }}">
+          @if ($isBuilding)
+            <div class="tab-pane fade" id="tab-specs" role="tabpanel">
+              @include('valuation_requests.edit_info.specs')
+            </div>
+          @endif
+          <div class="tab-pane fade" id="tab-photos" role="tabpanel">
+            @include('valuation_requests.edit_info.photos')
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Property type') }}</label>
-            <input type="text" name="property_type" class="form-control" value="{{ old('property_type', $request->property?->property_type) }}">
+          <div class="tab-pane fade" id="tab-valuation" role="tabpanel">
+            @include('valuation_requests.edit_info.valuation')
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Evaluation date') }}</label>
-            <input type="date" name="evaluation_date" class="form-control" value="{{ old('evaluation_date', optional($request->property?->evaluation_date)->format('Y-m-d')) }}">
+          <div class="tab-pane fade" id="tab-comparables" role="tabpanel">
+            @include('valuation_requests.edit_info.comparables')
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Forced sale %') }}</label>
-            <input type="number" name="forced_sale_percentage" class="form-control" min="0" max="100"
-                   value="{{ old('forced_sale_percentage', $request->property?->forced_sale_percentage) }}">
+          <div class="tab-pane fade" id="tab-standard" role="tabpanel">
+            @include('valuation_requests.edit_info.standard')
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('City') }}</label>
-            <select name="location[city_id]" class="form-select">
-              <option value="">{{ __('Select') }}</option>
-              @foreach ($cities as $id => $name)
-                <option value="{{ $id }}" @selected(old('location.city_id', $loc?->city_id) == $id)>{{ $name }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ __('Street') }}</label>
-            <input type="text" name="location[street]" class="form-control" value="{{ old('location.street', $loc?->street) }}">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">X</label>
-            <input type="text" name="location[x_axis]" class="form-control" value="{{ old('location.x_axis', $loc?->x_axis) }}">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Y</label>
-            <input type="text" name="location[y_axis]" class="form-control" value="{{ old('location.y_axis', $loc?->y_axis) }}">
-          </div>
-          <div class="col-12">
-            <label class="form-label">{{ __('Notes') }}</label>
-            <textarea name="notes" class="form-control" rows="2">{{ old('notes', $request->property?->notes) }}</textarea>
+          <div class="tab-pane fade" id="tab-attachments" role="tabpanel">
+            @include('valuation_requests.edit_info.attachments')
           </div>
         </div>
 
-        <h5 class="mt-2">{{ __('Components') }}</h5>
-        <div class="table-responsive">
-          <table class="table table-sm">
-            <thead>
-              <tr>
-                <th>{{ __('Component') }}</th>
-                <th>{{ __('Area') }}</th>
-                <th>{{ __('Price') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach ($componentKeys as $key)
-                @php $comp = $components->get($key); @endphp
-                <tr>
-                  <td>{{ __($key) }}</td>
-                  <td>
-                    <input type="number" step="any" class="form-control form-control-sm"
-                           name="components[{{ $key }}][area_value]"
-                           value="{{ old("components.$key.area_value", $comp?->area_value) }}">
-                  </td>
-                  <td>
-                    <input type="number" step="any" class="form-control form-control-sm"
-                           name="components[{{ $key }}][price_value]"
-                           value="{{ old("components.$key.price_value", $comp?->price_value) }}">
-                  </td>
-                </tr>
+        @if ($errors->any())
+          <div class="alert alert-danger mt-1 p-1">
+            <ul class="mb-0">
+              @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
               @endforeach
-            </tbody>
-          </table>
-        </div>
-        @foreach ($errors->all() as $error)
-          <div class="text-danger">{{ $error }}</div>
-        @endforeach
+            </ul>
+          </div>
+        @endif
       </div>
-      <div class="card-footer">
+      <div class="card-footer d-flex gap-1">
         <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
         <a href="{{ route('dashboard.valuation-requests.show', $request) }}" class="btn btn-outline-secondary">{{ __('Back') }}</a>
       </div>
     </form>
   </div>
+
+  {{-- Delete forms live outside the main form (HTML forbids nesting). --}}
+  @foreach ($property->pictures as $picture)
+    <form method="post" id="delete-picture-{{ $picture->id }}" action="{{ route('dashboard.valuation-requests.pictures.destroy', [$request, $picture]) }}" class="d-none">
+      @csrf @method('DELETE')
+    </form>
+  @endforeach
+  @foreach ($request->attachments as $attachment)
+    <form method="post" id="delete-attachment-{{ $attachment->id }}" action="{{ route('dashboard.valuation-requests.attachments.destroy', [$request, $attachment]) }}" class="d-none">
+      @csrf @method('DELETE')
+    </form>
+  @endforeach
 </section>
 @endsection
+
+@push('page-script')
+  <script>
+    (function () {
+      // Keep the active tab after a validation redirect.
+      var form = document.getElementById('evaluator-form');
+      var firstError = form.querySelector('.is-invalid');
+      if (firstError) {
+        var pane = firstError.closest('.tab-pane');
+        if (pane) { bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target="#' + pane.id + '"]')).show(); }
+      }
+      document.querySelectorAll('[data-confirm-submit]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (confirm(@json(__('Are you sure?')))) {
+            document.getElementById(btn.dataset.confirmSubmit).submit();
+          }
+        });
+      });
+    })();
+  </script>
+@endpush

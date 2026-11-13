@@ -6,6 +6,7 @@ return [
     'fields' => [
         'id' => 'Id',
         'name' => 'Name',
-        'ar_name' => 'Ar Name',
+        'ar_name' => 'Arabic name',
+        'permissions' => 'Permissions',
     ],
 ];

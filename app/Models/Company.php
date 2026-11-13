@@ -22,13 +22,18 @@ class Company extends Model
         'phone_number',
         'address',
         'company_membership_number',
+        'membership_date',
+        'accreditation_end_date',
         'company_reg_number',
         'main_logo_path',
         'signature_path',
         'stamp_path',
+        'report_logo_path',
         'default_coordinator_share',
         'default_evaluator_share',
         'default_manager_share',
+        'request_sla_hours',
+        'evaluation_sla_hours',
         'status',
     ];
 
@@ -40,9 +45,13 @@ class Company extends Model
         return [
             'legacy_id' => 'integer',
             'status' => 'integer',
+            'membership_date' => 'date',
+            'accreditation_end_date' => 'date',
             'default_coordinator_share' => 'integer',
             'default_evaluator_share' => 'integer',
             'default_manager_share' => 'integer',
+            'request_sla_hours' => 'integer',
+            'evaluation_sla_hours' => 'integer',
         ];
     }
 
@@ -58,13 +67,18 @@ class Company extends Model
                 'phone_number',
                 'address',
                 'company_membership_number',
+                'membership_date',
+                'accreditation_end_date',
                 'company_reg_number',
                 'main_logo_path',
                 'signature_path',
                 'stamp_path',
+                'report_logo_path',
                 'default_coordinator_share',
                 'default_evaluator_share',
                 'default_manager_share',
+                'request_sla_hours',
+                'evaluation_sla_hours',
                 'status',
             ]);
     }

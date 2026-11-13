@@ -7,26 +7,35 @@ namespace App\Console\Commands;
 use App\Models\ImportQuarantine;
 use App\Models\ImportRun;
 use App\Models\PropertyPicture;
+use App\Services\LegacyImport\AcImporter;
 use App\Services\LegacyImport\AdjustmentsImporter;
+use App\Services\LegacyImport\AttachmentsImporter;
 use App\Services\LegacyImport\BordersImporter;
+use App\Services\LegacyImport\BuildingsImporter;
 use App\Services\LegacyImport\CitiesImporter;
+use App\Services\LegacyImport\CommercialBuildingsImporter;
 use App\Services\LegacyImport\CompaniesImporter;
 use App\Services\LegacyImport\ComparablesImporter;
 use App\Services\LegacyImport\ComponentsImporter;
 use App\Services\LegacyImport\ContractorsImporter;
 use App\Services\LegacyImport\ContractsImporter;
+use App\Services\LegacyImport\CustomTableImporter;
 use App\Services\LegacyImport\FacadesImporter;
 use App\Services\LegacyImport\FeeSharesImporter;
+use App\Services\LegacyImport\FlooringsImporter;
 use App\Services\LegacyImport\LandsImporter;
 use App\Services\LegacyImport\LegacyUsersMapImporter;
 use App\Services\LegacyImport\NeighborhoodsImporter;
 use App\Services\LegacyImport\OfferEstatesImporter;
 use App\Services\LegacyImport\OffersImporter;
+use App\Services\LegacyImport\OtherAttachmentsImporter;
+use App\Services\LegacyImport\PartnerContractsImporter;
 use App\Services\LegacyImport\PartnersImporter;
 use App\Services\LegacyImport\PartyContactsImporter;
 use App\Services\LegacyImport\PicturesImporter;
 use App\Services\LegacyImport\PropertiesImporter;
 use App\Services\LegacyImport\PropertyLocationsImporter;
+use App\Services\LegacyImport\QuestionsImporter;
 use App\Services\LegacyImport\ServicesImporter;
 use App\Services\LegacyImport\TotalsImporter;
 use App\Services\LegacyImport\ValuationRequestsImporter;
@@ -66,11 +75,20 @@ class LegacyImportCommand extends Command
             LandsImporter::key() => LandsImporter::class,
             FacadesImporter::key() => FacadesImporter::class,
             ServicesImporter::key() => ServicesImporter::class,
+            BuildingsImporter::key() => BuildingsImporter::class,
+            CommercialBuildingsImporter::key() => CommercialBuildingsImporter::class,
+            QuestionsImporter::key() => QuestionsImporter::class,
+            AcImporter::key() => AcImporter::class,
+            FlooringsImporter::key() => FlooringsImporter::class,
             PicturesImporter::key() => PicturesImporter::class,
+            CustomTableImporter::key() => CustomTableImporter::class,
+            AttachmentsImporter::key() => AttachmentsImporter::class,
+            OtherAttachmentsImporter::key() => OtherAttachmentsImporter::class,
             FeeSharesImporter::key() => FeeSharesImporter::class,
             OffersImporter::key() => OffersImporter::class,
             OfferEstatesImporter::key() => OfferEstatesImporter::class,
             ContractsImporter::key() => ContractsImporter::class,
+            PartnerContractsImporter::key() => PartnerContractsImporter::class,
             PartyContactsImporter::key() => PartyContactsImporter::class,
         ];
     }

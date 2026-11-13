@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Valuation;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -97,23 +99,23 @@ final class ReportPdfCacheService
     public function isGenerating(int $valuationRequestId, string $key): bool
     {
         $lock = $this->lockPath($valuationRequestId, $key);
+        $ttl = (int) config('report_pdf.lock_ttl', 1800);
 
-        if (! is_file($lock)) {
-            return false;
+        if (is_file($lock) && time() - filemtime($lock) <= $ttl) {
+            return true;
         }
 
-        if (time() - filemtime($lock) > (int) config('report_pdf.lock_ttl', 600)) {
+        if (is_file($lock)) {
             @unlink($lock);
-
-            return false;
         }
 
-        return true;
+        return $this->hasPendingJob($key);
     }
 
     public function markGenerating(int $valuationRequestId, string $key): void
     {
         File::ensureDirectoryExists($this->directory($valuationRequestId), 0775);
+        @unlink($this->failPath($valuationRequestId, $key));
         @touch($this->lockPath($valuationRequestId, $key));
     }
 
@@ -122,9 +124,58 @@ final class ReportPdfCacheService
         @unlink($this->lockPath($valuationRequestId, $key));
     }
 
+    public function markFailed(int $valuationRequestId, string $key, string $message): void
+    {
+        File::ensureDirectoryExists($this->directory($valuationRequestId), 0775);
+        @file_put_contents($this->failPath($valuationRequestId, $key), $message);
+        $this->clearGenerating($valuationRequestId, $key);
+    }
+
+    public function failure(int $valuationRequestId, string $key): ?string
+    {
+        $path = $this->failPath($valuationRequestId, $key);
+
+        return is_file($path) ? (trim((string) file_get_contents($path)) ?: null) : null;
+    }
+
+    /**
+     * Deletes cached files not modified for $days days and removes emptied directories.
+     *
+     * @return int number of deleted files
+     */
+    public function prune(int $days): int
+    {
+        $root = $this->root();
+        if (! is_dir($root)) {
+            return 0;
+        }
+
+        $threshold = now()->subDays($days)->getTimestamp();
+        $deleted = 0;
+
+        foreach (File::directories($root) as $directory) {
+            foreach (File::files($directory, true) as $file) {
+                if ($file->getMTime() < $threshold && @unlink($file->getPathname())) {
+                    $deleted++;
+                }
+            }
+
+            if (File::isEmptyDirectory($directory)) {
+                @rmdir($directory);
+            }
+        }
+
+        return $deleted;
+    }
+
+    private function root(): string
+    {
+        return storage_path('app/private/report-pdf-cache');
+    }
+
     private function directory(int $valuationRequestId): string
     {
-        return storage_path('app/private/report-pdf-cache/'.$valuationRequestId);
+        return $this->root().'/'.$valuationRequestId;
     }
 
     private function path(int $valuationRequestId, string $key): string
@@ -140,6 +191,20 @@ final class ReportPdfCacheService
     private function metaPath(int $valuationRequestId, string $key): string
     {
         return $this->directory($valuationRequestId).'/'.$key.'.name';
+    }
+
+    private function failPath(int $valuationRequestId, string $key): string
+    {
+        return $this->directory($valuationRequestId).'/'.$key.'.fail';
+    }
+
+    private function hasPendingJob(string $key): bool
+    {
+        if ($key === '' || ! ctype_alnum($key) || ! Schema::hasTable('jobs')) {
+            return false;
+        }
+
+        return DB::table('jobs')->where('payload', 'like', '%'.$key.'%')->exists();
     }
 
     private function forgetOthers(int $valuationRequestId, string $keepKey): void

@@ -1,7 +1,7 @@
 <div>
     @if ($currentSystemRelease)
-        @if (Route::has('systemReleasesShow'))
-            <a href="{{ route('systemReleasesShow') }}">
+        @if (Route::has('dashboard.releases'))
+            <a href="{{ route('dashboard.releases') }}">
                 الاصدار الحالى للنظام
                 ({{ $currentSystemRelease }})
             </a>

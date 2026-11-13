@@ -44,8 +44,8 @@
     <tr>
         <td class="label">{{ __('Coordinates') }}</td>
         <td colspan="3">
-            {{ $location?->x_axis ?: $dash }} E /
-            {{ $location?->y_axis ?: $dash }} N
+            {{ $location?->x_axis ?: $dash }} N /
+            {{ $location?->y_axis ?: $dash }} E
         </td>
     </tr>
     <tr>
@@ -55,6 +55,26 @@
         <td>{{ $coordinator?->name ?: $dash }}</td>
     </tr>
 </table>
+
+@if (! empty($location_maps))
+<h2>{{ __('Property location') }}</h2>
+<table class="report">
+    <tr>
+        @isset($location_maps['streets'])
+            <td style="text-align:center; width:50%;">
+                <img src="{{ $location_maps['streets'] }}" alt="{{ __('Map') }}" style="width:100%; height:auto;">
+                <div>{{ __('Location map') }}</div>
+            </td>
+        @endisset
+        @isset($location_maps['aerial'])
+            <td style="text-align:center; width:50%;">
+                <img src="{{ $location_maps['aerial'] }}" alt="{{ __('Aerial image') }}" style="width:100%; height:auto;">
+                <div>{{ __('Aerial image') }}</div>
+            </td>
+        @endisset
+    </tr>
+</table>
+@endif
 
 @if ($border)
 <h2>{{ __('Borders and lengths') }}</h2>
@@ -70,22 +90,22 @@
         <tr>
             <td class="label">{{ __('North') }}</td>
             <td>{{ $border->north ?: $dash }}</td>
-            <td>{{ $border->north_length !== null ? $border->north_length.' م' : $dash }}</td>
+            <td>{{ $border->north_length !== null ? $border->north_length.' '.__('m') : $dash }}</td>
         </tr>
         <tr>
             <td class="label">{{ __('South') }}</td>
             <td>{{ $border->south ?: $dash }}</td>
-            <td>{{ $border->south_length !== null ? $border->south_length.' م' : $dash }}</td>
+            <td>{{ $border->south_length !== null ? $border->south_length.' '.__('m') : $dash }}</td>
         </tr>
         <tr>
             <td class="label">{{ __('East') }}</td>
             <td>{{ $border->east ?: $dash }}</td>
-            <td>{{ $border->east_length !== null ? $border->east_length.' م' : $dash }}</td>
+            <td>{{ $border->east_length !== null ? $border->east_length.' '.__('m') : $dash }}</td>
         </tr>
         <tr>
             <td class="label">{{ __('West') }}</td>
             <td>{{ $border->west ?: $dash }}</td>
-            <td>{{ $border->west_length !== null ? $border->west_length.' م' : $dash }}</td>
+            <td>{{ $border->west_length !== null ? $border->west_length.' '.__('m') : $dash }}</td>
         </tr>
     </tbody>
 </table>
